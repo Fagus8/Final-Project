@@ -1,3 +1,5 @@
+@use './colors' as colors;
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -6,8 +8,8 @@
 
 body {
   font-family: system-ui, -apple-system, sans-serif;
-  background-color: #f4f7fe;
-  color: #333;
+  background-color: colors.$color-background;
+  color: colors.$color-text;
 }
 
 a {

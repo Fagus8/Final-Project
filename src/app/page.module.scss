@@ -1,10 +1,12 @@
+@use './colors' as colors;
+
 .dashboardContainer {
   display: flex;
   min-height: 100vh;
-  background-color: #f4f7fe;
+  background-color: colors.$color-background;
 }
 
 .mainContent {
   flex: 1;
   padding: 24px;
-}/*# sourceMappingURL=page.module.css.map */
+}
