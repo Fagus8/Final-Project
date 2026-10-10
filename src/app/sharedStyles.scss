@@ -1,0 +1,20 @@
+@use './colors' as *;
+
+@mixin pageShell {
+  display: flex;
+  min-height: 100vh;
+  background: $color-background;
+}
+
+@mixin pageContent {
+  flex: 1;
+  min-width: 0;
+  padding: 32px;
+  color: $color-text;
+}
+
+@mixin pageTitle {
+  margin: 0 0 24px;
+  color: $color-heading;
+  font-size: 28px;
+}
