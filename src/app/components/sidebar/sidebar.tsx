@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import styles from './Sidebar.module.scss';
 import SideBarSvg from '../../asset/sidebarSvg/sideBarSvg';
+import ClinicsSvg from '../../asset/ClinicsSvg/ClinicsSvg';
 
 type UserRole = 'patient' | 'doctor' | 'admin';
 
@@ -25,7 +26,7 @@ export default function Sidebar() {
     <aside className={styles.sidebar}>
    
       <div className={styles.brand}>
-        <h1>Hospital</h1>
+        <Link className={styles.home} href="/">Hospital</Link>
       </div>
 
       {/* ნავიგაცია */}
@@ -62,6 +63,14 @@ export default function Sidebar() {
                 <SideBarSvg name="doctors" />
               </span>
               <span>Doctors Performance</span>
+            </Link>
+          </li>
+          <li>
+            <Link href="/clinics" className={styles.navItem}>
+              <span className={styles.icon}>
+                <ClinicsSvg />
+              </span>
+              <span>Clinics</span>
             </Link>
           </li>
         </ul>

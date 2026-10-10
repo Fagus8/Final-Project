@@ -1,0 +1,13 @@
+@use '../sharedStyles' as common;
+
+.page {
+  @include common.pageShell;
+}
+
+.main {
+  @include common.pageContent;
+}
+
+.title {
+  @include common.pageTitle;
+}

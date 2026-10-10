@@ -1,21 +1,15 @@
 @use '../colors' as *;
+@use '../sharedStyles' as common;
 
 .page {
-  display: flex;
-  min-height: 100vh;
-  background: $color-background;
+  @include common.pageShell;
 }
 
 .layout {
-  flex: 1;
-  min-width: 0;
-  padding: 32px;
-  color: $color-text;
+  @include common.pageContent;
 
   h1 {
-    margin: 0 0 24px;
-    color: $color-heading;
-    font-size: 28px;
+    @include common.pageTitle;
   }
 }
 

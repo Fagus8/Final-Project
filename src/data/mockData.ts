@@ -17,6 +17,15 @@ export interface Patient {
   avatarUrl: string;
 }
 
+export interface Clinic {
+  id: string;
+  name: string;
+  city: string;
+  address: string;
+  phone: string;
+  specialty: string;
+}
+
 export const mockDoctors: Doctor[] = [
   {
     id: 'doc_1',
@@ -46,5 +55,32 @@ export const mockPatients: Patient[] = [
     bloodType: 'A+',
     lastVisit: '2026-10-01',
     avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300',
+  },
+];
+
+export const mockClinics: Clinic[] = [
+  {
+    id: 'clinic_1',
+    name: 'თბილისის ცენტრალური კლინიკა',
+    city: 'თბილისი',
+    address: 'ვაჟა-ფშაველას გამზირი 15',
+    phone: '+995 32 200 10 10',
+    specialty: 'მრავალპროფილური',
+  },
+  {
+    id: 'clinic_2',
+    name: 'მედიქალ ჰაუსი',
+    city: 'თბილისი',
+    address: 'ყაზბეგის გამზირი 24',
+    phone: '+995 32 200 20 20',
+    specialty: 'კარდიოლოგია და ნევროლოგია',
+  },
+  {
+    id: 'clinic_3',
+    name: 'ქუთაისის საოჯახო კლინიკა',
+    city: 'ქუთაისი',
+    address: 'რუსთაველის ქუჩა 8',
+    phone: '+995 431 25 25 25',
+    specialty: 'ოჯახის მედიცინა',
   },
 ];
