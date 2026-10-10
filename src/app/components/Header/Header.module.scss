@@ -1,4 +1,4 @@
-@use '../../colors' as colors;
+@use '../../colors' as*;
 
 .header {
   display: flex;
@@ -8,7 +8,8 @@
    .title {
   font-size: 24px;
   font-weight: 700;
-  color: colors.$color-heading;
+  color: $color-heading;
+  cursor: pointer;
 }
 }
 .searchForm {
@@ -21,42 +22,14 @@
     padding: 10px 20px;
     border-radius: 30px;
     border: 1px solid transparent;
-    background-color: colors.$color-white;
+    background-color: $color-white;
     outline: none;
     font-size: 14px;
 
     &:focus {
-      border-color: colors.$color-primary;
+      border-color: $color-primary;
     }
   }
 }
-.userActions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
 
-  .iconBtn {
-    background: colors.$color-white;
-    border: none;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
 
-  .avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    overflow: hidden;
-
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-  }
-}

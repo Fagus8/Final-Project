@@ -1,9 +1,9 @@
-@use './colors' as colors;
+@use './colors' as* ;
 
 .dashboardContainer {
   display: flex;
   min-height: 100vh;
-  background-color: colors.$color-background;
+  background-color: $color-background;
 }
 
 .mainContent {

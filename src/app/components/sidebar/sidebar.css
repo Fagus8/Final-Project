@@ -19,14 +19,14 @@
   font-weight: 700;
   color: #1b2559;
 }
-.sidebar .brand .toggleBtn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: #a3edee;
+.sidebar .navMenu {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  margin: 20px;
+  padding: 20px;
+}
+.sidebar .navMenu .navItem {
+  display: flex;
+  gap: 20px;
 }
 .sidebar .navMenu ul {
   list-style: none;
@@ -36,27 +36,17 @@
   flex-direction: column;
   gap: 8px;
 }
+.sidebar .navMenu .icon {
+  display: flex;
+}
 .sidebar .navMenu .navItem {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border-radius: 12px;
-  color: #8f9bba;
-  font-weight: 500;
-  font-size: 15px;
-  transition: all 0.2s ease-in-out;
+  gap: 20px;
 }
 .sidebar .navMenu .navItem .icon {
   display: flex;
-  align-items: center;
 }
 .sidebar .navMenu .navItem:hover {
   background-color: #f4f7fe;
   color: #2b3674;
-}
-.sidebar .navMenu .navItem.active {
-  background-color: #e9f3ff;
-  color: #4318ff;
-  font-weight: 600;
 }/*# sourceMappingURL=sidebar.css.map */
