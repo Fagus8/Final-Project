@@ -1,0 +1,15 @@
+@use '../../colors' as *;
+
+.card {
+  padding: 20px;
+  border: 1px solid $color-border;
+  border-radius: 12px;
+  background: $color-white;
+  color: $color-text-hover;
+  box-shadow: 0 4px 16px rgba($color-heading, 0.06);
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background: $color-background-active;
+  }
+}

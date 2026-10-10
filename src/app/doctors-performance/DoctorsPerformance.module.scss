@@ -1,67 +1,49 @@
-.layout {
+@use '../colors' as *;
+
+.page {
   display: flex;
   min-height: 100vh;
-  background: #f5f7fb;
+  background: $color-background;
 }
 
-.main {
+.layout {
   flex: 1;
+  min-width: 0;
   padding: 32px;
-  color: #172033;
+  color: $color-text;
+
+  h1 {
+    margin: 0 0 24px;
+    color: $color-heading;
+    font-size: 28px;
+  }
 }
 
-.intro {
-  margin: 8px 0 24px;
-  color: #64748b;
-}
-
-.message {
-  padding: 18px;
-  border-radius: 10px;
-  background: #fff;
-  color: #475569;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 16px;
-}
-
-.card {
+.doctorCards {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 16px;
-  padding: 18px;
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 2px 8px rgb(15 23 42 / 5%);
+}
+
+.doctorCard {
+  flex: 1 1 240px;
+  max-width: 360px;
 
   h2 {
-    margin: 0 0 6px;
-    font-size: 17px;
+    margin: 12px 0 8px;
+    color: $color-heading;
+    font-size: 18px;
   }
 
   p {
-    margin: 4px 0;
-    color: #64748b;
+    margin: 6px 0;
+    color: $color-text-hover;
   }
 }
 
-.avatar,
-.avatarFallback {
-  width: 56px;
-  height: 56px;
-  flex: 0 0 56px;
+.avatar {
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   object-fit: cover;
-}
-
-.avatarFallback {
-  display: grid;
-  place-items: center;
-  background: #e0f2fe;
-  color: #0369a1;
-  font-size: 22px;
-  font-weight: 700;
 }
