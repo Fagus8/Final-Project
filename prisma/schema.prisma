@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String    @id @default(dbgenerated("pg_catalog.gen_random_uuid()")) @db.Uuid
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  role          String?
+  banned        Boolean?  @default(false)
+  banReason     String?
+  banExpires    DateTime?
+  accountType   String
+
+  sessions Session[]
+  accounts Account[]
+
+  patient Patient?
+  doctor  Doctor?
+  clinic  Clinic?
+}
+
+model Session {
+  id             String   @id @default(dbgenerated("pg_catalog.gen_random_uuid()")) @db.Uuid
+  expiresAt      DateTime
+  token          String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  ipAddress      String?
+  userAgent      String?
+  userId         String   @db.Uuid
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  impersonatedBy String?
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(dbgenerated("pg_catalog.gen_random_uuid()")) @db.Uuid
+  accountId             String
+  providerId            String
+  userId                String    @db.Uuid
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id @default(dbgenerated("pg_catalog.gen_random_uuid()")) @db.Uuid
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model Patient {
+  id        String   @id @db.Uuid
+  name      String
+  age       Int
+  bloodType String?
+  lastVisit DateTime?
+  avatarUrl String?
+
+  user User @relation(fields: [id], references: [id], onDelete: Cascade)
+}
+
+model Doctor {
+  id              String  @id @db.Uuid
+  name            String
+  specialty       String
+  rating          Float   @default(0)
+  experienceYears Int     @default(0)
+  avatarUrl       String?
+  isApproved      Boolean @default(false)
+
+  user User @relation(fields: [id], references: [id], onDelete: Cascade)
+}
+
+model Clinic {
+  id         String  @id @db.Uuid
+  name       String
+  city       String
+  address    String
+  phone      String
+  specialty  String
+  imageUrl   String?
+  isApproved Boolean @default(false)
+
+  user User @relation(fields: [id], references: [id], onDelete: Cascade)
+}

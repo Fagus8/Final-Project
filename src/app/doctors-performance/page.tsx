@@ -1,16 +1,21 @@
-import { mockDoctors } from '@/data/mockData';
+import { prisma } from '@/lib/prisma';
 import Card from '../components/Card/Card';
 import Sidebar from '../components/sidebar/sidebar';
 import styles from './DoctorsPerformance.module.scss';
 
-export default function DoctorsPerformancePage() {
+export default async function DoctorsPerformancePage() {
+  const doctors = await prisma.doctor.findMany({
+    where: { isApproved: true },
+    orderBy: { name: 'asc' },
+  });
+
   return (
     <div className={styles.page}>
       <Sidebar />
       <main className={styles.layout}>
         <h1>ექიმები</h1>
         <div className={styles.doctorCards}>
-          {mockDoctors.map((doctor) => (
+          {doctors.map((doctor) => (
             <Card key={doctor.id} className={styles.doctorCard}>
               {doctor.avatarUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
