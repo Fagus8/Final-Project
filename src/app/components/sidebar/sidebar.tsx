@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import styles from './Sidebar.module.scss';
 import SideBarSvg from '../../asset/sidebarSvg/sideBarSvg';
-import ClinicsSvg from '../../asset/ClinicsSvg/ClinicsSvg';
+import ClinicsSvg from '../../asset/ClinicsImage/ClinicsSvg';
 
 type UserRole = 'patient' | 'doctor' | 'admin';
 

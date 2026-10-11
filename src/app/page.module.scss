@@ -1,12 +1,9 @@
-@use './colors' as* ;
+@use './sharedStyles' as common;
 
 .dashboardContainer {
-  display: flex;
-  min-height: 100vh;
-  background-color: $color-background;
+  @include common.pageShell;
 }
 
 .mainContent {
-  flex: 1;
-  padding: 24px;
+  @include common.pageContent;
 }
