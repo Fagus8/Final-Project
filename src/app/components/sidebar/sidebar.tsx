@@ -1,68 +1,37 @@
-'use client';
-
+import { headers } from 'next/headers';
 import Link from 'next/link';
+import { auth } from '@/lib/auth';
 import styles from './Sidebar.module.scss';
 import SideBarSvg from '../../asset/sidebarSvg/sideBarSvg';
 import ClinicsSvg from '../../asset/ClinicsImage/ClinicsSvg';
 
-type UserRole = 'patient' | 'doctor' | 'admin';
-
-export default function Sidebar() {
-  const userRole = 'სხვა' as UserRole;
-
-  const canAccessPatients = userRole === 'doctor' || userRole === 'admin';
-
- 
-  const patientLinkClasses = [styles.navItem];
-
-
-  if (canAccessPatients) {
-    patientLinkClasses.push(styles.active);
-  } else {
-    patientLinkClasses.push(styles.disabled);
-  }
+export default async function Sidebar() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  const canAccessPatients = session?.user.role === 'admin';
 
   return (
     <aside className={styles.sidebar}>
-   
       <div className={styles.brand}>
         <Link className={styles.home} href="/">Hospital</Link>
       </div>
 
-      {/* ნავიგაცია */}
       <nav className={styles.navMenu}>
         <ul className={styles.menu}>
-        
           <li>
             <Link href="/dashboard" className={styles.navItem}>
               <span className={styles.icon}>
                 <SideBarSvg name="dashboard" />
               </span>
-              <span>Dashboard</span>
+              <span>პირადი კაბინეტი</span>
             </Link>
           </li>
 
-         
-          <li>
-            <Link
-              href="/patient-profiles"
-              className={patientLinkClasses.join(' ')}
-              
-            >
-              <span className={styles.icon}>
-                <SideBarSvg name="patients" />
-              </span>
-              <span>Patient Profiles</span>
-            </Link>
-          </li>
-
-     
           <li>
             <Link href="/doctors-performance" className={styles.navItem}>
               <span className={styles.icon}>
                 <SideBarSvg name="doctors" />
               </span>
-              <span>Doctors Performance</span>
+              <span>ექიმები</span>
             </Link>
           </li>
           <li>
@@ -70,9 +39,19 @@ export default function Sidebar() {
               <span className={styles.icon}>
                 <ClinicsSvg />
               </span>
-              <span>Clinics</span>
+              <span>კლინიკები</span>
             </Link>
           </li>
+          {canAccessPatients && (
+            <li>
+              <Link href="/patient-profiles" className={styles.navItem}>
+                <span className={styles.icon}>
+                  <SideBarSvg name="patients" />
+                </span>
+                <span>პაციენტების პროფილები</span>
+              </Link>
+            </li>
+          )}
         </ul>
       </nav>
     </aside>
