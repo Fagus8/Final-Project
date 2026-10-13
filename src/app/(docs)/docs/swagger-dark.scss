@@ -1,0 +1,153 @@
+body:has(.api-docs) {
+  background: #1b1b1b;
+}
+
+body:has(.api-docs) > header {
+  display: none;
+}
+
+.api-docs {
+  min-height: 100vh;
+  padding: 28px max(20px, calc((100vw - 1180px) / 2));
+  background: #1b1b1b;
+  color: #e7e7e7;
+
+  .swagger-ui {
+    color: #e7e7e7;
+    font-family: Arial, sans-serif;
+
+    .topbar {
+      display: none;
+    }
+
+    .info {
+      margin: 0 0 28px;
+
+      .title,
+      p,
+      li,
+      a,
+      code {
+        color: #e7e7e7;
+      }
+
+      .title small {
+        background: #414141;
+      }
+    }
+
+    .scheme-container,
+    .opblock-tag-section,
+    .model-box,
+    .models,
+    section.models {
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .opblock-tag {
+      border-bottom-color: #454545;
+      color: #f2f2f2;
+    }
+
+    .opblock {
+      border-color: #454545;
+      background: #242424;
+
+      .opblock-summary {
+        border-color: #454545;
+      }
+
+      .opblock-summary-description,
+      .opblock-summary-path,
+      .opblock-summary-operation-id,
+      .opblock-description-wrapper p,
+      .opblock-external-docs-wrapper p,
+      .opblock-title_normal,
+      .parameter__name,
+      .parameter__type,
+      .response-col_status,
+      .response-col_description,
+      .tab li,
+      .model-title,
+      .model {
+        color: #e7e7e7;
+      }
+
+      .opblock-section-header {
+        background: #303030;
+        box-shadow: none;
+
+        h4,
+        label {
+          color: #e7e7e7;
+        }
+      }
+
+      .opblock-body,
+      .opblock-description-wrapper,
+      .responses-wrapper {
+        background: #242424;
+      }
+    }
+
+    .opblock.opblock-post {
+      background: rgb(16 120 82 / 12%);
+    }
+
+    .opblock.opblock-patch {
+      background: rgb(198 111 20 / 12%);
+    }
+
+    table thead tr td,
+    table thead tr th,
+    table tbody tr td {
+      border-color: #454545;
+      color: #e7e7e7;
+    }
+
+    .responses-inner h4,
+    .responses-inner h5,
+    .response-control-media-type__title,
+    .parameter__in,
+    .parameter__deprecated,
+    .parameters-col_description p,
+    .renderedMarkdown p,
+    .renderedMarkdown li {
+      color: #d0d0d0;
+    }
+
+    input,
+    select,
+    textarea {
+      border-color: #555;
+      background: #1b1b1b;
+      color: #f2f2f2;
+    }
+
+    .btn {
+      border-color: #777;
+      color: #f2f2f2;
+    }
+
+    .filter input {
+      border-color: #666;
+      background: #242424;
+      color: #f2f2f2;
+    }
+
+    svg {
+      fill: #e7e7e7;
+    }
+
+    .model-toggle:after {
+      background: #e7e7e7;
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .api-docs {
+    padding: 20px 12px;
+  }
+}
