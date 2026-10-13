@@ -1,11 +1,14 @@
 import { prisma } from '@/lib/prisma';
-import Card from '../components/Card/Card';
-import Sidebar from '../components/sidebar/sidebar';
+import Card from '@/components/ui/Card';
+import Sidebar from '@/components/layout/Sidebar';
 import styles from './DoctorsPerformance.module.scss';
 
 export default async function DoctorsPerformancePage() {
   const doctors = await prisma.doctor.findMany({
-    where: { isApproved: true },
+    where: {
+  isApproved: true,
+  clinic: { isApproved: true },
+   },
     orderBy: { name: 'asc' },
   });
 

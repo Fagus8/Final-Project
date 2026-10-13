@@ -1,5 +1,5 @@
-@use '../sharedStyles' as common;
-@use '../colors' as *;
+@use '../../../styles/shared' as common;
+@use '../../../styles/colors' as *;
 
 .page {
   @include common.pageShell;
@@ -94,7 +94,11 @@
   font-size: 13px;
   font-weight: 700;
 }
-
+.statLink {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
 @media (max-width: 600px) {
   .main {
     padding: 22px 16px;

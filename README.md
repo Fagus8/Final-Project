@@ -1,36 +1,114 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# სამედიცინო პლატფორმა
 
-## Getting Started
+Next.js-ზე დაფუძნებული აპლიკაცია კლინიკების, ექიმებისა და პაციენტების
+ინფორმაციის სანახავად და სამართავად. მომხმარებლის ავტორიზაციისთვის გამოიყენება
+Better Auth, ხოლო მონაცემთა ბაზასთან სამუშაოდ — PostgreSQL და Prisma.
 
-First, run the development server:
+## საჭირო პროგრამები
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Node.js და npm
+- PostgreSQL მონაცემთა ბაზა
+
+## პროექტის გაშვება
+
+1. დააყენე პროექტის დამოკიდებულებები:
+
+   ```bash
+   npm install
+   ```
+
+2. პროექტის მთავარ საქაღალდეში შექმენი `.env` ან `.env.local` ფაილი და მიუთითე
+   PostgreSQL მონაცემთა ბაზასთან კავშირის მისამართი:
+
+   ```env
+   DATABASE_URL="postgresql://მომხმარებელი:პაროლი@სერვერი:5432/მონაცემთა_ბაზა?schema=public"
+   ```
+
+   ჩაანაცვლე მაგალითის მნიშვნელობები შენი მონაცემთა ბაზის შესაბამისი
+   მნიშვნელობებით. გარემოს ცვლადების ფაილი არ ატვირთო Git-ში და არ გაუზიარო
+   სხვებს.
+
+3. შექმენი მონაცემთა ბაზის ცხრილები მიგრაციების მიხედვით:
+
+   ```bash
+   npx prisma migrate dev
+   ```
+
+4. გაუშვი განვითარების სერვერი:
+
+   ```bash
+   npm run dev
+   ```
+
+5. გახსენი [http://localhost:3000](http://localhost:3000).
+
+## ბრძანებები
+
+| ბრძანება | დანიშნულება |
+| --- | --- |
+| `npm run dev` | განვითარების სერვერის გაშვება |
+| `npm run lint` | ESLint-ით კოდის შემოწმება |
+| `npm run build` | წარმოებისთვის პროექტის აწყობა |
+| `npm run start` | უკვე აწყობილი პროექტის გაშვება |
+| `npx prisma migrate dev` | მონაცემთა ბაზის მიგრაციების გამოყენება |
+| `npx prisma generate` | Prisma Client-ის გენერირება |
+
+## გვერდები
+
+| მისამართი | დანიშნულება |
+| --- | --- |
+| `/` | მთავარი გვერდი |
+| `/dashboard` | მომხმარებლის პანელი |
+| `/profile` | პაციენტის საკუთარი პროფილი |
+| `/clinics` | დამტკიცებული კლინიკების სია |
+| `/appointments` | ვიზიტების კალენდარი |
+| `/admin/clinics` | ადმინისტრატორის კლინიკების მართვის გვერდი |
+| `/doctors-performance` | ექიმების სია |
+| `/patient-profiles` | პაციენტების სია ადმინისტრატორისთვის |
+| `/login` | შესვლა |
+| `/register` | რეგისტრაცია |
+| `/docs` | API დოკუმენტაცია |
+
+API route-ები `src/app/api/` საქაღალდეშია. მაგალითად, Better Auth-ის მისამართია
+`/api/auth`, კლინიკის რეგისტრაციის მისამართია `/api/clinic-registration`.
+
+## პროექტის სტრუქტურა
+
+```text
+prisma/
+  migrations/       მონაცემთა ბაზის მიგრაციები
+  schema.prisma     მონაცემთა ბაზის სქემა
+src/
+  app/
+    (account)/           მომხმარებლის გვერდები
+      dashboard/
+      login/
+      profile/
+      register/          ვალიდაციის სქემა და ფორმის კომპონენტები
+    (admin)/             ადმინისტრატორის გვერდები
+      admin/clinics/
+      patient-profiles/
+    (care)/              კლინიკისა და ვიზიტების გვერდები
+      appointments/
+      clinics/
+      doctors-performance/
+    (docs)/
+      docs/               API დოკუმენტაცია
+    api/                 API route-ები
+  components/
+    icons/               ხელახლა გამოყენებადი აიქონები
+    layout/              Header, Sidebar და საერთო განლაგების კომპონენტები
+    ui/                  საერთო ინტერფეისის კომპონენტები
+  generated/prisma/      Prisma Client-ის მიერ გენერირებული ფაილები
+  lib/                   ავტორიზაციისა და მონაცემთა ბაზასთან კავშირის კოდი
+  styles/                საერთო SCSS სტილები, ფერები და მიქსინები
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+გვერდისთვის განკუთვნილი კომპონენტები, ვალიდაცია და სტილები შესაბამისი route-ის
+საქაღალდეში ინახება. `_components/` სახელით დაწყებული საქაღალდე URL-ში
+მისამართის ნაწილად არ ემატება. ფრჩხილებში მოქცეული `(account)`, `(admin)`, `(care)`
+და `(docs)` საქაღალდეებიც Next.js-ის route group-ებია: კოდს კატეგორიებად აწყობს,
+მაგრამ URL-ში არ ჩანს. მაგალითად, `src/app/(admin)/admin/clinics/` კვლავ
+`/admin/clinics` მისამართს ემსახურება. `src/components/` განკუთვნილია რამდენიმე
+route-ში გამოყენებული კომპონენტებისთვის, `src/lib/` — საერთო სერვისებისა და
+კავშირებისთვის, ხოლო `src/styles/` — გლობალური სტილებისთვის.

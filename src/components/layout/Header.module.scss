@@ -1,4 +1,4 @@
-@use '../../colors' as *;
+@use '../../styles/colors' as *;
 
 .header {
   position: sticky;
@@ -82,8 +82,33 @@
   display: flex;
   align-items: center;
   gap: 10px;
-}
 
+}
+.logoutButton {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: $color-text-hover;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    color: $color-primary;
+  }
+
+  &:focus-visible {
+    border-radius: 4px;
+    outline: 2px solid $color-primary;
+    outline-offset: 4px;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
+}
 .avatar {
   display: grid;
   width: 38px;

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
 import styles from './Header.module.scss';
-
+import LogoutButton from "./LogoutButton";
 export default async function Header() {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -25,12 +25,15 @@ export default async function Header() {
 
       <nav className={styles.actions} aria-label="ანგარიში">
         {session ? (
-          <Link href="/dashboard" className={styles.profileLink}>
-            <span className={styles.avatar} aria-hidden="true">
-              {session.user.name.trim().charAt(0).toUpperCase()}
-            </span>
-            <span>{session.user.name}</span>
-          </Link>
+          <>
+            <Link href="/dashboard" className={styles.profileLink}>
+              <span className={styles.avatar} aria-hidden="true">
+                {session.user.name.trim().charAt(0).toUpperCase()}
+              </span>
+              <span>{session.user.name}</span>
+            </Link>
+             <LogoutButton />
+          </>
         ) : (
           <>
             <Link href="/register" className={styles.actionLink}>

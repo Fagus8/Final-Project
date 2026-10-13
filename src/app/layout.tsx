@@ -1,13 +1,12 @@
 // src/app/layout.tsx
-import './global.scss';
-import { Inter } from 'next/font/google';
-import Header from './components/Header/header';
+import "@/styles/global.scss";
+import { Inter } from "next/font/google";
+import Header from "@/components/layout/Header";
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ["latin"] });
 export const metadata = {
-  title: 'medical.ge',
+  title: "medical.ge",
 };
-
 
 export default function RootLayout({
   children,
