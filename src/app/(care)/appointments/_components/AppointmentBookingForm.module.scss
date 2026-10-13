@@ -1,0 +1,126 @@
+@use "../../../../styles/colors" as *;
+
+.form {
+  display: flex;
+  max-width: 620px;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+  border: 1px solid $color-border;
+  border-radius: 16px;
+  background: $color-white;
+}
+
+.title {
+  margin: 0;
+  color: $color-heading;
+  font-size: 21px;
+}
+
+.doctor {
+  margin: 0 0 8px;
+  color: $color-text-hover;
+  line-height: 1.5;
+}
+
+.label {
+  color: $color-heading;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.dateInput {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid $color-border;
+  border-radius: 9px;
+  color: $color-text;
+  font: inherit;
+
+  &:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+  }
+}
+
+.datePreview {
+  margin: 0;
+  color: $color-text-muted;
+  font-size: 14px;
+}
+
+.times {
+  min-width: 0;
+  margin: 8px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.timeOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 12px;
+}
+
+.timeButton {
+  min-width: 76px;
+  min-height: 40px;
+  padding: 7px 12px;
+  border: 1px solid $color-border;
+  border-radius: 9px;
+  background: $color-white;
+  color: $color-text-hover;
+  cursor: pointer;
+  font: inherit;
+
+  &:hover {
+    border-color: $color-primary;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+  }
+}
+
+.selectedTime {
+  border-color: $color-primary;
+  background: $color-background-active;
+  color: $color-primary;
+  font-weight: 700;
+}
+
+.emptyTimes {
+  margin: 12px 0 0;
+  color: $color-text-muted;
+  line-height: 1.5;
+}
+
+.confirmButton {
+  min-height: 46px;
+  margin-top: 8px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 10px;
+  background: $color-primary;
+  color: $color-white;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+
+  &:hover:not(:disabled) {
+    background: $color-text-hover;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: 3px;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+}

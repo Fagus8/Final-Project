@@ -1,0 +1,74 @@
+@use "../../../../styles/colors" as *;
+
+.card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid $color-border;
+  border-radius: 16px;
+  background: $color-white;
+}
+
+.selected {
+  border-color: $color-primary;
+  box-shadow: 0 0 0 2px rgba($color-primary, 0.1);
+}
+
+.avatar {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border-radius: 50%;
+  background: $color-background-active;
+  color: $color-primary;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.details {
+  min-width: 0;
+
+  h2 {
+    margin: 0 0 8px;
+    color: $color-heading;
+    font-size: 18px;
+  }
+
+  p {
+    margin: 5px 0;
+    color: $color-text-hover;
+    line-height: 1.45;
+  }
+}
+
+.selectButton {
+  display: inline-flex;
+  min-height: 42px;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid $color-border;
+  border-radius: 10px;
+  background: $color-white;
+  color: $color-primary;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+
+  &:hover {
+    background: $color-background;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+  }
+
+  .selected & {
+    border-color: $color-primary;
+    background: $color-background-active;
+  }
+}
