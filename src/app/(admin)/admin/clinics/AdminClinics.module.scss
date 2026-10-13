@@ -1,0 +1,249 @@
+@use "../../../../styles/shared" as shared;
+@use "../../../../styles/colors" as *;
+
+.page {
+  @include shared.pageShell;
+}
+
+.main {
+  @include shared.pageContent;
+}
+
+.title {
+  @include shared.pageTitle;
+}
+
+.empty {
+  color: $color-text-muted;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 1100px;
+}
+
+.clinic {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px;
+  border: 1px solid $color-border;
+  border-radius: 16px;
+  background: $color-white;
+  box-shadow: 0 4px 16px rgb(27 37 89 / 6%);
+}
+
+.details {
+  min-width: 0;
+
+  h2,
+  h3 {
+    margin: 0 0 10px;
+    color: $color-heading;
+  }
+
+  h3 {
+    margin-top: 20px;
+    font-size: 16px;
+  }
+
+  p,
+  li {
+    margin: 6px 0;
+    color: $color-text;
+    line-height: 1.5;
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 20px;
+  }
+}
+
+.pending,
+.approved {
+  font-weight: 600;
+}
+
+.pending {
+  color: #b54708 !important;
+}
+
+.approved {
+  color: #067647 !important;
+}
+
+.actions {
+  display: flex;
+  flex: 0 0 320px;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.approval {
+  width: 100%;
+}
+
+.approveButton,
+.editButton,
+.cancelButton {
+  box-sizing: border-box;
+  padding: 11px 16px;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.editButton {
+  background: $color-primary;
+  color: $color-white;
+
+  &:hover:not(:disabled) {
+    background: $color-text-hover;
+  }
+}
+
+.approveButton {
+  width: 100%;
+  background: #15803d;
+  color: $color-white;
+
+  &:hover:not(:disabled) {
+    background: #166534;
+  }
+}
+
+.editButton {
+  width: 100%;
+}
+
+.cancelButton {
+  border: 1px solid $color-border;
+  background: $color-white;
+  color: $color-text;
+}
+
+.addDoctorButton {
+  align-self: flex-start;
+  padding: 9px 12px;
+  border: 1px solid $color-border;
+  border-radius: 8px;
+  background: $color-white;
+  color: $color-primary;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+
+  &:hover {
+    background: $color-background;
+  }
+}
+
+.approveButton,
+.editButton,
+.cancelButton,
+.addDoctorButton {
+  &:disabled {
+    cursor: wait;
+    opacity: 0.65;
+  }
+}
+
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid $color-border;
+  border-radius: 12px;
+  background: $color-white;
+
+  h3 {
+    margin: 4px 0;
+    color: $color-heading;
+    font-size: 16px;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  color: $color-text;
+  font-size: 14px;
+
+  input {
+    width: 100%;
+    min-width: 0;
+    padding: 9px 10px;
+    border: 1px solid $color-border;
+    border-radius: 8px;
+    color: $color-text;
+    font: inherit;
+  }
+}
+
+.doctorEditor {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid $color-border;
+  border-radius: 10px;
+
+  legend {
+    padding: 0 6px;
+    color: $color-heading;
+    font-weight: 600;
+  }
+}
+
+.removeDoctorButton {
+  align-self: flex-end;
+  padding: 6px 9px;
+  border: 1px solid #fecdca;
+  border-radius: 7px;
+  background: #fff;
+  color: #b42318;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+
+  &:hover:not(:disabled) {
+    background: #fef3f2;
+  }
+}
+
+.formActions {
+  display: flex;
+  gap: 8px;
+}
+
+.error {
+  max-width: 220px;
+  color: #b42318;
+  font-size: 14px;
+}
+
+@media (max-width: 700px) {
+  .main {
+    padding: 22px 16px;
+  }
+
+  .clinic {
+    flex-direction: column;
+    padding: 18px;
+  }
+
+  .actions {
+    flex-basis: auto;
+    width: 100%;
+  }
+}

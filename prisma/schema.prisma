@@ -25,8 +25,8 @@ model User {
   accounts Account[]
 
   patient Patient?
-  doctor  Doctor?
-  clinic  Clinic?
+
+  clinic Clinic?
 }
 
 model Session {
@@ -78,7 +78,7 @@ model Verification {
 }
 
 model Patient {
-  id        String   @id @db.Uuid
+  id        String    @id @db.Uuid
   name      String
   age       Int
   bloodType String?
@@ -89,7 +89,7 @@ model Patient {
 }
 
 model Doctor {
-  id              String  @id @db.Uuid
+  id              String  @id @default(dbgenerated("pg_catalog.gen_random_uuid()")) @db.Uuid
   name            String
   specialty       String
   rating          Float   @default(0)
@@ -97,18 +97,20 @@ model Doctor {
   avatarUrl       String?
   isApproved      Boolean @default(false)
 
-  user User @relation(fields: [id], references: [id], onDelete: Cascade)
+  clinicId String @db.Uuid
+  clinic   Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
 }
 
 model Clinic {
-  id         String  @id @db.Uuid
+  id         String   @id @db.Uuid
   name       String
   city       String
   address    String
   phone      String
   specialty  String
   imageUrl   String?
-  isApproved Boolean @default(false)
+  isApproved Boolean  @default(false)
+  doctors    Doctor[]
 
   user User @relation(fields: [id], references: [id], onDelete: Cascade)
 }

@@ -106,3 +106,84 @@ $border-color: #cbd5e1;        // ინპუტის ჩარჩოს ფ�
     }
   }
 }
+
+.clinicSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 4px;
+  padding-top: 22px;
+  border-top: 1px solid $border-color;
+}
+
+.sectionTitle {
+  margin: 0;
+  color: $text-main;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.doctorList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.doctorCard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  margin: 0;
+  padding: 18px;
+  border: 1px solid $border-color;
+  border-radius: 12px;
+  background: $bg-color;
+}
+
+.doctorLegend {
+  padding: 0 8px;
+  color: $primary-color;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.doctorRemoveButton,
+.addDoctorButton {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.doctorRemoveButton {
+  border: 1px solid #fecaca;
+  color: $error-color;
+  background: $card-bg;
+
+  &:hover {
+    border-color: $error-color;
+    background: #fef2f2;
+  }
+}
+
+.addDoctorButton {
+  border: 1px dashed $primary-color;
+  color: $primary-color;
+  background: $card-bg;
+
+  &:hover {
+    border-style: solid;
+    color: $primary-hover;
+    background: #eff6ff;
+  }
+}
+
+@media (max-width: 520px) {
+  .doctorCard {
+    padding: 14px;
+  }
+}
