@@ -58,57 +58,68 @@ Better Auth, ხოლო მონაცემთა ბაზასთან �
 | მისამართი | დანიშნულება |
 | --- | --- |
 | `/` | მთავარი გვერდი |
-| `/dashboard` | მომხმარებლის პანელი |
-| `/profile` | პაციენტის საკუთარი პროფილი |
+| `/login`, `/register` | შესვლა და რეგისტრაცია (პაციენტი, კლინიკა, ექიმი) |
+| `/dashboard` | პირადი კაბინეტი |
+| `/profile` | პაციენტის პროფილი |
+| `/notifications` | შეტყობინებები |
 | `/clinics` | დამტკიცებული კლინიკების სია |
-| `/appointments` | ვიზიტების კალენდარი |
-| `/admin/clinics` | ადმინისტრატორის კლინიკების მართვის გვერდი |
-| `/doctors-performance` | ექიმების სია |
-| `/patient-profiles` | პაციენტების სია ადმინისტრატორისთვის |
-| `/login` | შესვლა |
-| `/register` | რეგისტრაცია |
+| `/doctors` | ექიმების სია |
+| `/booking` | ექიმის ძებნა და ვიზიტის დაჯავშნა (პაციენტი) |
+| `/my-appointments` | ჩემი ვიზიტები, დიაგნოზები და რეცეპტები (პაციენტი) |
+| `/my-schedule` | ექიმის განრიგი და დიაგნოზის ჩაწერა (ექიმი) |
+| `/my-clinic` | კლინიკის მართვა: ექიმები, კაბინეტები, ვიზიტები, ანგარიში (კლინიკა) |
+| `/admin/clinics` | კლინიკების დამტკიცება (ადმინისტრატორი) |
+| `/admin/patients` | პაციენტების სია (ადმინისტრატორი) |
 | `/docs` | API დოკუმენტაცია |
-
-API route-ები `src/app/api/` საქაღალდეშია. მაგალითად, Better Auth-ის მისამართია
-`/api/auth`, კლინიკის რეგისტრაციის მისამართია `/api/clinic-registration`.
 
 ## პროექტის სტრუქტურა
 
 ```text
 prisma/
-  migrations/       მონაცემთა ბაზის მიგრაციები
-  schema.prisma     მონაცემთა ბაზის სქემა
+  migrations/                 მონაცემთა ბაზის მიგრაციები
+  schema.prisma               მონაცემთა ბაზის სქემა
 src/
-  app/
-    (account)/           მომხმარებლის გვერდები
-      dashboard/
-      login/
-      profile/
-      register/          ვალიდაციის სქემა და ფორმის კომპონენტები
-    (admin)/             ადმინისტრატორის გვერდები
-      admin/clinics/
-      patient-profiles/
-    (care)/              კლინიკისა და ვიზიტების გვერდები
-      appointments/
-      clinics/
-      doctors-performance/
-    (docs)/
-      docs/               API დოკუმენტაცია
-    api/                 API route-ები
-  components/
-    icons/               ხელახლა გამოყენებადი აიქონები
-    layout/              Header, Sidebar და საერთო განლაგების კომპონენტები
-    ui/                  საერთო ინტერფეისის კომპონენტები
-  generated/prisma/      Prisma Client-ის მიერ გენერირებული ფაილები
-  lib/                   ავტორიზაციისა და მონაცემთა ბაზასთან კავშირის კოდი
-  styles/                საერთო SCSS სტილები, ფერები და მიქსინები
+  app/                        მხოლოდ გვერდები (route-ები) და API
+    layout.tsx                საერთო განლაგება: <html>, შრიფტები, Header (Next.js-ის სავალდებულო ფაილი)
+    page.tsx                  მთავარი გვერდი „/“ — მხოლოდ აბრუნებს components/home/HomePage-ს
+    (auth)/                   login, register (+ რეგისტრაციის ფორმები და ვალიდაცია)
+    (account)/                dashboard, profile, notifications
+      Account.module.scss     ამ ჯგუფის გვერდების საერთო სტილი
+    (public)/                 clinics, doctors — ყველასთვის ღია გვერდები
+    (patient)/                booking, my-appointments — პაციენტის გვერდები
+      Patient.module.scss     ამ ჯგუფის გვერდების საერთო სტილი
+    (staff)/                  my-schedule (ექიმი), my-clinic (კლინიკა)
+      Staff.module.scss       ამ ჯგუფის გვერდების საერთო სტილი
+    (admin)/                  admin/clinics, admin/patients — ადმინისტრატორი
+    (docs)/                   docs — Swagger API დოკუმენტაცია
+    api/                      API route-ები (auth, appointments, doctors, clinics ...)
+  components/                 კომპონენტები (გვერდების „აგურები“)
+    home/                     მთავარი გვერდი: HomePage, Hero, BookingSteps, FeaturedDoctors, JoinBanner
+    layout/                   Header, Sidebar, NavLink, LogoutButton — ყველა გვერდის ჩარჩო
+    appointments/             ვიზიტის მოქმედებები (გაუქმება, დიაგნოზი) და ვიზიტების სიის სტილი
+    doctors/                  DoctorScheduleForm — ექიმის საათები, კაბინეტი, ელფოსტა
+    ui/                       საერთო ელემენტები: Icon, Card, Calendar
+  lib/                        სერვერის ლოგიკა და დამხმარე ფუნქციები
+    prisma.ts, auth.ts        ბაზასთან და ავტორიზაციასთან კავშირი
+    auth-client.ts            ავტორიზაცია ბრაუზერში
+    slots.ts                  დროის სლოტები და თბილისის დროის ზონა
+    appointments.ts           თავისუფალი დროების გამოთვლა
+    notifications.ts          შეტყობინებების შექმნა
+  styles/                     გლობალური სტილი, ფერები (_colors) და მიქსინები (_shared)
+  generated/prisma/           Prisma Client (ავტომატურად გენერირდება, არ შეცვალო)
 ```
 
-გვერდისთვის განკუთვნილი კომპონენტები, ვალიდაცია და სტილები შესაბამისი route-ის
-საქაღალდეში ინახება. `_components/` სახელით დაწყებული საქაღალდე URL-ში
-მისამართის ნაწილად არ ემატება. ფრჩხილებში მოქცეული `(account)`, `(admin)`, `(care)`
-და `(docs)` საქაღალდეებიც Next.js-ის route group-ებია: კოდს კატეგორიებად აწყობს,
-მაგრამ URL-ში არ ჩანს. მაგალითად, `src/app/(admin)/admin/clinics/` კვლავ
-`/admin/clinics` მისამართს ემსახურება. `src/components/` განკუთვნილია რამდენიმე
-route-ში გამოყენებული კომპონენტებისთვის, `src/lib/` — საერთო სერვისებისა და
-კავშირებისთვის, ხოლო `src/styles/` — გლობალური სტილებისთვის.
+**წესები, რომლითაც ფაილები ლაგდება:**
+
+- ფრჩხილებში მოქცეული საქაღალდეები (`(auth)`, `(patient)` ...) Next.js-ის
+  route group-ებია: კოდს როლების მიხედვით აჯგუფებს, მაგრამ URL-ში არ ჩანს.
+  მაგალითად, `src/app/(patient)/appointments/` კვლავ `/appointments` მისამართია.
+- `src/app/`-ში მხოლოდ Next.js-ის ფაილებია (`page.tsx`, `layout.tsx`, `route.ts`).
+  დიდი გვერდის შიგთავსი `src/components/`-ში გადადის, მაგალითად მთავარი გვერდი —
+  `components/home/`-ში.
+- კომპონენტი, რომელიც მხოლოდ ერთ გვერდზე გამოიყენება, ინახება ამ გვერდის
+  `_components/` საქაღალდეში. რამდენიმე გვერდზე გამოყენებული კომპონენტი კი
+  `src/components/`-შია.
+- კომპონენტის სტილი მის გვერდით დევს და იგივე სახელი აქვს
+  (`Calendar.tsx` → `Calendar.module.scss`). კომპონენტის ფაილები PascalCase-ით
+  იწერება, დამხმარე ფაილები (`lib/`, სქემები) kebab-case-ით.
