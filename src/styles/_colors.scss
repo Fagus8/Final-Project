@@ -1,10 +1,37 @@
+// ფერთა პალიტრა — მშვიდი სამედიცინო ფირუზისფერი (teal) + ნეიტრალური ნაცრისფრები.
+// ძველი ცვლადების სახელები შენარჩუნებულია, რომ ყველა ფაილმა ავტომატურად აიღოს ახალი ფერები.
+
+// ძირითადი
+$color-primary: #0e8a7a;
+$color-primary-dark: #0a6b5f;
+$color-background-active: #e7f5f2; // ღია ფირუზისფერი (არჩეული / hover ფონი)
+$color-accent-light: #a8e6da;
+
+// ტექსტი
+$color-heading: #0f2230;
+$color-text: #3a4a58;
+$color-text-hover: #1f3a4d; // მეორადი მუქი
+$color-text-muted: #7b8a98;
+
+// ფონი და ჩარჩო
 $color-white: #ffffff;
-$color-border: #e0e6ed;
-$color-heading: #1b2559;
-$color-accent-light: #a3edee;
-$color-text-muted: #8f9bba;
-$color-background: #f4f7fe;
-$color-text-hover: #2b3674;
-$color-background-active: #e9f3ff;
-$color-primary: #4318ff;
-$color-text: #333;
+$color-background: #f5f7f8;
+$color-border: #e5eaee;
+
+// სტატუსები
+$color-success: #12805c;
+$color-success-soft: #e4f5ed;
+$color-danger: #c8463e;
+$color-danger-soft: #fcecea;
+$color-warning: #a8681a;
+$color-warning-soft: #fdf3e2;
+
+// ჩრდილები, მომრგვალება, ანიმაცია
+$shadow-sm: 0 1px 2px rgba(15, 34, 48, 0.04), 0 1px 3px rgba(15, 34, 48, 0.05);
+$shadow-md: 0 4px 12px rgba(15, 34, 48, 0.06), 0 1px 3px rgba(15, 34, 48, 0.04);
+$shadow-lg: 0 18px 40px rgba(15, 34, 48, 0.1), 0 2px 6px rgba(15, 34, 48, 0.04);
+$radius-sm: 10px;
+$radius-md: 14px;
+$radius-lg: 20px;
+$ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+$transition: 180ms $ease;

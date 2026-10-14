@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { headers } from "next/headers";
+import Icon, { type IconName } from "@/components/ui/Icon";
 import { auth } from "@/lib/auth";
+import NavLink from "./NavLink";
 import styles from "./Sidebar.module.scss";
-import SidebarIcon from "@/components/icons/SidebarIcon";
+
+type MenuItem = { href: string; label: string; icon: IconName };
 
 export default async function Sidebar() {
   const session = await auth.api.getSession({
@@ -10,81 +13,82 @@ export default async function Sidebar() {
   });
   const isAdmin = session?.user.role === "admin";
   const isPatient = session?.user.accountType === "PATIENT";
+  const isDoctor = session?.user.accountType === "DOCTOR";
+  const isClinic = session?.user.accountType === "CLINIC";
+
+  // საერთო ბმულები — ყველასთვის
+  const general: MenuItem[] = [
+    { href: "/", label: "მთავარი", icon: "home" },
+    ...(session ? [{ href: "/dashboard", label: "პირადი კაბინეტი", icon: "dashboard" as const }] : []),
+    { href: "/doctors", label: "ექიმები", icon: "doctors" },
+    { href: "/clinics", label: "კლინიკები", icon: "clinic" },
+  ];
+
+  // როლის მიხედვით ბმულები
+  const personal: MenuItem[] = [];
+
+  if (isPatient && !isAdmin) {
+    personal.push(
+      { href: "/booking", label: "ვიზიტის დაჯავშნა", icon: "calendarPlus" },
+      { href: "/my-appointments", label: "ჩემი ვიზიტები", icon: "appointments" },
+      { href: "/profile", label: "ჩემი პროფილი", icon: "profile" },
+    );
+  }
+
+  if (isDoctor) {
+    personal.push({ href: "/my-schedule", label: "ჩემი განრიგი", icon: "appointments" });
+  }
+
+  if (isClinic) {
+    personal.push({ href: "/my-clinic", label: "კლინიკის მართვა", icon: "chart" });
+  }
+
+  if (isAdmin) {
+    personal.push(
+      { href: "/admin/clinics", label: "კლინიკების მართვა", icon: "shield" },
+      { href: "/admin/patients", label: "პაციენტები", icon: "patients" },
+    );
+  }
 
   return (
     <aside className={styles.sidebar}>
-      <nav className={styles.navMenu}>
+      <nav className={styles.navMenu} aria-label="მთავარი მენიუ">
+        <p className={styles.groupLabel}>მენიუ</p>
         <ul className={styles.menu}>
-          <li>
-            <Link href="/dashboard" className={styles.navItem}>
-              <span className={styles.icon}>
-                <SidebarIcon name="dashboard" />
-              </span>
-              <span>მიმოხილვა</span>
-            </Link>
-          </li>
-
-          {isAdmin && (
-            <li>
-              <Link href="/patient-profiles" className={styles.navItem}>
-                <span className={styles.icon}>
-                  <SidebarIcon name="patients" />
-                </span>
-                <span>პაციენტები</span>
-              </Link>
+          {general.map((item) => (
+            <li key={item.href}>
+              <NavLink {...item} />
             </li>
-          )}
-
-          <li>
-            <Link href="/doctors-performance" className={styles.navItem}>
-              <span className={styles.icon}>
-                <SidebarIcon name="doctors" />
-              </span>
-              <span>ექიმები</span>
-            </Link>
-          </li>
-          <li>
-            <Link href="/clinics" className={styles.navItem}>
-              <span className={styles.icon}>
-                <SidebarIcon name="clinic" />
-              </span>
-              <span>კლინიკები</span>
-            </Link>
-          </li>
-
-          {isPatient && !isAdmin && (
-            <>
-              <li>
-                <Link href="/appointments" className={styles.navItem}>
-                  <span className={styles.icon}>
-                    <SidebarIcon name="appointments" />
-                  </span>
-                  <span>ჩემი ვიზიტები</span>
-                </Link>
-              </li>
-              <li>
-                <Link href="/profile" className={styles.navItem}>
-                  <span className={styles.icon}>
-                    <SidebarIcon name="profile" />
-                  </span>
-                  <span>ჩემი პროფილი</span>
-                </Link>
-              </li>
-            </>
-          )}
-
-          {isAdmin && (
-            <li>
-              <Link href="/admin/clinics" className={styles.navItem}>
-                <span className={styles.icon}>
-                  <SidebarIcon name="clinic" />
-                </span>
-                <span>კლინიკების მართვა</span>
-              </Link>
-            </li>
-          )}
+          ))}
         </ul>
+
+        {personal.length > 0 && (
+          <>
+            <p className={styles.groupLabel}>{isAdmin ? "ადმინისტრირება" : "ჩემი სივრცე"}</p>
+            <ul className={styles.menu}>
+              {personal.map((item) => (
+                <li key={item.href}>
+                  <NavLink {...item} />
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+
       </nav>
+
+      {/* სტუმრისთვის მოკლე ახსნა, რატომ ღირს შესვლა */}
+      {!session && (
+        <div className={styles.guestCard}>
+          <span className={styles.guestIcon}>
+            <Icon name="calendarPlus" size={20} />
+          </span>
+          <p>შედი ანგარიშში, რომ დაჯავშნო ვიზიტი და ნახო შენი ისტორია.</p>
+          <Link href="/register" className={styles.guestButton}>
+            დაიწყე უფასოდ
+          </Link>
+        </div>
+      )}
     </aside>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Icon from "@/components/ui/Icon";
 import { authClient } from "@/lib/auth-client";
 import styles from "./Header.module.scss";
 
@@ -30,11 +31,13 @@ export default function LogoutButton() {
     <>
       <button
         type="button"
-        className={styles.logoutButton}
+        className={styles.iconButton}
         onClick={handleLogout}
         disabled={isLoggingOut}
+        aria-label="გამოსვლა"
+        title="გამოსვლა"
       >
-        {isLoggingOut ? "გამოსვლა..." : "გამოსვლა"}
+        <Icon name="logout" />
       </button>
 
       {errorMessage && <span role="alert">{errorMessage}</span>}

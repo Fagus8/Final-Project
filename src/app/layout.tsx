@@ -1,9 +1,16 @@
 // src/app/layout.tsx
 import "@/styles/global.scss";
-import { Inter } from "next/font/google";
+import { Inter, Noto_Sans_Georgian } from "next/font/google";
 import Header from "@/components/layout/Header";
 
-const inter = Inter({ subsets: ["latin"] });
+// Inter-ს ქართული ასოები არ აქვს, ამიტომ ქართულისთვის Noto Sans Georgian-ს ვიყენებთ
+const georgian = Noto_Sans_Georgian({
+  subsets: ["georgian"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-georgian",
+});
+const inter = Inter({ subsets: ["latin"], variable: "--font-latin" });
+
 export const metadata = {
   title: "medical.ge",
 };
@@ -14,7 +21,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ka" className={inter.className}>
+    <html
+      lang="ka"
+      className={`${georgian.variable} ${inter.variable}`}
+      data-scroll-behavior="smooth"
+    >
       <body>
         <Header />
         {children}

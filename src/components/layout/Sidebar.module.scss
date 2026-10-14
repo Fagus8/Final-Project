@@ -1,139 +1,174 @@
 @use "../../styles/colors" as *;
+@use "../../styles/shared" as common;
 
 .sidebar {
+  display: flex;
+  flex-direction: column;
   position: sticky;
-  top: 76px;
+  top: 68px;
   align-self: flex-start;
-  width: 320px;
-  flex: 0 0 320px;
-  height: calc(100vh - 76px);
+  width: 248px;
+  flex: 0 0 248px;
+  height: calc(100vh - 68px);
   overflow-y: auto;
-  padding: 28px 18px;
+  padding: 24px 14px;
   border-right: 1px solid $color-border;
-  background:
-    radial-gradient(ellipse at 0 0, rgba($color-background-active, 0.65), transparent 38%),
-    $color-white;
+  background: $color-white;
+}
 
-  .navMenu {
-    .menu {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
+.groupLabel {
+  margin: 0 12px 8px;
+  color: $color-text-muted;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  &:not(:first-child) {
+    margin-top: 24px;
   }
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .navItem {
   position: relative;
   display: flex;
-  min-height: 50px;
+  min-height: 42px;
   align-items: center;
-  gap: 14px;
-  padding: 12px 16px;
-  border: 1px solid transparent;
-  border-radius: 14px;
-  color: $color-text-hover;
-  font-size: 17px;
-  font-weight: 550;
-  text-decoration: none;
-  transition:
-    background-color 180ms ease,
-    border-color 180ms ease,
-    color 180ms ease,
-    transform 180ms ease;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: $radius-sm;
+  color: $color-text;
+  font-size: 14.5px;
+  font-weight: 500;
+  transition: background-color $transition, color $transition;
 
   .icon {
     display: grid;
-    width: 34px;
-    height: 34px;
-    flex: 0 0 34px;
     place-items: center;
-    border-radius: 11px;
-    background: $color-background;
-    color: $color-text-hover;
-    transition:
-      background-color 180ms ease,
-      color 180ms ease;
+    color: $color-text-muted;
+    transition: color $transition, transform $transition;
   }
 
   &:hover {
-    transform: translateX(2px);
-    border-color: rgba($color-border, 0.75);
-    background: $color-white;
-    color: $color-primary;
+    background: $color-background;
+    color: $color-heading;
   }
 
   &:hover .icon {
-    background: $color-background-active;
     color: $color-primary;
+    transform: translateX(1px);
   }
 
-  &:focus-visible {
-    outline: 2px solid $color-primary;
-    outline-offset: 2px;
-  }
-
+  // მიმდინარე გვერდი
   &.active {
-    border-color: rgba($color-primary, 0.1);
-    background: linear-gradient(100deg, $color-background-active, #f4f2ff);
-    color: $color-primary;
-    font-weight: 650;
-  }
+    background: $color-background-active;
+    color: $color-primary-dark;
+    font-weight: 600;
 
-  &.active .icon {
-    background: $color-primary;
-    color: $color-white;
-  }
+    .icon {
+      color: $color-primary;
+    }
 
-  &.disabled {
-    color: $color-text-muted;
-    opacity: 0.58;
-    cursor: not-allowed;
-    pointer-events: none;
+    &::before {
+      position: absolute;
+      top: 10px;
+      bottom: 10px;
+      left: -14px;
+      width: 3px;
+      border-radius: 0 3px 3px 0;
+      background: $color-primary;
+      content: "";
+    }
   }
+}
 
-  &.disabled .icon {
-    background: #f1f3f7;
-    color: $color-text-muted;
+// სტუმრის ბარათი მენიუს ბოლოში
+.guestCard {
+  margin-top: 56px;
+  padding: 16px;
+  border-radius: $radius-md;
+  background:
+    radial-gradient(circle at 100% 0%, rgba($color-accent-light, 0.5), transparent 55%),
+    $color-background-active;
+
+  p {
+    margin: 10px 0 14px;
+    color: $color-text;
+    font-size: 13px;
+    line-height: 1.5;
   }
+}
+
+.guestIcon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 10px;
+  background: $color-white;
+  color: $color-primary;
+  box-shadow: $shadow-sm;
+}
+
+.guestButton {
+  @include common.primaryButton;
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 12px;
+  font-size: 13.5px;
 }
 
 @media (max-width: 900px) {
   .sidebar {
-    width: 260px;
-    flex-basis: 260px;
-    padding-inline: 14px;
+    width: 210px;
+    flex-basis: 210px;
+    padding-inline: 10px;
   }
 
   .navItem {
     gap: 10px;
-    padding-inline: 12px;
-    font-size: 15px;
+    font-size: 14px;
+
+    &.active::before {
+      left: -10px;
+    }
   }
 }
 
+// პატარა ეკრანზე მხოლოდ აიქონები ჩანს
 @media (max-width: 640px) {
   .sidebar {
-    top: 120px;
-    width: 220px;
-    flex-basis: 220px;
-    height: calc(100vh - 120px);
-    padding: 20px 10px;
+    top: 112px;
+    width: 64px;
+    flex-basis: 64px;
+    height: calc(100vh - 112px);
+    padding: 16px 8px;
+  }
+
+  .groupLabel,
+  .guestCard {
+    display: none;
   }
 
   .navItem {
-    min-height: 44px;
-    gap: 8px;
-    padding: 8px;
-    font-size: 13px;
+    justify-content: center;
+    padding: 10px;
 
-    .icon {
-      width: 30px;
-      height: 30px;
-      flex-basis: 30px;
+    span:not(.icon) {
+      display: none;
+    }
+
+    &.active::before {
+      left: -8px;
     }
   }
 }
