@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
-import { getDoctorUserId, notify } from "@/lib/notifications";
+import { notify } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { formatDateTime, generateTimes, isSunday, isValidDay, isValidTime, toDate } from "@/lib/slots";
 
@@ -100,7 +100,7 @@ export async function POST(request: Request) {
   const when = formatDateTime(startsAt);
   await notify(session.user.id, `ვიზიტი დაიჯავშნა: ${doctor.name}, ${when}`);
   await notify(doctor.clinicId, `ახალი ჯავშანი: ${session.user.name} → ${doctor.name}, ${when}`);
-  await notify(await getDoctorUserId(doctor.email), `ახალი პაციენტი: ${session.user.name}, ${when}`);
+  await notify(doctor.userId, `ახალი პაციენტი: ${session.user.name}, ${when}`);
 
   return Response.json({ message: "ვიზიტი წარმატებით დაიჯავშნა", appointmentId });
 }

@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -19,6 +20,9 @@ export async function POST(
   }
 
   const { clinicId } = await params;
+  if (!z.string().uuid().safeParse(clinicId).success) {
+    return Response.json({ message: "კლინიკა ვერ მოიძებნა" }, { status: 404 });
+  }
 
   const clinic = await prisma.clinic.findUnique({
     where: { id: clinicId },
@@ -34,8 +38,10 @@ export async function POST(
       where: { id: clinicId },
       data: { isApproved: true },
     }),
+    // მხოლოდ კლინიკის მიერ დამატებული ექიმები. ექიმის საკუთარ მოთხოვნას
+    // (ანგარიშით) კლინიკა თვითონ ადასტურებს
     prisma.doctor.updateMany({
-      where: { clinicId },
+      where: { clinicId, userId: null },
       data: { isApproved: true },
     }),
   ]);

@@ -28,6 +28,9 @@ model User {
 
   clinic Clinic?
 
+  // ექიმის ანგარიში — ექიმს ანგარიშთან userId აკავშირებს და არა ელფოსტა
+  doctor Doctor?
+
   appointments  Appointment[]
   notifications Notification[]
 }
@@ -80,13 +83,12 @@ model Verification {
   @@map("verification")
 }
 
+// პაციენტის დამატებითი მონაცემები (სახელი და ელფოსტა User-შია)
 model Patient {
-  id        String    @id @db.Uuid
-  name      String
-  age       Int
+  id        String  @id @db.Uuid
+  phone     String?
+  // მაგ: "A(II)+"; null — პაციენტმა ჯერ არ იცის
   bloodType String?
-  lastVisit DateTime?
-  avatarUrl String?
 
   user User @relation(fields: [id], references: [id], onDelete: Cascade)
 }
@@ -99,13 +101,28 @@ model Doctor {
   avatarUrl       String?
   isApproved      Boolean @default(false)
 
-  // ექიმის ანგარიში ამ ელფოსტით უკავშირდება ექიმს
+  // ექიმის ანგარიში; null — ექიმი კლინიკამ დაამატა და ანგარიში ჯერ არ აქვს
+  userId String? @unique @db.Uuid
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // საკონტაქტო ელფოსტა. კლინიკა მას მოსაწვევად უთითებს: როცა ამ ელფოსტით
+  // დარეგისტრირებულ ექიმს კლინიკა დაადასტურებს, ანგარიში ამ ექიმს მიებმება
   email     String? @unique
   // კაბინეტის ნომერი
   room      String?
   // სამუშაო საათები, მაგ: "10:00" - "18:00"
   workStart String  @default("10:00")
   workEnd   String  @default("18:00")
+
+  // პროფილის ინფორმაცია
+  bio             String?
+  education       String?
+  // საუბრობს ენებზე, მაგ: ["ქართული", "ინგლისური"]
+  languages       String[] @default([])
+  // სერვისები / პროცედურები
+  services        String[] @default([])
+  // კონსულტაციის ფასი ლარში
+  consultationFee Int?
 
   clinicId String @db.Uuid
   clinic   Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)

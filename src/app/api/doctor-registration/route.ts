@@ -37,9 +37,9 @@ export async function POST(request: Request) {
     return Response.json({ message: "შეამოწმე შევსებული ველები" }, { status: 400 });
   }
 
-  // თუ კლინიკას ეს ექიმი უკვე დამატებული ჰყავს ამ ელფოსტით, ახალს არ ვქმნით
+  // ერთ ანგარიშს მხოლოდ ერთი ექიმის ჩანაწერი აქვს
   const existing = await prisma.doctor.findUnique({
-    where: { email: session.user.email },
+    where: { userId: session.user.id },
   });
 
   if (existing) {
@@ -54,10 +54,12 @@ export async function POST(request: Request) {
     return Response.json({ message: "კლინიკა ვერ მოიძებნა" }, { status: 404 });
   }
 
+  // ელფოსტას აქ არ ვწერთ: ის შეიძლება კლინიკის მოწვეულ ექიმს ეკუთვნოდეს.
+  // ანგარიში ექიმს მხოლოდ კლინიკის დადასტურების შემდეგ მიებმება (approve)
   await prisma.doctor.create({
     data: {
       name: session.user.name,
-      email: session.user.email,
+      userId: session.user.id,
       specialty: result.data.specialty,
       experienceYears: result.data.experienceYears,
       clinicId: clinic.id,

@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
-import { getDoctorUserId, notify } from "@/lib/notifications";
+import { notify } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { formatDateTime } from "@/lib/slots";
 
@@ -57,7 +57,7 @@ export async function PATCH(
   const user = session.user;
   const isPatient = appointment.patientId === user.id;
   const isClinic = appointment.doctor.clinicId === user.id;
-  const isDoctor = user.accountType === "DOCTOR" && appointment.doctor.email === user.email;
+  const isDoctor = appointment.doctor.userId === user.id;
   const isAdmin = user.role === "admin";
 
   const when = formatDateTime(appointment.startsAt);
@@ -81,7 +81,7 @@ export async function PATCH(
     const message = `ვიზიტი გაუქმდა: ${appointment.patient.name} → ${appointment.doctor.name}, ${when}`;
     if (!isPatient) await notify(appointment.patientId, message);
     if (!isClinic) await notify(appointment.doctor.clinicId, message);
-    if (!isDoctor) await notify(await getDoctorUserId(appointment.doctor.email), message);
+    if (!isDoctor) await notify(appointment.doctor.userId, message);
 
     return Response.json({ message: "ვიზიტი გაუქმდა" });
   }
@@ -93,6 +93,10 @@ export async function PATCH(
 
   if (appointment.status === "CANCELLED") {
     return Response.json({ message: "გაუქმებულ ვიზიტს დიაგნოზი არ ეწერება" }, { status: 400 });
+  }
+
+  if (appointment.startsAt.getTime() > Date.now()) {
+    return Response.json({ message: "ვიზიტის დრო ჯერ არ დამდგარა" }, { status: 400 });
   }
 
   await prisma.appointment.update({

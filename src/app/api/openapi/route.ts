@@ -1,8 +1,8 @@
 const apiDocument = {
   openapi: '3.0.3',
   info: {
-    title: 'სამედიცინო პლატფორმის API',
-    description: 'სამედიცინო პლატფორმის ანგარიშების, კლინიკებისა და ადმინისტრირების API.',
+    title: 'medical.ge API',
+    description: 'medical.ge-ის ანგარიშების, კლინიკებისა და ადმინისტრირების API.',
     version: '1.0.0',
   },
   servers: [{ url: '/', description: 'მიმდინარე სერვერი' }],

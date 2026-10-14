@@ -57,7 +57,7 @@ export async function PATCH(
   }
 
   const isClinic = doctor.clinicId === session.user.id;
-  const isDoctor = session.user.accountType === "DOCTOR" && doctor.email === session.user.email;
+  const isDoctor = doctor.userId === session.user.id;
 
   if (!isClinic && !isDoctor) {
     return Response.json({ message: "ამ ექიმის რედაქტირება არ შეგიძლია" }, { status: 403 });
