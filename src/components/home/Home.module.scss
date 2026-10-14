@@ -1,0 +1,467 @@
+@use "../../styles/colors" as *;
+@use "../../styles/shared" as common;
+
+.layout {
+  @include common.pageShell;
+}
+
+.page {
+  @include common.pageContent;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+// ===== მთავარი ბლოკი =====
+.hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 40px;
+  overflow: hidden;
+  padding: 48px;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  background:
+    radial-gradient(circle at 85% 20%, rgba($color-accent-light, 0.45), transparent 40%),
+    radial-gradient(circle at 70% 90%, rgba($color-primary, 0.08), transparent 45%),
+    $color-white;
+  box-shadow: $shadow-sm;
+}
+
+.heroText {
+  h1 {
+    max-width: 520px;
+    margin: 18px 0 14px;
+    font-size: clamp(30px, 3.4vw, 44px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.12;
+  }
+
+  > p {
+    max-width: 440px;
+    color: $color-text;
+    font-size: 16.5px;
+  }
+}
+
+.highlight {
+  color: $color-primary;
+}
+
+.eyebrow {
+  @include common.pill;
+  padding: 6px 12px;
+  background: $color-background-active;
+  color: $color-primary-dark;
+  font-size: 12.5px;
+}
+
+// მოციმციმე წერტილი
+.pulse {
+  position: relative;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: $color-primary;
+
+  &::after {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: $color-primary;
+    content: "";
+    animation: ping 1.8s ease-out infinite;
+  }
+
+  @keyframes ping {
+    from {
+      opacity: 0.6;
+      transform: scale(1);
+    }
+
+    to {
+      opacity: 0;
+      transform: scale(2.8);
+    }
+  }
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.primaryButton {
+  @include common.primaryButton;
+  min-height: 46px;
+  padding: 12px 20px;
+
+ 
+}
+
+.secondaryButton {
+  @include common.secondaryButton;
+  min-height: 46px;
+  padding: 12px 20px;
+}
+
+.stats {
+  display: flex;
+  gap: 32px;
+  margin: 36px 0 0;
+
+  div {
+    display: flex;
+    flex-direction: column-reverse;
+  }
+
+  dt {
+    color: $color-text-muted;
+    font-size: 13px;
+  }
+
+  dd {
+    margin: 0;
+    color: $color-heading;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+}
+
+// ===== დეკორატიული ბარათი =====
+.heroVisual {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 300px;
+}
+
+.mockCard {
+  width: min(100%, 330px);
+  padding: 20px;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  background: $color-white;
+  box-shadow: $shadow-lg;
+  transform: rotate(-2deg);
+  transition: transform 400ms $ease;
+  animation: float 6s ease-in-out infinite;
+
+  &:hover {
+    transform: rotate(0deg) scale(1.02);
+  }
+
+  strong {
+    display: block;
+    color: $color-heading;
+    font-size: 14.5px;
+  }
+
+  span {
+    color: $color-text-muted;
+    font-size: 12.5px;
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      translate: 0 0;
+    }
+
+    50% {
+      translate: 0 -8px;
+    }
+  }
+}
+
+.mockHeader,
+.mockDoctor {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mockHeader {
+  padding-bottom: 16px;
+  border-bottom: 1px solid $color-border;
+}
+
+.mockCheck {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 50%;
+  background: $color-success-soft;
+  color: $color-success !important;
+}
+
+.mockDoctor {
+  margin: 16px 0;
+}
+
+.mockAvatar {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 50%;
+  background: $color-background-active;
+  color: $color-primary-dark !important;
+  font-size: 16px !important;
+  font-weight: 700;
+}
+
+.mockSlots {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+
+  span {
+    padding: 7px 0;
+    border: 1px solid $color-border;
+    border-radius: 8px;
+    color: $color-text;
+    text-align: center;
+  }
+}
+
+.mockSlotActive {
+  border-color: $color-primary !important;
+  background: $color-primary;
+  color: $color-white !important;
+  font-weight: 600;
+}
+
+.mockBubble {
+  position: absolute;
+  right: 4%;
+  bottom: 8%;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: $color-heading;
+  color: $color-white;
+  font-size: 12.5px;
+  font-weight: 600;
+  box-shadow: $shadow-lg;
+}
+
+// ===== სექციები =====
+.sectionHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    margin-top: 4px;
+    color: $color-text-muted;
+  }
+}
+
+.textLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: $color-primary;
+  font-weight: 600;
+
+  svg {
+    transition: transform $transition;
+  }
+
+  &:hover svg {
+    transform: translateX(3px);
+  }
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  @include common.card;
+  @include common.cardHover;
+  position: relative;
+  padding: 24px;
+
+  h3 {
+    margin: 18px 0 6px;
+    font-size: 16.5px;
+    font-weight: 650;
+  }
+
+  p {
+    color: $color-text-muted;
+    font-size: 14px;
+  }
+}
+
+.stepIcon {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border-radius: 14px;
+  background: $color-background-active;
+  color: $color-primary;
+  transition: background-color $transition, color $transition;
+
+  .step:hover & {
+    background: $color-primary;
+    color: $color-white;
+  }
+}
+
+.stepNumber {
+  position: absolute;
+  top: 22px;
+  right: 24px;
+  color: #d5dde3;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+}
+
+.doctors {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.doctor {
+  @include common.card;
+  @include common.cardHover;
+  display: flex;
+  gap: 14px;
+  padding: 20px;
+
+  h3 {
+    font-size: 15.5px;
+    font-weight: 650;
+  }
+
+  p {
+    margin: 2px 0 8px;
+    color: $color-primary-dark;
+    font-size: 14px;
+    font-weight: 500;
+  }
+}
+
+.doctorAvatar {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $color-background-active, #d3eee8);
+  color: $color-primary-dark;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.doctorMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: $color-text-muted;
+  font-size: 13px;
+}
+
+// ===== მოწვევა =====
+.callToAction {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 32px 36px;
+  border-radius: $radius-lg;
+  background:
+    radial-gradient(circle at 90% 0%, rgba($color-accent-light, 0.35), transparent 45%),
+    $color-heading;
+
+  h2 {
+    color: $color-white;
+    font-size: 22px;
+  }
+
+  p {
+    margin-top: 4px;
+    color: rgba($color-white, 0.7);
+  }
+}
+
+.ctaButton {
+  @include common.buttonBase;
+  min-height: 46px;
+  padding: 12px 20px;
+  background: $color-white;
+  color: $color-heading;
+
+  &:hover {
+    background: $color-background-active;
+    color: $color-primary-dark;
+  }
+}
+
+@media (max-width: 1000px) {
+  .hero {
+    grid-template-columns: 1fr;
+    padding: 36px 28px;
+  }
+
+  .heroVisual {
+    min-height: 260px;
+  }
+
+  .steps,
+  .doctors {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .page {
+    gap: 36px;
+  }
+
+  .hero {
+    padding: 28px 20px;
+  }
+
+  .stats {
+    gap: 20px;
+  }
+
+  .callToAction {
+    padding: 24px 20px;
+  }
+}
