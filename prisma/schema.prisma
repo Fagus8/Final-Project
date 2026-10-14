@@ -27,6 +27,9 @@ model User {
   patient Patient?
 
   clinic Clinic?
+
+  appointments  Appointment[]
+  notifications Notification[]
 }
 
 model Session {
@@ -92,13 +95,52 @@ model Doctor {
   id              String  @id @default(dbgenerated("pg_catalog.gen_random_uuid()")) @db.Uuid
   name            String
   specialty       String
-  rating          Float   @default(0)
   experienceYears Int     @default(0)
   avatarUrl       String?
   isApproved      Boolean @default(false)
 
+  // ექიმის ანგარიში ამ ელფოსტით უკავშირდება ექიმს
+  email     String? @unique
+  // კაბინეტის ნომერი
+  room      String?
+  // სამუშაო საათები, მაგ: "10:00" - "18:00"
+  workStart String  @default("10:00")
+  workEnd   String  @default("18:00")
+
   clinicId String @db.Uuid
   clinic   Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  appointments Appointment[]
+}
+
+model Appointment {
+  id           String   @id @default(dbgenerated("pg_catalog.gen_random_uuid()")) @db.Uuid
+  startsAt     DateTime
+  // BOOKED, COMPLETED, CANCELLED
+  status       String   @default("BOOKED")
+  diagnosis    String?
+  prescription String?
+  createdAt    DateTime @default(now())
+
+  doctorId  String @db.Uuid
+  doctor    Doctor @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  patientId String @db.Uuid
+  patient   User   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([doctorId, startsAt])
+  @@index([patientId])
+}
+
+model Notification {
+  id        String   @id @default(dbgenerated("pg_catalog.gen_random_uuid()")) @db.Uuid
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Clinic {

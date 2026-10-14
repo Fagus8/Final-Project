@@ -1,0 +1,87 @@
+@use "../../../../styles/colors" as *;
+@use "../../../../styles/shared" as common;
+
+.card {
+  @include common.card;
+  @include common.cardHover;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+}
+
+.selected {
+  border-color: $color-primary;
+  box-shadow: 0 0 0 3px rgba($color-primary, 0.12);
+
+  &:hover {
+    border-color: $color-primary;
+  }
+}
+
+.avatar {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $color-background-active, #d3eee8);
+  color: $color-primary-dark;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.details {
+  min-width: 0;
+
+  h2 {
+    margin: 0 0 6px;
+    font-size: 16px;
+    font-weight: 650;
+  }
+}
+
+.specialty {
+  @include common.pill;
+  background: $color-background-active;
+  color: $color-primary-dark;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 10px 0 0;
+  padding: 0;
+  color: $color-text-muted;
+  font-size: 13.5px;
+  list-style: none;
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+.selectButton {
+  @include common.secondaryButton;
+  min-width: 112px;
+
+  .selected & {
+    border-color: $color-primary;
+    background: $color-primary;
+    color: $color-white;
+  }
+}
+
+@media (max-width: 560px) {
+  .card {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .selectButton {
+    grid-column: 1 / -1;
+  }
+}

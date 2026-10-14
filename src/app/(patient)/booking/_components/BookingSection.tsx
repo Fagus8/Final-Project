@@ -1,0 +1,154 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import BookingForm from "./BookingForm";
+import DoctorCard from "./DoctorCard";
+import styles from "../../Patient.module.scss";
+import type { DoctorOption } from "./types";
+
+type BookingSectionProps = {
+  doctors: DoctorOption[];
+  initialDoctorId?: string;
+};
+
+export default function BookingSection({ doctors, initialDoctorId }: BookingSectionProps) {
+  const router = useRouter();
+  const [doctorId, setDoctorId] = useState(initialDoctorId ?? "");
+  const [date, setDate] = useState("");
+  const [times, setTimes] = useState<string[]>([]);
+  const [time, setTime] = useState<string | null>(null);
+  const [isLoadingTimes, setIsLoadingTimes] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  const selectedDoctor = doctors.find((doctor) => doctor.id === doctorId);
+
+  // როცა ექიმი ან თარიღი იცვლება, თავისუფალ დროებს თავიდან ვტვირთავთ
+  useEffect(() => {
+    if (!doctorId || !date) {
+      return;
+    }
+
+    let ignore = false;
+
+    fetch(`/api/doctors/${doctorId}/slots?date=${date}`)
+      .then((response) => response.json())
+      .then((result) => {
+        if (!ignore) {
+          setTimes(result.times ?? []);
+        }
+      })
+      .catch(() => {
+        if (!ignore) {
+          setError("დროების ჩატვირთვა ვერ მოხერხდა");
+        }
+      })
+      .finally(() => {
+        if (!ignore) {
+          setIsLoadingTimes(false);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [doctorId, date]);
+
+  function selectDoctor(id: string) {
+    setDoctorId(id);
+    setTime(null);
+    setTimes([]);
+    setMessage("");
+    setError("");
+    if (date) {
+      setIsLoadingTimes(true);
+    }
+  }
+
+  function selectDate(newDate: string) {
+    setDate(newDate);
+    setTime(null);
+    setTimes([]);
+    setMessage("");
+    setError("");
+    setIsLoadingTimes(true);
+  }
+
+  async function bookAppointment() {
+    if (!time) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/appointments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ doctorId, date, time }),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        setError(result.message || "დაჯავშნა ვერ მოხერხდა");
+        // შეიძლება ვინმემ უკვე დაიკავა ეს დრო, ამიტომ სიიდან ვაშორებთ
+        setTimes((current) => current.filter((item) => item !== time));
+        setTime(null);
+        return;
+      }
+
+      setMessage(`${result.message}! ნახე „ჩემი ვიზიტები“ გვერდზე.`);
+      setTimes((current) => current.filter((item) => item !== time));
+      setTime(null);
+      router.refresh();
+    } catch {
+      setError("სერვერთან დაკავშირება ვერ მოხერხდა");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <div className={styles.booking}>
+      <section className={styles.doctorList} aria-label="ექიმები">
+        {doctors.length === 0 ? (
+          <p className={styles.empty}>ამ ფილტრით ექიმი ვერ მოიძებნა.</p>
+        ) : (
+          doctors.map((doctor) => (
+            <DoctorCard
+              key={doctor.id}
+              doctor={doctor}
+              selected={doctor.id === doctorId}
+              onSelect={selectDoctor}
+            />
+          ))
+        )}
+      </section>
+
+      <section className={styles.formColumn}>
+        {selectedDoctor ? (
+          <>
+            <BookingForm
+              doctor={selectedDoctor}
+              selectedDate={date}
+              availableTimes={date ? times : []}
+              selectedTime={time}
+              isLoadingTimes={isLoadingTimes}
+              isSubmitting={isSubmitting}
+              onDateChange={selectDate}
+              onTimeSelect={setTime}
+              onConfirm={bookAppointment}
+            />
+            {message && <p className={styles.success} role="status">{message}</p>}
+            {error && <p className={styles.error} role="alert">{error}</p>}
+          </>
+        ) : (
+          <p className={styles.empty}>ჯერ აირჩიე ექიმი სიიდან.</p>
+        )}
+      </section>
+    </div>
+  );
+}

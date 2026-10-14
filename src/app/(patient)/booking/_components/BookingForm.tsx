@@ -2,18 +2,21 @@
 
 import dayjs from "dayjs";
 import "dayjs/locale/ka";
-import styles from "./AppointmentBookingForm.module.scss";
-import type { AppointmentBookingFormProps } from "./types";
+import Calendar from "@/components/ui/Calendar";
+import styles from "./BookingForm.module.scss";
+import type { BookingFormProps } from "./types";
 
-export default function AppointmentBookingForm({
+export default function BookingForm({
   doctor,
   selectedDate,
   availableTimes,
   selectedTime,
+  isLoadingTimes,
+  isSubmitting,
   onDateChange,
   onTimeSelect,
   onConfirm,
-}: AppointmentBookingFormProps) {
+}: BookingFormProps) {
   const parsedDate = dayjs(selectedDate);
   const formattedDate = parsedDate.isValid()
     ? parsedDate.locale("ka").format("D MMMM YYYY")
@@ -30,25 +33,18 @@ export default function AppointmentBookingForm({
       <h2 className={styles.title}>ვიზიტის დროის არჩევა</h2>
       <p className={styles.doctor}>
         ექიმი: <strong>{doctor.name}</strong> · {doctor.specialty}
+        {doctor.room && <> · კაბინეტი {doctor.room}</>}
       </p>
 
-      <label className={styles.label} htmlFor="appointment-date">
-        თარიღი
-      </label>
-      <input
-        className={styles.dateInput}
-        id="appointment-date"
-        type="date"
-        min={dayjs().format("YYYY-MM-DD")}
-        value={selectedDate}
-        onChange={(event) => onDateChange(event.currentTarget.value)}
-        required
-      />
+      <span className={styles.label}>თარიღი</span>
+      <Calendar selectedDate={selectedDate} onSelect={onDateChange} disablePast />
       <p className={styles.datePreview}>{formattedDate}</p>
 
       <fieldset className={styles.times}>
-        <legend className={styles.label}>თავისუფალი დრო</legend>
-        {availableTimes.length > 0 ? (
+        <legend className={styles.label}>თავისუფალი დრო (თბილისის დროით)</legend>
+        {isLoadingTimes ? (
+          <p className={styles.emptyTimes}>იტვირთება...</p>
+        ) : availableTimes.length > 0 ? (
           <div className={styles.timeOptions}>
             {availableTimes.map((time) => (
               <button
@@ -66,17 +62,17 @@ export default function AppointmentBookingForm({
           </div>
         ) : (
           <p className={styles.emptyTimes}>
-            ამ დღისთვის თავისუფალი დროები ჯერ დამატებული არ არის.
+            ამ დღისთვის თავისუფალი დრო არ არის. აირჩიე სხვა დღე.
           </p>
         )}
       </fieldset>
 
       <button
         className={styles.confirmButton}
-        disabled={!selectedDate || !selectedTime}
+        disabled={!selectedDate || !selectedTime || isSubmitting}
         type="submit"
       >
-        ვიზიტის დადასტურება
+        {isSubmitting ? "იგზავნება..." : "ვიზიტის დადასტურება"}
       </button>
     </form>
   );

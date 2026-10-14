@@ -1,0 +1,118 @@
+@use '../../styles/shared' as common;
+@use '../../styles/colors' as *;
+
+.page {
+  @include common.pageShell;
+}
+
+.main {
+  @include common.pageContent;
+
+  > h2 {
+    margin: 8px 0 14px;
+    font-size: 17px;
+    font-weight: 650;
+  }
+}
+
+.title {
+  @include common.pageTitle;
+}
+
+// ფილტრების ზოლი
+.filters {
+  @include common.card;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  padding: 12px;
+
+  input,
+  select {
+    @include common.input;
+    width: auto;
+    min-height: 42px;
+  }
+
+  input {
+    flex: 1 1 220px;
+  }
+
+  select {
+    flex: 0 1 200px;
+    cursor: pointer;
+  }
+
+  button {
+    @include common.primaryButton;
+  }
+
+  a {
+    padding: 0 6px;
+    color: $color-text-muted;
+    font-size: 14px;
+    transition: color $transition;
+
+    &:hover {
+      color: $color-danger;
+    }
+  }
+}
+
+.booking {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 24px;
+}
+
+.doctorList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.formColumn {
+  position: sticky;
+  top: 92px;
+}
+
+.empty {
+  padding: 28px 20px;
+  border: 1px dashed #d5dde3;
+  border-radius: $radius-md;
+  color: $color-text-muted;
+  text-align: center;
+}
+
+.success,
+.error {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: $radius-sm;
+  font-size: 14px;
+  font-weight: 600;
+  @include common.fadeUp(220ms);
+}
+
+.success {
+  background: $color-success-soft;
+  color: $color-success;
+}
+
+.error {
+  background: $color-danger-soft;
+  color: $color-danger;
+}
+
+@media (max-width: 900px) {
+  .booking {
+    grid-template-columns: 1fr;
+  }
+
+  .formColumn {
+    position: static;
+  }
+}

@@ -2,14 +2,31 @@
 
 import React, { useState } from 'react';
 import dayjs from 'dayjs';
-import styles from "./calendar.module.scss";
+import 'dayjs/locale/ka';
+import styles from "./Calendar.module.scss";
 
-export default function Calendar() {
-  const [currentDate, setCurrentDate] = useState(dayjs());
-  const [selectedDate, setSelectedDate] = useState(dayjs());
+type CalendarProps = {
+  // არჩეული დღე ფორმატით "YYYY-MM-DD"
+  selectedDate: string;
+  onSelect: (date: string) => void;
+  // დღეები, რომლებზეც ვიზიტებია (წერტილით აღინიშნება)
+  markedDates?: string[];
+  // პაციენტისთვის წარსული დღეები და კვირა გამორთულია
+  disablePast?: boolean;
+};
 
-  // თვის და წლის სათაური (მაგ: "October 2026")
-  const monthYearString = currentDate.format('MMMM YYYY');
+export default function Calendar({
+  selectedDate,
+  onSelect,
+  markedDates = [],
+  disablePast = false,
+}: CalendarProps) {
+  const [currentDate, setCurrentDate] = useState(() =>
+    selectedDate ? dayjs(selectedDate) : dayjs(),
+  );
+
+  // თვის და წლის სათაური ქართულად (მაგ: "ოქტომბერი 2026")
+  const monthYearString = currentDate.locale('ka').format('MMMM YYYY');
 
   // გამოვთვალოთ თვის პირველი დღე და დღეების რაოდენობა
   const startOfMonth = currentDate.startOf('month');
@@ -31,12 +48,12 @@ export default function Calendar() {
     <div className={styles.calendarContainer}>
       {/* ჰედერი */}
       <div className={styles.header}>
-        <button className={styles.navBtn} onClick={handlePrevMonth} aria-label="Previous Month">
-          &lt;
+        <button type="button" className={styles.navBtn} onClick={handlePrevMonth} aria-label="წინა თვე">
+          ‹
         </button>
         <h2>{monthYearString}</h2>
-        <button className={styles.navBtn} onClick={handleNextMonth} aria-label="Next Month">
-          &gt;
+        <button type="button" className={styles.navBtn} onClick={handleNextMonth} aria-label="შემდეგი თვე">
+          ›
         </button>
       </div>
 
@@ -61,23 +78,30 @@ export default function Calendar() {
         {/* თვის დღეები */}
         {monthDays.map((day) => {
           const dateObj = currentDate.date(day);
+          const dateString = dateObj.format('YYYY-MM-DD');
           const isToday = dayjs().isSame(dateObj, 'day');
-          const isSelected = selectedDate.isSame(dateObj, 'day');
+          const isSelected = selectedDate === dateString;
+          const isMarked = markedDates.includes(dateString);
+          const isDisabled =
+            disablePast && (dateObj.isBefore(dayjs(), 'day') || dateObj.day() === 0);
 
           // დინამიკური კლასების გაერთიანება
           const dayClasses = [
             styles.dayBtn,
             isToday ? styles.today : '',
             isSelected ? styles.selected : '',
+            isMarked ? styles.marked : '',
           ]
             .filter(Boolean)
             .join(' ');
 
           return (
             <button
+              type="button"
               key={day}
               className={dayClasses}
-              onClick={() => setSelectedDate(dateObj)}
+              disabled={isDisabled}
+              onClick={() => onSelect(dateString)}
             >
               {day}
             </button>
@@ -87,7 +111,7 @@ export default function Calendar() {
 
       {/* არჩეული თარიღის გამოჩენა */}
       <div className={styles.footer}>
-        არჩეულია: <strong>{selectedDate.format('YYYY-MM-DD')}</strong>
+        არჩეულია: <strong>{selectedDate || '—'}</strong>
       </div>
     </div>
   );

@@ -1,0 +1,169 @@
+@use '../../styles/colors' as *;
+@use '../../styles/shared' as common;
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 0 32px;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  @include common.card;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  transition: border-color $transition, box-shadow $transition;
+
+  &:hover {
+    border-color: #d5dde3;
+    box-shadow: $shadow-md;
+  }
+}
+
+.info {
+  min-width: 0;
+
+  h3 {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 6px;
+    font-size: 16px;
+    font-weight: 650;
+  }
+
+  p {
+    margin: 3px 0;
+    color: $color-text;
+    line-height: 1.5;
+  }
+}
+
+.status {
+  @include common.pill;
+
+  // ფერადი წერტილი სტატუსის წინ
+  &::before {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    content: '';
+  }
+}
+
+.BOOKED {
+  background: $color-background-active;
+  color: $color-primary-dark;
+}
+
+.COMPLETED {
+  background: $color-success-soft;
+  color: $color-success;
+}
+
+.CANCELLED {
+  background: $color-danger-soft;
+  color: $color-danger;
+}
+
+.note {
+  margin-top: 10px !important;
+  padding: 12px 14px;
+  border-left: 3px solid $color-primary;
+  border-radius: 0 $radius-sm $radius-sm 0;
+  background: $color-background;
+  font-size: 14px;
+}
+
+.actions {
+  display: flex;
+  flex: 0 1 320px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  // ახალ ხაზზე გადასვლისასაც მარჯვნივ რჩება
+  margin-left: auto;
+}
+
+.primaryButton {
+  @include common.primaryButton;
+  min-height: 38px;
+  padding: 8px 14px;
+  font-size: 14px;
+}
+
+.cancelButton {
+  @include common.dangerButton;
+  min-height: 38px;
+  padding: 8px 14px;
+  font-size: 14px;
+}
+
+.diagnosisForm {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: $radius-sm;
+  background: $color-background;
+  @include common.fadeUp(220ms);
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: $color-heading;
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+
+  textarea {
+    @include common.input;
+    resize: vertical;
+  }
+}
+
+.formButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.error {
+  margin: 0;
+  color: $color-danger;
+  font-size: 13.5px;
+}
+
+.empty {
+  margin: 0 0 32px;
+  padding: 28px 20px;
+  border: 1px dashed #d5dde3;
+  border-radius: $radius-md;
+  color: $color-text-muted;
+  text-align: center;
+
+  a {
+    color: $color-primary;
+    font-weight: 600;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .actions {
+    align-items: stretch;
+    flex-basis: 100%;
+  }
+}
