@@ -14,7 +14,7 @@ export default async function ClinicsPage() {
     <div className={styles.page}>
       <Sidebar />
       <main className={styles.main}>
-        <h1 className={styles.title}>Clinics</h1>
+        <h1 className={styles.title}>კლინიკები</h1>
         <div className={styles.clinicCards}>
           {clinics.map((clinic) => (
             <Card key={clinic.id} className={styles.clinicCard}>

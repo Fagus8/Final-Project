@@ -1,0 +1,74 @@
+@use '../../../styles/colors' as *;
+@use '../../../styles/shared' as common;
+
+.page {
+  @include common.pageShell;
+}
+
+.layout {
+  @include common.pageContent;
+
+  h1 {
+    @include common.pageTitle;
+  }
+}
+
+.doctorCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 18px;
+}
+
+.doctorCard {
+  display: flex;
+  flex-direction: column;
+
+  h2 {
+    margin: 0 0 4px;
+    font-size: 16.5px;
+    font-weight: 650;
+  }
+
+  p {
+    margin: 3px 0;
+    color: $color-text-muted;
+    font-size: 14px;
+
+    // სპეციალობა
+    &:first-of-type {
+      margin-bottom: 10px;
+      color: $color-primary-dark;
+      font-weight: 600;
+    }
+  }
+}
+
+// ავატარი სურათის გარეშე — სახელის პირველი ასო
+.initial {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 14px;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $color-background-active, #d3eee8);
+  color: $color-primary-dark;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.avatar {
+  width: 56px;
+  height: 56px;
+  margin-bottom: 14px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.bookLink {
+  @include common.secondaryButton;
+  width: 100%;
+  min-height: 40px;
+  margin-top: 16px;
+  font-size: 14px;
+}

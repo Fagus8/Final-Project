@@ -1,0 +1,113 @@
+@use '../../styles/shared' as common;
+@use '../../styles/colors' as *;
+
+.page {
+  @include common.pageShell;
+}
+
+.main {
+  @include common.pageContent;
+}
+
+.title {
+  @include common.pageTitle;
+}
+
+// მისალმების ბლოკი
+.welcomeCard {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 20px;
+  padding: 32px;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  background:
+    radial-gradient(circle at 95% 0%, rgba($color-accent-light, 0.45), transparent 40%),
+    $color-white;
+  box-shadow: $shadow-sm;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: $color-text-muted;
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+.welcomeTitle {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.welcomeText {
+  margin: 8px 0 0;
+  color: $color-text;
+}
+
+.quickLink {
+  @include common.primaryButton;
+  margin-top: 20px;
+}
+
+// ინფორმაციის ბარათები
+.details {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.detailCard {
+  @include common.card;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 22px;
+}
+
+.detailLabel {
+  color: $color-text-muted;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.detailValue {
+  overflow-wrap: anywhere;
+  color: $color-heading;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.accountType {
+  @include common.pill;
+  align-self: flex-start;
+  background: $color-background-active;
+  color: $color-primary-dark;
+  font-size: 13px;
+}
+
+// ადმინის სტატისტიკის ბარათები — დაკლიკებადი
+.statLink {
+  @include common.cardHover;
+  color: inherit;
+  cursor: pointer;
+
+  .detailValue {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+}
+
+@media (max-width: 600px) {
+  .welcomeCard {
+    padding: 24px 20px;
+  }
+
+  .welcomeTitle {
+    font-size: 22px;
+  }
+}

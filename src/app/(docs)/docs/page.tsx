@@ -1,4 +1,4 @@
-import SwaggerDocs from './swagger-docs';
+import SwaggerDocs from './_components/SwaggerDocs';
 
 export const metadata = {
   title: 'API დოკუმენტაცია | სამედიცინო პლატფორმა',

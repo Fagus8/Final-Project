@@ -1,0 +1,58 @@
+@use '../../../../styles/colors' as *;
+@use '../../../../styles/shared' as common;
+
+.page {
+  @include common.pageShell;
+}
+
+.main {
+  @include common.pageContent;
+
+  h1 {
+    @include common.pageTitle;
+  }
+}
+
+.profileCard {
+  @include common.card;
+  max-width: 760px;
+  overflow: hidden;
+  color: $color-text;
+
+  > p {
+    padding: 24px;
+    color: $color-text-muted;
+  }
+}
+
+// ყოველი პაციენტი — ცხრილის მსგავსი რიგი
+.details {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 16px;
+  margin: 0;
+  padding: 14px 22px;
+  border-bottom: 1px solid $color-border;
+  transition: background-color $transition;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  &:hover {
+    background: $color-background;
+  }
+
+  dt {
+    color: $color-text-muted;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  dd {
+    margin: 2px 0 0;
+    overflow-wrap: anywhere;
+    color: $color-heading;
+    font-weight: 500;
+  }
+}

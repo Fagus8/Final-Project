@@ -1,9 +1,11 @@
 "use client";
 
 import { useFormik } from "formik";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Icon from "@/components/ui/Icon";
 import { authClient } from "@/lib/auth-client";
-import styles from "./login.module.scss";
+import styles from "./Login.module.scss";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -47,7 +49,11 @@ export default function LoginPage() {
   return (
     <main className={styles.page}>
       <section className={styles.card}>
-        <h1 className={styles.title}>შესვლა</h1>
+        <span className={styles.logo} aria-hidden="true">
+          <Icon name="logo" size={22} />
+        </span>
+        <h1 className={styles.title}>კეთილი იყოს შენი დაბრუნება</h1>
+        <p className={styles.subtitle}>შედი ანგარიშში და მართე შენი ვიზიტები</p>
 
         <form className={styles.form} onSubmit={formik.handleSubmit}>
           <div className={styles.field}>
@@ -90,6 +96,10 @@ export default function LoginPage() {
             {formik.isSubmitting ? "მოწმდება..." : "შესვლა"}
           </button>
         </form>
+
+        <p className={styles.switch}>
+          ანგარიში არ გაქვს? <Link href="/register">დარეგისტრირდი</Link>
+        </p>
       </section>
     </main>
   );

@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import Sidebar from "@/components/layout/Sidebar";
-import styles from "../dashboard/Dashboard.module.scss";
+import styles from "../Account.module.scss";
 
 export default async function ProfilePage() {
   const session = await auth.api.getSession({

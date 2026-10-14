@@ -1,0 +1,108 @@
+@use "../../../styles/colors" as *;
+@use "../../../styles/shared" as common;
+
+.page {
+  display: grid;
+  min-height: calc(100vh - 68px);
+  place-items: center;
+  padding: 40px 16px;
+  background:
+    radial-gradient(circle at 15% 10%, rgba($color-accent-light, 0.35), transparent 35%),
+    radial-gradient(circle at 90% 90%, rgba($color-primary, 0.06), transparent 40%),
+    $color-background;
+}
+
+.card {
+  @include common.card;
+  @include common.fadeUp;
+  width: min(100%, 420px);
+  padding: 40px 36px 32px;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-lg;
+  text-align: center;
+}
+
+.logo {
+  display: inline-grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 14px;
+  background: $color-primary;
+  color: $color-white;
+  box-shadow: 0 8px 18px rgba($color-primary, 0.3);
+}
+
+.title {
+  margin: 20px 0 6px;
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  margin-bottom: 28px;
+  color: $color-text-muted;
+  font-size: 14.5px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  text-align: left;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label {
+    color: $color-heading;
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+
+  input {
+    @include common.input;
+    min-height: 46px;
+  }
+}
+
+.error {
+  margin: 0;
+  color: $color-danger;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.submitButton {
+  @include common.primaryButton;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 6px;
+}
+
+.switch {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid $color-border;
+  color: $color-text-muted;
+  font-size: 14px;
+
+  a {
+    color: $color-primary;
+    font-weight: 600;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 32px 22px 26px;
+  }
+}

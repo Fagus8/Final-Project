@@ -3,7 +3,21 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import styles from "./Dashboard.module.scss";
+import Sidebar from "@/components/layout/Sidebar";
+import styles from "../Account.module.scss";
+
+const accountTypeLabels: Record<string, string> = {
+  PATIENT: "პაციენტი",
+  DOCTOR: "ექიმი",
+  CLINIC: "კლინიკა",
+};
+
+// თითოეული როლისთვის მთავარი გვერდი
+const quickLinks: Record<string, { href: string; label: string }> = {
+  PATIENT: { href: "/booking", label: "ვიზიტის დაჯავშნა" },
+  DOCTOR: { href: "/my-schedule", label: "ჩემი განრიგი" },
+  CLINIC: { href: "/my-clinic", label: "კლინიკის მართვა" },
+};
 
 export default async function DashboardPage() {
   const session = await auth.api.getSession({
@@ -24,8 +38,11 @@ export default async function DashboardPage() {
       ])
     : null;
 
+  const quickLink = isAdmin ? null : quickLinks[session.user.accountType];
+
   return (
     <div className={styles.page}>
+      <Sidebar />
       <main className={styles.main}>
         <h1 className={styles.title}>პირადი კაბინეტი</h1>
 
@@ -37,6 +54,11 @@ export default async function DashboardPage() {
           <p className={styles.welcomeText}>
             აქ შეგიძლია შენი ანგარიშის ინფორმაციის ნახვა.
           </p>
+          {quickLink && (
+            <Link href={quickLink.href} className={styles.quickLink}>
+              {quickLink.label} →
+            </Link>
+          )}
         </section>
 
         <section className={styles.details} aria-label="ანგარიშის ინფორმაცია">
@@ -48,7 +70,9 @@ export default async function DashboardPage() {
           <article className={styles.detailCard}>
             <span className={styles.detailLabel}>ანგარიშის ტიპი</span>
             <span className={styles.accountType}>
-              {session.user.accountType}
+              {isAdmin
+                ? "ადმინისტრატორი"
+                : accountTypeLabels[session.user.accountType] ?? session.user.accountType}
             </span>
           </article>
         </section>
@@ -70,7 +94,7 @@ export default async function DashboardPage() {
               </Link>
 
               <Link
-                href="/patient-profiles"
+                href="/admin/patients"
                 className={`${styles.detailCard} ${styles.statLink}`}
               >
                 <span className={styles.detailLabel}>

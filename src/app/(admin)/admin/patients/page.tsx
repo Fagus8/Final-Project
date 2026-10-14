@@ -3,9 +3,9 @@ import { redirect } from "next/navigation";
 import Sidebar from "@/components/layout/Sidebar";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import styles from "./PatientProfiles.module.scss";
+import styles from "./Patients.module.scss";
 
-export default async function PatientProfilesPage() {
+export default async function PatientsPage() {
   const session = await auth.api.getSession({ headers: await headers() });
 
   if (!session) {
