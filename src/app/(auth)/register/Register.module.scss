@@ -1,0 +1,262 @@
+// რეგისტრაციის ფორმა — იგივე სტილი, რაც შესვლის გვერდს აქვს
+@use "../../../styles/colors" as *;
+@use "../../../styles/shared" as common;
+
+.page {
+  min-height: calc(100vh - 68px);
+  padding: 40px 16px 64px;
+  background:
+    radial-gradient(circle at 15% 10%, rgba($color-accent-light, 0.35), transparent 35%),
+    radial-gradient(circle at 90% 90%, rgba($color-primary, 0.06), transparent 40%),
+    $color-background;
+}
+
+.form-wrapper {
+  @include common.card;
+  @include common.fadeUp;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 40px 36px 32px;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-lg;
+  text-align: center;
+
+  h2 {
+    margin: 20px 0 6px;
+    font-size: 23px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    text-align: left;
+  }
+
+  .input-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    label {
+      color: $color-heading;
+      font-size: 13.5px;
+      font-weight: 600;
+    }
+
+    input,
+    select {
+      @include common.input;
+      min-height: 46px;
+    }
+
+    select {
+      cursor: pointer;
+    }
+
+    .error-text {
+      font-size: 13px;
+      font-weight: 500;
+      color: $color-danger;
+    }
+  }
+
+  // ფორმის ბოლოს შეცდომის შეტყობინება
+  > form > .error-text {
+    padding: 10px 14px;
+    border-radius: $radius-sm;
+    background: $color-danger-soft;
+    color: $color-danger;
+    font-size: 14px;
+  }
+
+  button[type="submit"] {
+    @include common.primaryButton;
+    width: 100%;
+    min-height: 48px;
+    margin-top: 6px;
+  }
+}
+
+.logo {
+  display: inline-grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 14px;
+  background: $color-primary;
+  color: $color-white;
+  box-shadow: 0 8px 18px rgba($color-primary, 0.3);
+}
+
+.subtitle {
+  margin-bottom: 24px;
+  color: $color-text-muted;
+  font-size: 14.5px;
+}
+
+// ===== ანგარიშის ტიპის არჩევა =====
+.typePicker {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.typeOption {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 8px;
+  border: 1.5px solid $color-border;
+  border-radius: $radius-md;
+  background: $color-white;
+  color: $color-text-muted;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color $transition, background-color $transition, color $transition,
+    transform 120ms ease;
+
+  // რადიო ღილაკი დამალულია, მაგრამ კლავიატურით მაინც მუშაობს
+  input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &:hover {
+    border-color: rgba($color-primary, 0.4);
+    color: $color-heading;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &:focus-within {
+    box-shadow: 0 0 0 4px rgba($color-primary, 0.12);
+  }
+}
+
+.typeSelected {
+  border-color: $color-primary;
+  background: $color-background-active;
+  color: $color-primary-dark;
+
+  &:hover {
+    border-color: $color-primary;
+    color: $color-primary-dark;
+  }
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+// ===== კლინიკისა და ექიმის დამატებითი ველები =====
+.clinicSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 4px;
+  padding-top: 22px;
+  border-top: 1px solid $color-border;
+
+  > p {
+    padding: 12px 14px;
+    border-radius: $radius-sm;
+    background: $color-background-active;
+    color: $color-primary-dark;
+    font-size: 13.5px;
+  }
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.doctorList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.doctorCard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  margin: 0;
+  padding: 18px;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  background: $color-background;
+}
+
+.doctorLegend {
+  padding: 0 8px;
+  color: $color-primary-dark;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.doctorRemoveButton {
+  @include common.dangerButton;
+  width: 100%;
+  font-size: 14px;
+}
+
+.addDoctorButton {
+  @include common.buttonBase;
+  width: 100%;
+  border: 1.5px dashed rgba($color-primary, 0.5);
+  background: $color-white;
+  color: $color-primary;
+  font-size: 14px;
+
+  &:hover {
+    border-style: solid;
+    background: $color-background-active;
+  }
+}
+
+.switch {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid $color-border;
+  color: $color-text-muted;
+  font-size: 14px;
+
+  a {
+    color: $color-primary;
+    font-weight: 600;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+@media (max-width: 520px) {
+  .form-wrapper {
+    padding: 32px 20px 26px;
+  }
+
+  .doctorCard {
+    padding: 14px;
+  }
+}

@@ -1,0 +1,123 @@
+@use '../../../styles/colors' as *;
+@use '../../../styles/shared' as common;
+
+// სტატისტიკის ბარათები
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+
+  div {
+    @include common.card;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 4px;
+    padding: 18px 20px;
+  }
+
+  span {
+    color: $color-text-muted;
+    font-size: 13px;
+  }
+
+  strong {
+    color: $color-heading;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  // ფერადი ზოლი სტატუსის მიხედვით
+  div:nth-child(2) {
+    border-top: 3px solid $color-primary;
+  }
+
+  div:nth-child(3) {
+    border-top: 3px solid $color-success;
+  }
+
+  div:nth-child(4) {
+    border-top: 3px solid $color-danger;
+  }
+}
+
+.reportHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.download {
+  @include common.secondaryButton;
+  min-height: 38px;
+  padding: 8px 14px;
+  font-size: 14px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14.5px;
+
+  th,
+  td {
+    padding: 12px 10px;
+    border-bottom: 1px solid $color-border;
+    text-align: left;
+  }
+
+  th {
+    color: $color-text-muted;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  td {
+    font-variant-numeric: tabular-nums;
+  }
+
+  tbody tr {
+    transition: background-color $transition;
+
+    &:hover {
+      background: $color-background;
+    }
+
+    &:last-child td {
+      border-bottom: 0;
+    }
+  }
+}
+
+.doctorRow {
+  padding: 16px 0;
+  border-bottom: 1px solid $color-border;
+
+  &:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  h3 {
+    margin: 0 0 12px !important;
+    color: $color-heading !important;
+    font-size: 15px !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+  }
+}
+
+.warning {
+  margin: 10px 0 !important;
+  padding: 12px 14px;
+  border-radius: $radius-sm;
+  background: $color-warning-soft;
+  color: $color-warning !important;
+  font-size: 14px;
+}

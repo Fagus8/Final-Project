@@ -1,0 +1,66 @@
+@use '../../styles/shared' as common;
+@use '../../styles/colors' as *;
+
+.page {
+  @include common.pageShell;
+}
+
+.main {
+  @include common.pageContent;
+
+  > h2 {
+    margin: 8px 0 14px;
+    font-size: 17px;
+    font-weight: 650;
+  }
+}
+
+.title {
+  @include common.pageTitle;
+}
+
+.card {
+  @include common.card;
+  margin: 0 0 20px;
+  padding: 22px 24px;
+  line-height: 1.6;
+
+  h2 {
+    margin: 0 0 4px;
+    font-size: 18px;
+    font-weight: 650;
+  }
+
+  h3 {
+    margin: 18px 0 10px;
+    color: $color-text-muted;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  p {
+    margin: 0;
+    color: $color-text;
+  }
+}
+
+.schedule {
+  display: grid;
+  grid-template-columns: 380px minmax(0, 1fr);
+  align-items: start;
+  gap: 24px;
+}
+
+.dayList h2 {
+  margin: 0 0 14px;
+  font-size: 17px;
+  font-weight: 650;
+}
+
+@media (max-width: 1000px) {
+  .schedule {
+    grid-template-columns: 1fr;
+  }
+}

@@ -2,7 +2,7 @@
 
 import { FieldArray, getIn, type FormikProps } from "formik";
 import type { RegistrationValues } from "./registration-schema";
-import styles from "../register.module.scss";
+import styles from "../Register.module.scss";
 
 type ClinicFieldsProps = {
   formik: FormikProps<RegistrationValues>;

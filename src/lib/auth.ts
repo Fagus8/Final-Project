@@ -22,7 +22,7 @@ export const auth = betterAuth({
   user: {
     additionalFields: {
       accountType: {
-        type: ['PATIENT', 'CLINIC'],
+        type: ['PATIENT', 'CLINIC', 'DOCTOR'],
         required: true,
         input: true,
       },

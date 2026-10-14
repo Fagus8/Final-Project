@@ -6,12 +6,16 @@ export const registerSchema = z
     email: z.string().email("არავალიდური ელ.ფოსტის ფორმატი"),
     password: z.string().min(6, "პაროლი უნდა იყოს მინიმუმ 6 სიმბოლო"),
     phone: z.string(),
-    accountType: z.enum(["PATIENT", "CLINIC"]),
+    accountType: z.enum(["PATIENT", "CLINIC", "DOCTOR"]),
     clinicName: z.string(),
     city: z.string(),
     address: z.string(),
     specialty: z.string(),
     imageUrl: z.string(),
+    // მხოლოდ ექიმის რეგისტრაციისთვის
+    doctorSpecialty: z.string(),
+    doctorExperience: z.number().int().min(0, "გამოცდილების წელი უნდა იყოს 0 ან მეტი"),
+    doctorClinicId: z.string(),
     doctors: z.array(
       z.object({
         name: z.string(),
@@ -34,9 +38,17 @@ export const registerSchema = z
       }
     };
 
-    if (values.accountType === "PATIENT") {
+    if (values.accountType === "PATIENT" || values.accountType === "DOCTOR") {
       requireText(values.fullName, ["fullName"], "სახელი და გვარი სავალდებულოა");
       requireText(values.phone, ["phone"], "ტელეფონის ნომერი სავალდებულოა");
+    }
+
+    if (values.accountType === "DOCTOR") {
+      requireText(values.doctorSpecialty, ["doctorSpecialty"], "სპეციალობა სავალდებულოა");
+      requireText(values.doctorClinicId, ["doctorClinicId"], "აირჩიე კლინიკა");
+    }
+
+    if (values.accountType !== "CLINIC") {
       return;
     }
 

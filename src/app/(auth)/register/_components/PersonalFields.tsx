@@ -2,13 +2,13 @@
 
 import type { FormikProps } from "formik";
 import type { RegistrationValues } from "./registration-schema";
-import styles from "../register.module.scss";
+import styles from "../Register.module.scss";
 
-type PatientFieldsProps = {
+type PersonalFieldsProps = {
   formik: FormikProps<RegistrationValues>;
 };
 
-export default function PatientFields({ formik }: PatientFieldsProps) {
+export default function PersonalFields({ formik }: PersonalFieldsProps) {
   return (
     <>
       <div className={styles["input-field"]}>
