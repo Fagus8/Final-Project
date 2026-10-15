@@ -7,6 +7,8 @@ import { prisma } from "@/lib/prisma";
 import BookingSection from "./_components/BookingSection";
 import styles from "../Patient.module.scss";
 
+// ფილტრები URL-იდან მოდის, მაგ: /booking?specialty=კარდიოლოგი&q=ნინო.
+// ასე ძიების შედეგი ბმულით გაზიარებაც შეიძლება
 type BookingPageProps = {
   searchParams: Promise<{
     q?: string;
@@ -17,6 +19,8 @@ type BookingPageProps = {
   }>;
 };
 
+// ვიზიტის დაჯავშნის გვერდი: ფილტრები, ექიმების სია და ჯავშნის ფორმა.
+// მონაცემებს სერვერზე ვკრებთ, არჩევა და ჯავშანი კი BookingSection-შია
 export default async function BookingPage({ searchParams }: BookingPageProps) {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -33,7 +37,7 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
 
   const { q = "", specialty = "", clinicId = "", doctorId, language = "" } = await searchParams;
 
-  // ფილტრების სიებისთვის
+  // ფილტრების სიებისთვის: არსებული სპეციალობები და ენები, გამეორების გარეშე (Set)
   const allDoctors = await prisma.doctor.findMany({
     where: { isApproved: true, clinic: { isApproved: true } },
     select: { specialty: true, languages: true },
@@ -47,7 +51,9 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
     orderBy: { name: "asc" },
   });
 
-  // ექიმების ძებნა სახელის, სპეციალობისა და კლინიკის მიხედვით
+  // ექიმების ძებნა სახელის, სპეციალობისა და კლინიკის მიხედვით.
+  // ცარიელი ფილტრი პირობას არ ამატებს; clinicId-ს მხოლოდ მაშინ ვიყენებთ,
+  // თუ ასეთი დამტკიცებული კლინიკა არსებობს. mode: "insensitive" — დიდ/პატარა ასოს არ არჩევს
   const doctors = await prisma.doctor.findMany({
     where: {
       isApproved: true,
@@ -75,6 +81,7 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
       <main className={styles.main}>
         <h1 className={styles.title}>ვიზიტის დაჯავშნა</h1>
 
+        {/* ჩვეულებრივი GET ფორმა: გაგზავნისას ფილტრები URL-ში ჩაიწერება */}
         <form className={styles.filters} action="/booking">
           <input type="search" name="q" defaultValue={q} placeholder="ექიმის ან კლინიკის სახელი" />
 
@@ -117,6 +124,7 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
             consultationFee: doctor.consultationFee,
             languages: doctor.languages,
           }))}
+          // ?doctorId=... (ექიმის პროფილიდან მოსვლისას) ექიმს წინასწარ ირჩევს
           initialDoctorId={doctors.some((doctor) => doctor.id === doctorId) ? doctorId : undefined}
         />
       </main>

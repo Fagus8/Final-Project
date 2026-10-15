@@ -19,6 +19,7 @@ export async function GET(
     return Response.json({ message: "თარიღი არასწორია" }, { status: 400 });
   }
 
+  // დაუდასტურებელ ექიმთან ჩაწერა არ შეიძლება, ამიტომ მის დროებსაც არ ვაჩვენებთ
   const doctor = await prisma.doctor.findFirst({
     where: { id: doctorId, isApproved: true },
     select: { id: true, workStart: true, workEnd: true },
@@ -28,6 +29,7 @@ export async function GET(
     return Response.json({ message: "ექიმი ვერ მოიძებნა" }, { status: 404 });
   }
 
+  // დაკავებული, გასული და კვირის დროები უკვე გაფილტრულია
   const times = await getAvailableTimes(doctor, date);
 
   return Response.json({ times });

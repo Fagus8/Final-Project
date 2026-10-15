@@ -4,6 +4,8 @@ type ClinicImageProps = {
   className?: string;
 };
 
+// კლინიკის სურათი. ჩვეულებრივი <img>, რადგან ბმული ნებისმიერი საიტიდან
+// შეიძლება იყოს და next/image-ს წინასწარ ცნობილი დომენები სჭირდება
 export default function ClinicImage({ src, alt, className }: ClinicImageProps) {
   return (
     // eslint-disable-next-line @next/next/no-img-element

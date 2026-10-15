@@ -6,12 +6,15 @@ import { prisma } from '@/lib/prisma';
 import styles from './Header.module.scss';
 import LogoutButton from "./LogoutButton";
 
+// ანგარიშის ტიპი ქართულად (სახელის ქვეშ ჩანს)
 const accountTypeLabels: Record<string, string> = {
   PATIENT: "პაციენტი",
   DOCTOR: "ექიმი",
   CLINIC: "კლინიკა",
 };
 
+// ზედა ზოლი ყველა გვერდზე: ლოგო, ძიება, შეტყობინებები და ანგარიში.
+// სტუმარს „შესვლა“ და „რეგისტრაცია“ უჩანს
 export default async function Header() {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -24,6 +27,7 @@ export default async function Header() {
       })
     : 0;
 
+  // ჯავშანი სტუმარს და პაციენტს შეუძლია
   const canBook = !session || session.user.accountType === "PATIENT";
 
   return (
@@ -65,6 +69,7 @@ export default async function Header() {
               title="შეტყობინებები"
             >
               <Icon name="bell" />
+              {/* წითელი ნიშანი; 9-ზე მეტს „9+“-ად ვაჩვენებთ */}
               {unreadCount > 0 && <span className={styles.badge}>{unreadCount > 9 ? "9+" : unreadCount}</span>}
             </Link>
 

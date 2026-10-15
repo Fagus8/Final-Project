@@ -6,12 +6,16 @@ import styles from "./AppointmentList.module.scss";
 
 type AppointmentActionsProps = {
   appointmentId: string;
+  // ღილაკები ჩანს მხოლოდ მაშინ, როცა მშობელი გვერდი ამის უფლებას იძლევა.
+  // საბოლოო შემოწმებას მაინც სერვერი აკეთებს
   canCancel?: boolean;
   canComplete?: boolean;
   diagnosis?: string | null;
   prescription?: string | null;
 };
 
+// ვიზიტის ღილაკები: გაუქმება (პაციენტი, ექიმი, კლინიკა) და
+// დიაგნოზის ჩაწერა/შეცვლა (ექიმი). გამოიყენება რამდენიმე გვერდზე
 export default function AppointmentActions({
   appointmentId,
   canCancel = false,
@@ -23,6 +27,7 @@ export default function AppointmentActions({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
+  // ფორმა არსებული დიაგნოზით ივსება, რომ ექიმმა შეცვლა შეძლოს
   const [diagnosisText, setDiagnosisText] = useState(diagnosis ?? "");
   const [prescriptionText, setPrescriptionText] = useState(prescription ?? "");
 
@@ -44,6 +49,7 @@ export default function AppointmentActions({
         return;
       }
 
+      // წარმატებისას ფორმას ვხურავთ და გვერდს ვაახლებთ (ახალი სტატუსი გამოჩნდება)
       setShowForm(false);
       router.refresh();
     } catch {
@@ -61,6 +67,7 @@ export default function AppointmentActions({
           className={styles.cancelButton}
           disabled={isSaving}
           onClick={() => {
+            // შემთხვევითი დაჭერისგან დაცვა
             if (confirm("ნამდვილად გსურს ვიზიტის გაუქმება?")) {
               sendAction({ action: "cancel" });
             }
@@ -76,6 +83,7 @@ export default function AppointmentActions({
         </button>
       )}
 
+      {/* დიაგნოზის ფორმა: შენახვისას ვიზიტი „დასრულებული“ ხდება */}
       {canComplete && showForm && (
         <form
           className={styles.diagnosisForm}

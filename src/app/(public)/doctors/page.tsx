@@ -6,6 +6,7 @@ import Card from '@/components/ui/Card';
 import Sidebar from '@/components/layout/Sidebar';
 import styles from './Doctors.module.scss';
 
+// ექიმების სია, ყველასთვის ღია
 export default async function DoctorsPage() {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -13,11 +14,12 @@ export default async function DoctorsPage() {
   // „დაჯავშნა“ ღილაკი ჩანს სტუმრისთვის და პაციენტისთვის, კლინიკისა და ექიმისთვის — არა
   const canBook = !session || session.user.accountType === 'PATIENT';
 
+  // ჩანს მხოლოდ დადასტურებული ექიმი დამტკიცებული კლინიკიდან
   const doctors = await prisma.doctor.findMany({
     where: {
-  isApproved: true,
-  clinic: { isApproved: true },
-   },
+      isApproved: true,
+      clinic: { isApproved: true },
+    },
     include: { clinic: true },
     orderBy: { name: 'asc' },
   });
@@ -30,6 +32,7 @@ export default async function DoctorsPage() {
         <div className={styles.doctorCards}>
           {doctors.map((doctor) => (
             <Card key={doctor.id} className={styles.doctorCard}>
+              {/* ფოტო, ან თუ ფოტო არ აქვს, სახელის პირველი ასო */}
               {doctor.avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img className={styles.avatar} src={doctor.avatarUrl} alt={doctor.name} />
@@ -51,6 +54,7 @@ export default async function DoctorsPage() {
                 <p className={styles.fee}>კონსულტაცია: {doctor.consultationFee} ₾</p>
               )}
               {canBook && (
+                // ჯავშნის გვერდი ამ ექიმით უკვე არჩეული იხსნება
                 <Link className={styles.bookLink} href={`/booking?doctorId=${doctor.id}`}>
                   დაჯავშნა
                 </Link>

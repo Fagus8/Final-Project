@@ -1,3 +1,5 @@
+// slots.ts-ის ტესტები: დროის სლოტები, თბილისის დრო და ვალიდაცია.
+// გაშვება: npm test
 import { describe, expect, it } from "vitest";
 import {
   formatDateTime,

@@ -5,7 +5,9 @@ import { prisma } from "@/lib/prisma";
 import ClinicImage from "./_components/ClinicImage";
 import styles from "./Clinics.module.scss";
 
+// კლინიკების სია, ყველასთვის ღია. ბარათზე დაჭერით კლინიკის გვერდი იხსნება
 export default async function ClinicsPage() {
+  // მხოლოდ ადმინის მიერ დამტკიცებული კლინიკები
   const clinics = await prisma.clinic.findMany({
     where: { isApproved: true },
     orderBy: { name: "asc" },

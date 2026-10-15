@@ -1,3 +1,6 @@
+// ჯავშნის გვერდის კომპონენტების საერთო ტიპები
+
+// ექიმი, როგორც ჯავშნის სიაში ჩანს
 export type DoctorOption = {
   id: string;
   name: string;
@@ -18,8 +21,10 @@ export type DoctorCardProps = {
 
 export type BookingFormProps = {
   doctor: DoctorOption;
+  // "2026-10-15" ფორმატით
   selectedDate: string;
   availableTimes: readonly string[];
+  // "10:30" ან null, თუ დრო ჯერ არ აურჩევია
   selectedTime: string | null;
   isLoadingTimes: boolean;
   isSubmitting: boolean;

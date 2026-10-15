@@ -17,6 +17,7 @@ export default function JoinClinicForm({ clinics }: JoinClinicFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
 
+  // მოთხოვნა იქმნება როგორც დაუდასტურებელი ექიმი; კლინიკა მას „ახალი ექიმების“ სიაში ნახავს
   async function send(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSaving(true);
@@ -31,6 +32,7 @@ export default function JoinClinicForm({ clinics }: JoinClinicFormProps) {
       const result = await response.json();
 
       setMessage(result.message);
+      // გვერდი თავიდან იტვირთება და „მოთხოვნა გაგზავნილია“ გამოჩნდება
       if (response.ok) {
         router.refresh();
       }

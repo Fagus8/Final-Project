@@ -8,6 +8,9 @@ type ClinicFieldsProps = {
   formik: FormikProps<RegistrationValues>;
 };
 
+// რეგისტრაციის ფორმის ნაწილი კლინიკისთვის: კლინიკის მონაცემები,
+// ანგარიში (ელფოსტა, პაროლი) და ექიმების სია.
+// ველები და შეცდომები საერთო formik-იდან მოდის (register/page.tsx)
 export default function ClinicFields({ formik }: ClinicFieldsProps) {
   return (
     <section className={styles.clinicSection}>
@@ -78,6 +81,7 @@ export default function ClinicFields({ formik }: ClinicFieldsProps) {
 
       <h3 className={styles.sectionTitle}>კლინიკის ექიმები</h3>
 
+      {/* ექიმების დინამიკური სია: push ამატებს, remove შლის */}
       <FieldArray name="doctors">
         {({ push, remove }) => (
           <div className={styles.doctorList}>
@@ -92,6 +96,7 @@ export default function ClinicFields({ formik }: ClinicFieldsProps) {
                     type="text"
                     {...formik.getFieldProps(`doctors.${index}.name`)}
                   />
+                  {/* getIn ჩადგმულ შეცდომას პოულობს, მაგ: doctors.0.name */}
                   {getIn(formik.errors, `doctors.${index}.name`) ? (
                     <div className={styles["error-text"]}>
                       {getIn(formik.errors, `doctors.${index}.name`)}
@@ -133,6 +138,7 @@ export default function ClinicFields({ formik }: ClinicFieldsProps) {
                   ) : null}
                 </div>
 
+                {/* მინიმუმ ერთი ექიმი უნდა დარჩეს */}
                 {formik.values.doctors.length > 1 && (
                   <button
                     type="button"

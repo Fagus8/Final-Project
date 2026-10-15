@@ -6,6 +6,8 @@ import Calendar from "@/components/ui/Calendar";
 import styles from "./BookingForm.module.scss";
 import type { BookingFormProps } from "./types";
 
+// ჯავშნის ფორმა: თარიღი კალენდრიდან, დრო თავისუფალი სლოტებიდან.
+// მონაცემებს და მოქმედებებს მშობელი კომპონენტი (BookingSection) აწვდის
 export default function BookingForm({
   doctor,
   selectedDate,
@@ -17,6 +19,7 @@ export default function BookingForm({
   onTimeSelect,
   onConfirm,
 }: BookingFormProps) {
+  // არჩეული თარიღი ქართულად, მაგ: „15 ოქტომბერი 2026“
   const parsedDate = dayjs(selectedDate);
   const formattedDate = parsedDate.isValid()
     ? parsedDate.locale("ka").format("D MMMM YYYY")
@@ -42,6 +45,7 @@ export default function BookingForm({
 
       <fieldset className={styles.times}>
         <legend className={styles.label}>თავისუფალი დრო (თბილისის დროით)</legend>
+        {/* სამი მდგომარეობა: იტვირთება / დროების ღილაკები / თავისუფალი დრო არ არის */}
         {isLoadingTimes ? (
           <p className={styles.emptyTimes}>იტვირთება...</p>
         ) : availableTimes.length > 0 ? (
@@ -67,6 +71,7 @@ export default function BookingForm({
         )}
       </fieldset>
 
+      {/* ღილაკი აქტიურდება მხოლოდ მაშინ, როცა თარიღიც და დროც არჩეულია */}
       <button
         className={styles.confirmButton}
         disabled={!selectedDate || !selectedTime || isSubmitting}

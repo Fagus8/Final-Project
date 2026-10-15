@@ -8,6 +8,7 @@ import ApproveClinicButton from "./_components/ApproveClinicButton";
 import EditClinicForm from "./_components/EditClinicForm";
 import styles from "./AdminClinics.module.scss";
 
+// ადმინის გვერდი: ყველა კლინიკა, მათი დამტკიცება, რედაქტირება და წაშლა
 export default async function AdminClinicsPage() {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -17,10 +18,12 @@ export default async function AdminClinicsPage() {
     redirect("/login");
   }
 
+  // გვერდი მხოლოდ ადმინისთვისაა
   if (session.user.role !== "admin") {
     redirect("/");
   }
 
+  // ყველა კლინიკა (დაუმტკიცებელიც) თავისი ექიმებით
   const clinics = await prisma.clinic.findMany({
     include: { doctors: true },
     orderBy: { name: "asc" },
@@ -60,6 +63,7 @@ export default async function AdminClinicsPage() {
                   )}
                 </div>
 
+                {/* მოქმედებები: დამტკიცება (თუ ჯერ არ არის), რედაქტირება, წაშლა */}
                 <div className={styles.actions}>
                   {!clinic.isApproved && <ApproveClinicButton clinicId={clinic.id} />}
                   <EditClinicForm

@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import styles from "./Patients.module.scss";
 
+// ადმინის გვერდი: რეგისტრირებული პაციენტების სია
 export default async function PatientsPage() {
   const session = await auth.api.getSession({ headers: await headers() });
 
@@ -12,6 +13,7 @@ export default async function PatientsPage() {
     redirect("/login");
   }
 
+  // სხვა როლის მომხმარებელი სიას ვერ ხედავს
   if (session.user.role !== "admin") {
     return (
       <div className={styles.page}>
@@ -26,15 +28,16 @@ export default async function PatientsPage() {
     );
   }
 
+  // მხოლოდ საჭირო ველები — პაროლის ჰეში და სხვა მონაცემები გვერდზე არ მოდის
   const patients = await prisma.user.findMany({
-  where: { accountType: "PATIENT" },
-  select: {
-    id: true,
-    name: true,
-    email: true,
-  },
-  orderBy: { name: "asc" },
-});
+    where: { accountType: "PATIENT" },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
+    orderBy: { name: "asc" },
+  });
 
   return (
     <div className={styles.page}>
@@ -47,15 +50,15 @@ export default async function PatientsPage() {
           ) : (
             patients.map((patient) => (
               <dl key={patient.id} className={styles.details}>
-            <div>
-              <dt>სახელი</dt>
-                <dd>{patient.name}</dd>
-               </div>
-              <div>
+                <div>
+                  <dt>სახელი</dt>
+                  <dd>{patient.name}</dd>
+                </div>
+                <div>
                   <dt>ელფოსტა</dt>
-               <          dd>{patient.email}</dd>
-            </div>
-                </dl>
+                  <dd>{patient.email}</dd>
+                </div>
+              </dl>
             ))
           )}
         </section>

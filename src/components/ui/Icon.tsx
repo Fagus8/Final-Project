@@ -1,4 +1,7 @@
 // ხაზოვანი (outline) აიქონები — ერთი სტილით, 24x24 ბადეზე.
+// გამოყენება: <Icon name="clock" size={16} />
+
+// ყველა ხელმისაწვდომი იკონის სახელი (სხვა სახელს TypeScript არ მიიღებს)
 export type IconName =
   | 'dashboard'
   | 'patients'
@@ -31,6 +34,8 @@ type IconProps = {
 };
 
 export default function Icon({ name, size = 20 }: IconProps) {
+  // ყველა იკონის საერთო პარამეტრები. currentColor-ით იკონი ტექსტის ფერს იღებს,
+  // aria-hidden-ით ეკრანის წამკითხველი მას გამოტოვებს (დეკორაციაა)
   const sharedProps = {
     width: size,
     height: size,
@@ -43,6 +48,7 @@ export default function Icon({ name, size = 20 }: IconProps) {
     'aria-hidden': true as const,
   };
 
+  // თითოეული სახელისთვის თავისი SVG ნახატი
   switch (name) {
     case 'dashboard':
       return (

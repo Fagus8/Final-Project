@@ -6,6 +6,7 @@ import Icon from "@/components/ui/Icon";
 import { authClient } from "@/lib/auth-client";
 import styles from "./Header.module.scss";
 
+// Header-ის ღილაკი: ანგარიშიდან გასვლა
 export default function LogoutButton() {
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -15,6 +16,7 @@ export default function LogoutButton() {
     setIsLoggingOut(true);
     setErrorMessage("");
 
+    // better-auth სესიას შლის სერვერზეც და ბრაუზერის cookie-შიც
     const { error } = await authClient.signOut();
 
     if (error) {
@@ -23,6 +25,7 @@ export default function LogoutButton() {
       return;
     }
 
+    // replace: „უკან“ ღილაკით დახურულ გვერდზე აღარ დაბრუნდება
     router.replace("/login");
     router.refresh();
   }

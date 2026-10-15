@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 
-// დამტკიცებული კლინიკების სია (ექიმის რეგისტრაციისთვის)
+// GET /api/clinics — დამტკიცებული კლინიკების სია (ექიმის რეგისტრაციისთვის).
+// მხოლოდ id, სახელი და ქალაქი, სხვა მონაცემი ფორმას არ სჭირდება
 export async function GET() {
   const clinics = await prisma.clinic.findMany({
     where: { isApproved: true },

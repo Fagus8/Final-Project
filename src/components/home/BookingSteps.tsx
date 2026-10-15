@@ -1,6 +1,7 @@
 import Icon, { type IconName } from "@/components/ui/Icon";
 import styles from "./Home.module.scss";
 
+// სამი ნაბიჯის ტექსტები; ბარათები ამ სიიდან იხატება
 const steps: { icon: IconName; title: string; text: string }[] = [
   { icon: "search", title: "იპოვე ექიმი", text: "მოძებნე სპეციალობით, სახელით ან კლინიკით." },
   { icon: "appointments", title: "აირჩიე დრო", text: "კალენდარში მხოლოდ თავისუფალი საათები ჩანს." },

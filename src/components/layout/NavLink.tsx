@@ -14,6 +14,7 @@ type NavLinkProps = {
 // Sidebar-ის ბმული, რომელიც მიმდინარე გვერდზე გამოკვეთილია
 export default function NavLink({ href, label, icon }: NavLinkProps) {
   const pathname = usePathname();
+  // აქტიურია ზუსტად ამ გვერდზეც და მის ქვეგვერდებზეც (მაგ: /doctors/123)
   const isActive = pathname === href || pathname.startsWith(`${href}/`);
 
   return (

@@ -11,6 +11,10 @@ import JoinClinicForm from "./_components/JoinClinicForm";
 import DoctorSchedule from "./_components/DoctorSchedule";
 import styles from "../Staff.module.scss";
 
+// ექიმის გვერდი „ჩემი განრიგი“. სამი მდგომარეობა აქვს:
+// 1) ექიმი ჯერ არცერთ კლინიკას არ უკავშირდება — კლინიკის არჩევის ფორმა
+// 2) მოთხოვნა გაგზავნილია, კლინიკას ჯერ არ დაუდასტურებია — ლოდინის შეტყობინება
+// 3) დადასტურებულია — სამუშაო საათები, პროფილი და ვიზიტების კალენდარი
 export default async function MySchedulePage() {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -24,6 +28,7 @@ export default async function MySchedulePage() {
     redirect("/dashboard");
   }
 
+  // ექიმის ჩანაწერი ანგარიშს userId-ით უკავშირდება, ვიზიტებთან და პაციენტებთან ერთად
   const doctor = await prisma.doctor.findUnique({
     where: { userId: session.user.id },
     include: {
@@ -35,6 +40,7 @@ export default async function MySchedulePage() {
     },
   });
 
+  // 1) კლინიკა ჯერ არ აურჩევია: ვაჩვენებთ დამტკიცებულ კლინიკებს
   if (!doctor) {
     const clinics = await prisma.clinic.findMany({
       where: { isApproved: true },
@@ -61,6 +67,7 @@ export default async function MySchedulePage() {
     );
   }
 
+  // 2) კლინიკის დადასტურებას ელოდება
   if (!doctor.isApproved) {
     return (
       <div className={styles.page}>
@@ -76,6 +83,8 @@ export default async function MySchedulePage() {
     );
   }
 
+  // 3) კალენდრისთვის ვიზიტებს მარტივ ობიექტებად ვამზადებთ (კლიენტის
+  // კომპონენტს Date ობიექტი კი არა, მზა ტექსტი გადაეცემა)
   const now = new Date();
   const items = doctor.appointments.map((appointment) => ({
     id: appointment.id,
@@ -87,6 +96,7 @@ export default async function MySchedulePage() {
     diagnosis: appointment.diagnosis,
     prescription: appointment.prescription,
     hasStarted: appointment.startsAt <= now,
+    // რამდენჯერ ყოფილა ეს პაციენტი ამ ექიმთან ამ ვიზიტამდე
     previousVisits: doctor.appointments.filter(
       (other) =>
         other.patientId === appointment.patientId &&

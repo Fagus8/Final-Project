@@ -13,6 +13,9 @@ import styles from "../Staff.module.scss";
 import ApproveDoctorButtons from "./_components/ApproveDoctorButtons";
 import clinicStyles from "./MyClinic.module.scss";
 
+// კლინიკის გვერდი „კლინიკის მართვა“: ახალი ექიმების მოთხოვნები, სტატისტიკა,
+// ანგარიში ექიმების მიხედვით (CSV), ექიმების საათები და კაბინეტები,
+// მომავალი და გაუქმებული ვიზიტები, კლინიკის წაშლა
 export default async function MyClinicPage() {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -26,6 +29,7 @@ export default async function MyClinicPage() {
     redirect("/dashboard");
   }
 
+  // კლინიკის id = ანგარიშის id; ექიმებთან, მათ ვიზიტებთან და ანგარიშის ელფოსტასთან ერთად
   const clinic = await prisma.clinic.findUnique({
     where: { id: session.user.id },
     include: {
@@ -72,6 +76,7 @@ export default async function MyClinicPage() {
   const upcoming = appointments.filter((a) => a.status === "BOOKED" && a.startsAt >= now);
   const cancelled = appointments.filter((a) => a.status === "CANCELLED").reverse();
 
+  // რამდენი ვიზიტია მოცემული სტატუსით (სტატისტიკის ბარათებისთვის)
   const countByStatus = (status: string) => appointments.filter((a) => a.status === status).length;
 
   // კაბინეტის კონფლიქტი: ორ ექიმს ერთი კაბინეტი აქვს და საათები ემთხვევა

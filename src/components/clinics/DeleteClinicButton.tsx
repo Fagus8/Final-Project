@@ -23,6 +23,7 @@ export default function DeleteClinicButton({
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState("");
 
+  // „საბოლოოდ წაშლა“ მხოლოდ მაშინ აქტიურდება, როცა სახელი ზუსტად ემთხვევა
   const nameMatches = typedName.trim() === clinicName.trim();
 
   function cancel() {
@@ -46,6 +47,7 @@ export default function DeleteClinicButton({
         return;
       }
 
+      // საკუთარი კლინიკის წაშლისას ანგარიშიც იშლება, ამიტომ მთავარ გვერდზე გადავდივართ
       if (isOwnClinic) {
         router.replace("/");
       }
@@ -57,6 +59,7 @@ export default function DeleteClinicButton({
     }
   }
 
+  // პირველი ნაბიჯი: მხოლოდ ღილაკი. დაჭერის შემდეგ ჩნდება დადასტურების ფორმა
   if (!isConfirming) {
     return (
       <button type="button" className={styles.deleteButton} onClick={() => setIsConfirming(true)}>

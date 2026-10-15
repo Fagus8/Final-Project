@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { formatDateTime } from "@/lib/slots";
 import styles from "../Account.module.scss";
 
+// შეტყობინებების გვერდი: ბოლო 50 შეტყობინება, ახლები ზემოთ
 export default async function NotificationsPage() {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -22,7 +23,8 @@ export default async function NotificationsPage() {
     take: 50,
   });
 
-  // გვერდის გახსნისას ყველა შეტყობინება წაკითხულად ითვლება
+  // გვერდის გახსნისას ყველა შეტყობინება წაკითხულად ითვლება. სია ზემოთ უკვე
+  // წამოღებულია, ამიტომ ამ ერთხელ „ახალი“ ნიშანი მაინც გამოჩნდება
   await prisma.notification.updateMany({
     where: { userId: session.user.id, isRead: false },
     data: { isRead: true },

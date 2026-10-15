@@ -2,8 +2,11 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 
+// სესია ყოველ ჯერზე უნდა შემოწმდეს, ამიტომ გვერდი არ იქეშება
 export const dynamic = "force-dynamic";
 
+// რეგისტრაციის გვერდის ჩარჩო: უკვე შესულ მომხმარებელს
+// რეგისტრაციის ნაცვლად მის გვერდზე ვაბრუნებთ
 export default async function RegisterLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {

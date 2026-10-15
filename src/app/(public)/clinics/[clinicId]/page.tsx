@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import ClinicImage from "../_components/ClinicImage";
 import styles from "./ClinicDetails.module.scss";
 
+// კლინიკის საჯარო გვერდი: სურათი, კონტაქტები, მოკლე სტატისტიკა და ექიმები
 export default async function ClinicDetailsPage(props: PageProps<"/clinics/[clinicId]">) {
   const { clinicId } = await props.params;
 
@@ -17,6 +18,7 @@ export default async function ClinicDetailsPage(props: PageProps<"/clinics/[clin
     notFound();
   }
 
+  // დაუმტკიცებელი კლინიკა საჯაროდ არ ჩანს (404)
   const clinic = await prisma.clinic.findFirst({
     where: { id: clinicId, isApproved: true },
     include: {
@@ -37,6 +39,7 @@ export default async function ClinicDetailsPage(props: PageProps<"/clinics/[clin
   // „დაჯავშნა“ ღილაკი ჩანს სტუმრისთვის და პაციენტისთვის
   const canBook = !session || session.user.accountType === "PATIENT";
 
+  // სტატისტიკა: განსხვავებული სპეციალობები და ექიმების საშუალო გამოცდილება
   const specialties = [...new Set(clinic.doctors.map((doctor) => doctor.specialty))].sort();
   const totalExperience = clinic.doctors.reduce((sum, doctor) => sum + doctor.experienceYears, 0);
   const averageExperience = clinic.doctors.length
@@ -71,6 +74,7 @@ export default async function ClinicDetailsPage(props: PageProps<"/clinics/[clin
               </li>
               <li>
                 <Icon name="phone" size={18} />
+                {/* tel: ბმული ტელეფონზე დარეკვას იწყებს; ჰარებს ვაშორებთ */}
                 <a href={`tel:${clinic.phone.replace(/\s/g, "")}`}>{clinic.phone}</a>
               </li>
               <li>

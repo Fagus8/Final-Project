@@ -4,6 +4,7 @@ import Icon from "@/components/ui/Icon";
 import styles from "./DoctorCard.module.scss";
 import type { DoctorCardProps } from "./types";
 
+// ექიმის ბარათი ჯავშნის სიაში. „არჩევა“ ექიმს ირჩევს და ჯავშნის ფორმას ხსნის
 export default function DoctorCard({
   doctor,
   selected,
@@ -11,6 +12,7 @@ export default function DoctorCard({
 }: DoctorCardProps) {
   return (
     <article className={`${styles.card} ${selected ? styles.selected : ""}`}>
+      {/* ფოტო, ან თუ ფოტო არ აქვს — სახელის პირველი ასო */}
       {doctor.avatarUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img className={styles.avatar} src={doctor.avatarUrl} alt="" />
@@ -32,6 +34,7 @@ export default function DoctorCard({
             <Icon name="clock" size={16} />
             გამოცდილება: {doctor.experienceYears} წელი
           </li>
+          {/* ფასი და ენები მხოლოდ მაშინ ჩანს, თუ ექიმს შევსებული აქვს */}
           {doctor.consultationFee !== null && (
             <li>
               <Icon name="money" size={16} />

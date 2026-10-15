@@ -1,3 +1,5 @@
+// ჯავშნის API-ის (POST /api/appointments) ტესტები: წარმატებული ჯავშანი,
+// ორმაგი ჯავშანი, არასწორი დრო და უფლებები
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { toDate } from "@/lib/slots";
 import { POST } from "./route";

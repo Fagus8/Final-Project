@@ -8,6 +8,8 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import styles from "./DoctorProfile.module.scss";
 
+// ექიმის საჯარო პროფილი: ფოტო, სპეციალობა, ბიოგრაფია, განათლება, ენები,
+// სერვისები, ფასი, კლინიკა და იმავე კლინიკის სხვა ექიმები
 export default async function DoctorProfilePage(props: PageProps<"/doctors/[doctorId]">) {
   const { doctorId } = await props.params;
 
@@ -16,6 +18,7 @@ export default async function DoctorProfilePage(props: PageProps<"/doctors/[doct
     notFound();
   }
 
+  // დაუდასტურებელი ექიმის ან დაუმტკიცებელი კლინიკის პროფილი არ ჩანს (404)
   const doctor = await prisma.doctor.findFirst({
     where: { id: doctorId, isApproved: true, clinic: { isApproved: true } },
     include: {

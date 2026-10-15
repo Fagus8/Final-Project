@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import styles from "../AdminClinics.module.scss";
 
+// ადმინის ღილაკი: კლინიკის დამტკიცება. დამტკიცების შემდეგ კლინიკა
+// და მისი ექიმები საიტზე ჩნდება
 export default function ApproveClinicButton({ clinicId }: { clinicId: string }) {
   const router = useRouter();
   const [isApproving, setIsApproving] = useState(false);
@@ -25,6 +27,7 @@ export default function ApproveClinicButton({ clinicId }: { clinicId: string }) 
         return;
       }
 
+      // გვერდს თავიდან ვტვირთავთ, რომ სტატუსი „დამტკიცებულია“ გამოჩნდეს
       router.refresh();
     } catch {
       setError("სერვერთან დაკავშირება ვერ მოხერხდა");

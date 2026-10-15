@@ -2,7 +2,7 @@ import Link from "next/link";
 import Icon from "@/components/ui/Icon";
 import styles from "./Home.module.scss";
 
-// მოწვევა ექიმებისა და კლინიკებისთვის
+// მოწვევა ექიმებისა და კლინიკებისთვის (მთავარ გვერდზე მხოლოდ სტუმარს უჩანს)
 export default function JoinBanner() {
   return (
     <section className={styles.callToAction}>

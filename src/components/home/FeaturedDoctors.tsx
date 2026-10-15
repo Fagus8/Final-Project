@@ -14,7 +14,9 @@ type FeaturedDoctorsProps = {
 };
 
 // ყველაზე გამოცდილი ექიმები მთავარ გვერდზე
+// (ექიმებს HomePage არჩევს და აწვდის). ბარათზე დაჭერით ექიმის პროფილი იხსნება
 export default function FeaturedDoctors({ doctors }: FeaturedDoctorsProps) {
+  // ექიმები ჯერ არ არის — სექციას საერთოდ არ ვაჩვენებთ
   if (doctors.length === 0) {
     return null;
   }

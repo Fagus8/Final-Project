@@ -12,6 +12,8 @@ type BookingSectionProps = {
   initialDoctorId?: string;
 };
 
+// ჯავშნის გვერდის მთავარი ნაწილი: მარცხნივ ექიმების სია, მარჯვნივ ჯავშნის ფორმა.
+// აქ ინახება არჩეული ექიმი, თარიღი და დრო და აქედან იგზავნება ჯავშანი
 export default function BookingSection({ doctors, initialDoctorId }: BookingSectionProps) {
   const router = useRouter();
   const [doctorId, setDoctorId] = useState(initialDoctorId ?? "");
@@ -31,6 +33,7 @@ export default function BookingSection({ doctors, initialDoctorId }: BookingSect
       return;
     }
 
+    // თუ მომხმარებელმა პასუხის მოსვლამდე სხვა დღე აირჩია, ძველ პასუხს ვტოვებთ
     let ignore = false;
 
     fetch(`/api/doctors/${doctorId}/slots?date=${date}`)
@@ -56,6 +59,7 @@ export default function BookingSection({ doctors, initialDoctorId }: BookingSect
     };
   }, [doctorId, date]);
 
+  // ექიმის ან თარიღის შეცვლისას წინა არჩევანს და შეტყობინებებს ვასუფთავებთ
   function selectDoctor(id: string) {
     setDoctorId(id);
     setTime(null);
@@ -76,6 +80,7 @@ export default function BookingSection({ doctors, initialDoctorId }: BookingSect
     setIsLoadingTimes(true);
   }
 
+  // ჯავშნის გაგზავნა. სერვერი კიდევ ერთხელ ამოწმებს, თავისუფალია თუ არა დრო
   async function bookAppointment() {
     if (!time) {
       return;
@@ -100,6 +105,7 @@ export default function BookingSection({ doctors, initialDoctorId }: BookingSect
         return;
       }
 
+      // დაჯავშნილი დრო სიიდან ქრება, რომ ხელახლა ვერ აირჩიოს
       setMessage(`${result.message}! ნახე „ჩემი ვიზიტები“ გვერდზე.`);
       setTimes((current) => current.filter((item) => item !== time));
       setTime(null);

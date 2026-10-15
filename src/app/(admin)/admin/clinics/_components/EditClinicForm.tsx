@@ -4,6 +4,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import styles from "../AdminClinics.module.scss";
 
+// ადმინის ფორმა: კლინიკის მონაცემების და მისი ექიმების რედაქტირება
+
+// ფორმის მონაცემები. localKey სიაში ექიმის გასარჩევადაა
+// (ახლად დამატებულ ექიმს id ჯერ არ აქვს)
 type ClinicDraft = {
   id: string;
   name: string;
@@ -21,6 +25,7 @@ type ClinicDraft = {
   }[];
 };
 
+// კლინიკის ველები ფორმაში ერთნაირად იხატება, ამიტომ სიიდან ვაგენერირებთ
 const clinicFields: { name: keyof Omit<ClinicDraft, "id" | "doctors">; label: string }[] = [
   { name: "name", label: "კლინიკის სახელი" },
   { name: "city", label: "ქალაქი" },
@@ -35,6 +40,7 @@ export default function EditClinicForm({ clinic }: { clinic: ClinicDraft }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
+  // რედაქტირებადი ასლი; შენახვამდე ბაზაში არაფერი იცვლება
   const [draft, setDraft] = useState(() => ({
     ...clinic,
     doctors: clinic.doctors.map((doctor) => ({
@@ -43,6 +49,7 @@ export default function EditClinicForm({ clinic }: { clinic: ClinicDraft }) {
     })),
   }));
 
+  // გაუქმება: ცვლილებებს ვყრით და საწყის მონაცემებს ვაბრუნებთ
   function cancelEditing() {
     setDraft({
       ...clinic,
@@ -55,6 +62,8 @@ export default function EditClinicForm({ clinic }: { clinic: ClinicDraft }) {
     setIsEditing(false);
   }
 
+  // შენახვა: მთელ კლინიკას ექიმებიანად ვაგზავნით. ექიმი id-ით განახლდება,
+  // id-ის გარეშე შეიქმნება, სიიდან ამოღებული კი წაიშლება
   async function saveClinic(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSaving(true);
@@ -98,6 +107,7 @@ export default function EditClinicForm({ clinic }: { clinic: ClinicDraft }) {
     }
   }
 
+  // სანამ რედაქტირება არ დაიწყება, მხოლოდ ღილაკი ჩანს
   if (!isEditing) {
     return (
       <button
@@ -129,6 +139,7 @@ export default function EditClinicForm({ clinic }: { clinic: ClinicDraft }) {
       ))}
 
       <h3>ექიმების რედაქტირება</h3>
+      {/* თითოეული ველის ცვლილება მხოლოდ შესაბამის ექიმს ცვლის (index-ით) */}
       {draft.doctors.map((doctor, index) => (
         <fieldset className={styles.doctorEditor} key={doctor.localKey}>
           <legend>{doctor.name || `ექიმი ${index + 1}`}</legend>
@@ -200,6 +211,7 @@ export default function EditClinicForm({ clinic }: { clinic: ClinicDraft }) {
           </label>
         </fieldset>
       ))}
+      {/* ახალ ექიმს დროებითი localKey ეძლევა, id-ს ბაზა შენახვისას მიანიჭებს */}
       <button
         className={styles.addDoctorButton}
         type="button"

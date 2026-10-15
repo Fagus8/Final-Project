@@ -3,8 +3,12 @@
 import dynamic from 'next/dynamic';
 import { useEffect, useRef } from 'react';
 
+// API დოკუმენტაციის გვერდი (Swagger UI), ინტერფეისის ტექსტები ქართულად
+
+// Swagger UI მხოლოდ ბრაუზერში მუშაობს, ამიტომ სერვერზე არ იხატება
 const SwaggerUI = dynamic(() => import('swagger-ui-react'), { ssr: false });
 
+// Swagger-ს ქართული ენა არ აქვს. ინგლისური ტექსტი → ქართული თარგმანი
 const translations: Record<string, string> = {
   'Servers': 'სერვერები',
   'Authorize': 'ავტორიზაცია',
@@ -86,6 +90,7 @@ const translations: Record<string, string> = {
   'object': 'ობიექტი',
 };
 
+// ატრიბუტები, რომლებშიც ტექსტი მომხმარებელს უჩანს (მინიშნებები, placeholder)
 const translatableAttributes = ['aria-label', 'title', 'placeholder'];
 
 export default function SwaggerDocs() {
@@ -95,6 +100,8 @@ export default function SwaggerDocs() {
     const docs = docsRef.current;
     if (!docs) return;
 
+    // ერთი ტექსტური კვანძის თარგმნა. კოდის ბლოკებს და ველებს არ ვეხებით,
+    // თორემ API-ს მაგალითებიც ითარგმნებოდა
     const translateText = (node: Node) => {
       if (node.nodeType !== Node.TEXT_NODE || !node.textContent) return;
       if (node.parentElement?.closest('code, pre, textarea')) return;
@@ -103,6 +110,7 @@ export default function SwaggerDocs() {
       const trimmed = text.trim();
       const translation = translations[trimmed];
       if (translation) {
+        // სიტყვის გარშემო არსებულ ცარიელ ადგილებს ვინარჩუნებთ
         const start = text.indexOf(trimmed);
         node.textContent = `${text.slice(0, start)}${translation}${text.slice(start + trimmed.length)}`;
       }
@@ -116,6 +124,7 @@ export default function SwaggerDocs() {
       }
     };
 
+    // ელემენტი და მთელი მისი შიგთავსი (რეკურსიულად)
     const translateSubtree = (node: Node) => {
       if (node.nodeType === Node.TEXT_NODE) {
         translateText(node);
@@ -128,6 +137,8 @@ export default function SwaggerDocs() {
 
     translateSubtree(docs);
 
+    // Swagger ტექსტს მოგვიანებითაც ამატებს (გაშლისას, პასუხის მოსვლისას),
+    // ამიტომ ცვლილებებს ვაკვირდებით და ახალ ტექსტსაც ვთარგმნით
     const observer = new MutationObserver((records) => {
       for (const record of records) {
         if (record.type === 'characterData') {
@@ -148,11 +159,13 @@ export default function SwaggerDocs() {
       subtree: true,
     });
 
+    // გვერდიდან გასვლისას დაკვირვებას ვწყვეტთ
     return () => observer.disconnect();
   }, []);
 
   return (
     <main className="api-docs" ref={docsRef}>
+      {/* API-ს აღწერას /api/openapi აბრუნებს */}
       <SwaggerUI
         url="/api/openapi"
         docExpansion="list"

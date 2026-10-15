@@ -3,6 +3,9 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+// კლინიკის რეგისტრაციის მეორე ნაბიჯი: ანგარიში უკვე შექმნილია,
+// აქ ვინახავთ კლინიკის მონაცემებს და ექიმებს (ადმინის დამტკიცებამდე დამალულია)
+
 const clinicSchema = z.object({
   name: z.string().trim().min(1),
   city: z.string().trim().min(1),
@@ -46,6 +49,8 @@ export async function POST(request: Request) {
     return Response.json({ message: "შეამოწმე შევსებული ველები" }, { status: 400 });
   }
 
+  // კლინიკის id = ანგარიშის id. upsert-ის update ცარიელია: თუ კლინიკა
+  // უკვე არსებობს (ფორმა ორჯერ გაიგზავნა), არაფერი იცვლება
   const clinic = await prisma.clinic.upsert({
     where: { id: session.user.id },
     create: {

@@ -16,6 +16,8 @@ type DoctorScheduleFormProps = {
   isClinic?: boolean;
 };
 
+// ექიმის სამუშაო საათების ფორმა („ჩემი განრიგი“ და „კლინიკის მართვა“).
+// ამ საათებიდან იქმნება 30-წუთიანი სლოტები ჯავშნისთვის
 export default function DoctorScheduleForm({ doctor, isClinic = false }: DoctorScheduleFormProps) {
   const router = useRouter();
   const [workStart, setWorkStart] = useState(doctor.workStart);
@@ -34,6 +36,7 @@ export default function DoctorScheduleForm({ doctor, isClinic = false }: DoctorS
       const response = await fetch(`/api/doctors/${doctor.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
+        // ექიმი მხოლოდ საათებს აგზავნის; ელფოსტას და კაბინეტს სერვერი მხოლოდ კლინიკისგან იღებს
         body: JSON.stringify(isClinic ? { workStart, workEnd, email, room } : { workStart, workEnd }),
       });
       const result = await response.json();
@@ -53,6 +56,7 @@ export default function DoctorScheduleForm({ doctor, isClinic = false }: DoctorS
     <form className={styles.form} onSubmit={save}>
       <label>
         მუშაობის დაწყება
+        {/* step="1800" — 30 წუთის ბიჯი (წამებში) */}
         <input type="time" step="1800" required value={workStart} onChange={(e) => setWorkStart(e.target.value)} />
       </label>
       <label>

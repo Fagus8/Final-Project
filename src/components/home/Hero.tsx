@@ -3,6 +3,7 @@ import Icon from "@/components/ui/Icon";
 import styles from "./Home.module.scss";
 
 type HeroProps = {
+  // false ექიმისა და კლინიკისთვის — მათ ჯავშნის ღილაკი არ უჩანთ
   canBook: boolean;
   clinicCount: number;
   doctorCount: number;

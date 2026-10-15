@@ -3,6 +3,9 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+// ადმინი ცვლის კლინიკის მონაცემებს და ექიმების სიას
+
+// მოსალოდნელი მონაცემები. id-იანი ექიმი განახლდება, id-ის გარეშე — შეიქმნება
 const clinicUpdateSchema = z.object({
   name: z.string().trim().min(1),
   city: z.string().trim().min(1),
@@ -53,6 +56,7 @@ export async function PATCH(
     return Response.json({ message: "შეამოწმე შევსებული ველები" }, { status: 400 });
   }
 
+  // ყველაფერი ერთ ტრანზაქციაშია: ან მთლიანად შეინახება, ან არაფერი
   const updateResult = await prisma.$transaction(async (transaction) => {
     const clinic = await transaction.clinic.findUnique({
       where: { id: clinicId },
@@ -67,6 +71,8 @@ export async function PATCH(
       return "not-found";
     }
 
+    // გაგზავნილი id-ები ამ კლინიკის ექიმებს უნდა ეკუთვნოდეს და არ უნდა მეორდებოდეს.
+    // თუ არა, ფორმა მოძველებულია (სხვამ უკვე შეცვალა) — "stale"
     const submittedDoctorIds = result.data.doctors.flatMap((doctor) =>
       doctor.id ? [doctor.id] : [],
     );
@@ -90,6 +96,7 @@ export async function PATCH(
       },
     });
 
+    // სიიდან ამოღებულ ექიმებს ვშლით
     await transaction.doctor.deleteMany({
       where: {
         clinicId,
@@ -99,6 +106,7 @@ export async function PATCH(
       },
     });
 
+    // დანარჩენს ვაახლებთ, ახლებს ვქმნით (დამტკიცებულ კლინიკაში — მაშინვე დამტკიცებულს)
     for (const doctor of result.data.doctors) {
       if (doctor.id) {
         await transaction.doctor.update({

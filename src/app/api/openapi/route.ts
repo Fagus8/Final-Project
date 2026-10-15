@@ -1,3 +1,5 @@
+// API-ს აღწერა OpenAPI ფორმატში. ამ აღწერიდან /docs გვერდზე Swagger
+// აწყობს დოკუმენტაციას, სადაც API-ს გამოცდაც შეიძლება
 const apiDocument = {
   openapi: '3.0.3',
   info: {
@@ -12,6 +14,7 @@ const apiDocument = {
     { name: 'ადმინისტრირება' },
   ],
   components: {
+    // ავტორიზაცია: სესიის cookie, რომელსაც შესვლისას better-auth აყენებს
     securitySchemes: {
       sessionCookie: {
         type: 'apiKey',
@@ -20,6 +23,7 @@ const apiDocument = {
         description: 'ავტორიზაციის სესიის cookie. ჯერ შედით ანგარიშში იმავე ბრაუზერიდან.',
       },
     },
+    // მონაცემების ფორმები, რომლებზეც ქვემოთ $ref-ით ვმიუთითებთ
     schemas: {
       Error: {
         type: 'object',
@@ -60,6 +64,7 @@ const apiDocument = {
       },
     },
   },
+  // თითოეული მისამართი: რა მეთოდით, რა მონაცემით და რა პასუხებს აბრუნებს
   paths: {
     '/api/auth/sign-up/email': {
       post: {
@@ -265,6 +270,7 @@ const apiDocument = {
   },
 };
 
+// GET /api/openapi — აღწერას JSON-ად აბრუნებს
 export function GET() {
   return Response.json(apiDocument);
 }

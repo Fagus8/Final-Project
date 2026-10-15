@@ -4,6 +4,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import styles from "./DoctorProfileForm.module.scss";
 
+// ექიმის პროფილის ფორმა: ფოტო, სპეციალობა, გამოცდილება, ფასი, ბიოგრაფია,
+// განათლება, ენები და სერვისები. იყენებს თავად ექიმი და მისი კლინიკა.
+// შენახული მონაცემები ექიმის საჯარო გვერდზე (/doctors/[id]) ჩანს
+
+// ენები, რომლებიც ფორმაში მოსანიშნად ჩანს
 export const LANGUAGE_OPTIONS = [
   "ქართული",
   "ინგლისური",
@@ -40,6 +45,7 @@ function resizePhoto(file: File): Promise<string> {
     const image = new Image();
 
     image.onload = () => {
+      // სურათის შუიდან ვიღებთ ყველაზე დიდ კვადრატს და 400x400-ზე ვხატავთ
       const side = Math.min(image.width, image.height);
       const canvas = document.createElement("canvas");
       canvas.width = PHOTO_SIZE;
@@ -62,6 +68,7 @@ function resizePhoto(file: File): Promise<string> {
         PHOTO_SIZE,
         PHOTO_SIZE,
       );
+      // დროებით ბმულს ვათავისუფლებთ; შედეგი JPEG ტექსტად (data URL) ინახება
       URL.revokeObjectURL(url);
       resolve(canvas.toDataURL("image/jpeg", 0.85));
     };
@@ -79,6 +86,7 @@ export default function DoctorProfileForm({ doctor }: DoctorProfileFormProps) {
   const router = useRouter();
   const [avatarUrl, setAvatarUrl] = useState(doctor.avatarUrl ?? "");
   const [specialty, setSpecialty] = useState(doctor.specialty);
+  // რიცხვითი ველები ტექსტად ინახება, რომ ცარიელი ველიც შეიძლებოდეს
   const [experienceYears, setExperienceYears] = useState(String(doctor.experienceYears));
   const [consultationFee, setConsultationFee] = useState(
     doctor.consultationFee === null ? "" : String(doctor.consultationFee),
@@ -86,14 +94,18 @@ export default function DoctorProfileForm({ doctor }: DoctorProfileFormProps) {
   const [bio, setBio] = useState(doctor.bio ?? "");
   const [education, setEducation] = useState(doctor.education ?? "");
   const [languages, setLanguages] = useState(doctor.languages);
+  // სერვისები ფორმაში ერთ ტექსტად, თითო ხაზზე თითო სერვისი
   const [services, setServices] = useState(doctor.services.join("\n"));
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
 
+  // უნიკალური id ველებისთვის: კლინიკის გვერდზე ეს ფორმა რამდენჯერმე ჩანს
   const id = (field: string) => `doctor-${doctor.id}-${field}`;
 
+  // ფოტოს არჩევა: ფაილს ვამოწმებთ, ვაპატარავებთ და გადახედვისთვის ვაჩვენებთ
   async function choosePhoto(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
+    // ველს ვასუფთავებთ, რომ იგივე ფაილის ხელახლა არჩევაც იმუშაოს
     event.target.value = "";
 
     if (!file) {
@@ -113,6 +125,7 @@ export default function DoctorProfileForm({ doctor }: DoctorProfileFormProps) {
     }
   }
 
+  // ენის მონიშვნა/მოხსნა
   function toggleLanguage(language: string) {
     setLanguages((current) =>
       current.includes(language)
@@ -121,6 +134,7 @@ export default function DoctorProfileForm({ doctor }: DoctorProfileFormProps) {
     );
   }
 
+  // შენახვა: ტექსტურ ველებს სწორ ტიპებად ვაქცევთ (რიცხვი, null, სია)
   async function save(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSaving(true);

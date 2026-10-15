@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import list from "@/components/appointments/AppointmentList.module.scss";
 
+// კლინიკის ღილაკები ახალი ექიმის მოთხოვნაზე: დადასტურება ან უარყოფა
 export default function ApproveDoctorButtons({ doctorId }: { doctorId: string }) {
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
