@@ -20,6 +20,10 @@ const accountTypes: { value: RegistrationValues["accountType"]; label: string; i
   { value: "CLINIC", label: "კლინიკა", icon: "clinic" },
 ];
 
+// რეგისტრაციის გვერდი. ჯერ იქმნება ანგარიში (better-auth), შემდეგ
+// როლის მიხედვით იგზავნება დამატებითი მონაცემები:
+// პაციენტი → ტელეფონი და სისხლის ჯგუფი, კლინიკა → კლინიკა და ექიმები,
+// ექიმი → მოთხოვნა არჩეულ კლინიკასთან
 export default function RegisterPage() {
   const router = useRouter();
 
@@ -29,6 +33,7 @@ export default function RegisterPage() {
       email: "",
       password: "",
       phone: "",
+      bloodType: "",
       accountType: "PATIENT",
       clinicName: "",
       city: "",
@@ -40,6 +45,7 @@ export default function RegisterPage() {
       doctorClinicId: "",
       doctors: [{ name: "", specialty: "", experienceYears: 0 }],
     },
+    // Zod-ის შეცდომებს formik-ის ფორმატში გადავიყვანთ (ველის სახელი → ტექსტი)
     validate: (values) => {
       const result = registerSchema.safeParse(values);
 
@@ -62,6 +68,8 @@ export default function RegisterPage() {
     onSubmit: async (values, { setStatus }) => {
       try {
         const email = values.email.trim();
+        // თუ კლინიკის ანგარიში უკვე შეიქმნა, მაგრამ კლინიკის მონაცემები ვერ შეინახა,
+        // იმავე ანგარიშით ხელახლა გაგზავნა შეიძლება (ანგარიშს თავიდან აღარ ვქმნით)
         let canResumeClinicRegistration = false;
 
         if (values.accountType === "CLINIC") {
@@ -125,6 +133,21 @@ export default function RegisterPage() {
           }
         }
 
+        // პაციენტის ტელეფონი და სისხლის ჯგუფი
+        if (values.accountType === "PATIENT") {
+          const response = await fetch("/api/patient-registration", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone: values.phone, bloodType: values.bloodType }),
+          });
+
+          if (!response.ok) {
+            const result = await response.json();
+            setStatus(result.message || "პაციენტის მონაცემების შენახვა ვერ მოხერხდა");
+            return;
+          }
+        }
+
         // ექიმის მონაცემები იგზავნება კლინიკასთან დასადასტურებლად
         if (values.accountType === "DOCTOR") {
           const response = await fetch("/api/doctor-registration", {
@@ -162,7 +185,7 @@ export default function RegisterPage() {
         <span className={styles.logo} aria-hidden="true">
           <Icon name="logo" size={22} />
         </span>
-        <h2>შექმენი ანგარიში</h2>
+        <h2>შექმენი ანგარიში medical.ge-ზე</h2>
         <p className={styles.subtitle}>აირჩიე, ვინ ხარ — ფორმა შესაბამისად შეიცვლება</p>
 
         <FormikProvider value={formik}>

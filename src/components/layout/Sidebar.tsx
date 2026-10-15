@@ -16,20 +16,24 @@ export default async function Sidebar() {
   const isDoctor = session?.user.accountType === "DOCTOR";
   const isClinic = session?.user.accountType === "CLINIC";
 
+  // დაჯავშნა ჩანს სტუმრისთვის და პაციენტისთვის, კლინიკისა და ექიმისთვის — არა
+  const canBook = !session || (isPatient && !isAdmin);
+
   // საერთო ბმულები — ყველასთვის
   const general: MenuItem[] = [
     { href: "/", label: "მთავარი", icon: "home" },
-    ...(session ? [{ href: "/dashboard", label: "პირადი კაბინეტი", icon: "dashboard" as const }] : []),
     { href: "/doctors", label: "ექიმები", icon: "doctors" },
     { href: "/clinics", label: "კლინიკები", icon: "clinic" },
+    ...(canBook ? [{ href: "/booking", label: "ვიზიტის დაჯავშნა", icon: "calendarPlus" as const }] : []),
   ];
 
-  // როლის მიხედვით ბმულები
-  const personal: MenuItem[] = [];
+  // როლის მიხედვით ბმულები, პირველი — პირადი კაბინეტი
+  const personal: MenuItem[] = session
+    ? [{ href: "/dashboard", label: "პირადი კაბინეტი", icon: "dashboard" }]
+    : [];
 
   if (isPatient && !isAdmin) {
     personal.push(
-      { href: "/booking", label: "ვიზიტის დაჯავშნა", icon: "calendarPlus" },
       { href: "/my-appointments", label: "ჩემი ვიზიტები", icon: "appointments" },
       { href: "/profile", label: "ჩემი პროფილი", icon: "profile" },
     );

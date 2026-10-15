@@ -12,7 +12,9 @@ const georgian = Noto_Sans_Georgian({
 const inter = Inter({ subsets: ["latin"], variable: "--font-latin" });
 
 export const metadata = {
-  title: "medical.ge",
+  // ქვეგვერდის სათაურს ბოლოში საიტის სახელი ემატება: „ექიმები | medical.ge“
+  title: { default: "medical.ge", template: "%s | medical.ge" },
+  description: "medical.ge — იპოვე ექიმი, აირჩიე კლინიკა და დაჯავშნე ვიზიტი ონლაინ.",
 };
 
 export default function RootLayout({

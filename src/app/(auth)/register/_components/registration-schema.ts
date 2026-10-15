@@ -1,11 +1,16 @@
 import { z } from "zod";
 
+// რეგისტრაციის ფორმის ვალიდაცია (Zod). ფორმა სამივე როლისთვის ერთია,
+// ამიტომ ველები აქ არასავალდებულოა, ხოლო რომელი ველი რომელ როლს სჭირდება,
+// ქვემოთ superRefine ამოწმებს
 export const registerSchema = z
   .object({
     fullName: z.string(),
     email: z.string().email("არავალიდური ელ.ფოსტის ფორმატი"),
     password: z.string().min(6, "პაროლი უნდა იყოს მინიმუმ 6 სიმბოლო"),
     phone: z.string(),
+    // მხოლოდ პაციენტისთვის; "" — ჯერ არ ვიცი
+    bloodType: z.string(),
     accountType: z.enum(["PATIENT", "CLINIC", "DOCTOR"]),
     clinicName: z.string(),
     city: z.string(),
@@ -28,6 +33,7 @@ export const registerSchema = z
     ),
   })
   .superRefine((values, context) => {
+    // დამხმარე: ცარიელ ველზე შეცდომას ამატებს მითითებულ ადგილას (path)
     const requireText = (
       value: string,
       path: (string | number)[],
@@ -48,6 +54,7 @@ export const registerSchema = z
       requireText(values.doctorClinicId, ["doctorClinicId"], "აირჩიე კლინიკა");
     }
 
+    // დანარჩენი შემოწმებები მხოლოდ კლინიკისთვისაა
     if (values.accountType !== "CLINIC") {
       return;
     }
@@ -80,5 +87,5 @@ export const registerSchema = z
     });
   });
 
+// ფორმის მნიშვნელობების ტიპი პირდაპირ სქემიდან გამოიყვანება
 export type RegistrationValues = z.infer<typeof registerSchema>;
-export type AccountType = RegistrationValues["accountType"];

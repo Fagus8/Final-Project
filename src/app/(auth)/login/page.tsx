@@ -7,15 +7,18 @@ import Icon from "@/components/ui/Icon";
 import { authClient } from "@/lib/auth-client";
 import styles from "./Login.module.scss";
 
+// შესვლის გვერდი: ელფოსტა და პაროლი, წარმატების შემდეგ — პირადი კაბინეტი
 export default function LoginPage() {
   const router = useRouter();
 
+  // formik ფორმის მნიშვნელობებს, შეცდომებს და გაგზავნას მართავს
   const formik = useFormik({
     initialValues: {
       email: "",
       password: "",
     },
 
+    // ცარიელი ველები სერვერამდე არ მიდის
     validate: (values) => {
       const errors: { email?: string; password?: string } = {};
 
@@ -30,17 +33,20 @@ export default function LoginPage() {
       return errors;
     },
 
+    // better-auth ამოწმებს მონაცემებს და წარმატებისას სესიის cookie-ს აყენებს
     onSubmit: async (values, { setStatus }) => {
       const { error } = await authClient.signIn.email({
         email: values.email.trim(),
         password: values.password,
       });
 
+      // რომელი ველია არასწორი, არ ვამბობთ, რომ სხვისი ელფოსტა ვერ გამოიცნონ
       if (error) {
         setStatus("ელფოსტა ან პაროლი არასწორია.");
         return;
       }
 
+      // refresh საჭიროა, რომ Header-მა და Sidebar-მა ახალი სესია დაინახონ
       router.push("/dashboard");
       router.refresh();
     },
@@ -53,7 +59,7 @@ export default function LoginPage() {
           <Icon name="logo" size={22} />
         </span>
         <h1 className={styles.title}>კეთილი იყოს შენი დაბრუნება</h1>
-        <p className={styles.subtitle}>შედი ანგარიშში და მართე შენი ვიზიტები</p>
+        <p className={styles.subtitle}>შედი medical.ge-ზე და მართე შენი ვიზიტები</p>
 
         <form className={styles.form} onSubmit={formik.handleSubmit}>
           <div className={styles.field}>

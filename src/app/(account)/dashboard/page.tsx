@@ -4,21 +4,27 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Sidebar from "@/components/layout/Sidebar";
+import ClinicOverview from "./_components/ClinicOverview";
+import DoctorOverview from "./_components/DoctorOverview";
+import PatientOverview from "./_components/PatientOverview";
 import styles from "../Account.module.scss";
 
-const accountTypeLabels: Record<string, string> = {
-  PATIENT: "პაციენტი",
-  DOCTOR: "ექიმი",
-  CLINIC: "კლინიკა",
+// თითოეული როლისთვის მისალმების ტექსტი და მთავარი გვერდი
+const roleIntro: Record<string, { text: string; link?: { href: string; label: string } }> = {
+  PATIENT: { text: "აქ ნახავ შენს ვიზიტებს, დიაგნოზებს და დანიშნულებებს." },
+  DOCTOR: {
+    text: "აქ ნახავ შენს დღევანდელ და მომავალ პაციენტებს.",
+    link: { href: "/my-schedule", label: "ჩემი განრიგი" },
+  },
+  CLINIC: {
+    text: "აქ ნახავ კლინიკის ექიმებსა და ვიზიტებს.",
+    link: { href: "/my-clinic", label: "კლინიკის მართვა" },
+  },
 };
 
-// თითოეული როლისთვის მთავარი გვერდი
-const quickLinks: Record<string, { href: string; label: string }> = {
-  PATIENT: { href: "/booking", label: "ვიზიტის დაჯავშნა" },
-  DOCTOR: { href: "/my-schedule", label: "ჩემი განრიგი" },
-  CLINIC: { href: "/my-clinic", label: "კლინიკის მართვა" },
-};
-
+// პირადი კაბინეტი. ყველა როლს თავისი შიგთავსი აქვს:
+// პაციენტს — ჯანმრთელობა, ექიმს — პაციენტები, კლინიკას — ექიმები და ვიზიტები,
+// ადმინს — საიტის სტატისტიკა
 export default async function DashboardPage() {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -29,7 +35,10 @@ export default async function DashboardPage() {
   }
 
   const isAdmin = session.user.role === "admin";
+  const accountType = session.user.accountType;
 
+  // ადმინის სტატისტიკა: დასამტკიცებელი კლინიკები, პაციენტები, ყველა კლინიკა.
+  // Promise.all სამივე მოთხოვნას ერთდროულად აგზავნის
   const adminStats = isAdmin
     ? await Promise.all([
         prisma.clinic.count({ where: { isApproved: false } }),
@@ -38,7 +47,7 @@ export default async function DashboardPage() {
       ])
     : null;
 
-  const quickLink = isAdmin ? null : quickLinks[session.user.accountType];
+  const intro = isAdmin ? null : roleIntro[accountType];
 
   return (
     <div className={styles.page}>
@@ -52,33 +61,33 @@ export default async function DashboardPage() {
             {session.user.name}
           </h2>
           <p className={styles.welcomeText}>
-            აქ შეგიძლია შენი ანგარიშის ინფორმაციის ნახვა.
+            {intro?.text ?? "აქ შეგიძლია საიტის მართვა."}
           </p>
-          {quickLink && (
-            <Link href={quickLink.href} className={styles.quickLink}>
-              {quickLink.label} →
+          {intro?.link && (
+            <Link href={intro.link.href} className={styles.quickLink}>
+              {intro.link.label} →
             </Link>
           )}
         </section>
 
-        <section className={styles.details} aria-label="ანგარიშის ინფორმაცია">
-          <article className={styles.detailCard}>
-            <span className={styles.detailLabel}>ელფოსტა</span>
-            <span className={styles.detailValue}>{session.user.email}</span>
-          </article>
-
-          <article className={styles.detailCard}>
-            <span className={styles.detailLabel}>ანგარიშის ტიპი</span>
-            <span className={styles.accountType}>
-              {isAdmin
-                ? "ადმინისტრატორი"
-                : accountTypeLabels[session.user.accountType] ?? session.user.accountType}
-            </span>
-          </article>
-        </section>
+        {!isAdmin && accountType === "PATIENT" && <PatientOverview patientId={session.user.id} />}
+        {!isAdmin && accountType === "DOCTOR" && <DoctorOverview userId={session.user.id} />}
+        {!isAdmin && accountType === "CLINIC" && <ClinicOverview clinicId={session.user.id} />}
 
         {isAdmin && adminStats && (
           <>
+            <section className={styles.details} aria-label="ანგარიშის ინფორმაცია">
+              <article className={styles.detailCard}>
+                <span className={styles.detailLabel}>ელფოსტა</span>
+                <span className={styles.detailValue}>{session.user.email}</span>
+              </article>
+
+              <article className={styles.detailCard}>
+                <span className={styles.detailLabel}>ანგარიშის ტიპი</span>
+                <span className={styles.accountType}>ადმინისტრატორი</span>
+              </article>
+            </section>
+
             <section
               className={styles.details}
               aria-label="საიტის სტატისტიკა"
