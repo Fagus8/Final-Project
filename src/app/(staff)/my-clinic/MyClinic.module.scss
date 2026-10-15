@@ -113,6 +113,41 @@
   }
 }
 
+// ექიმის პროფილის ფორმა იხსნება დაჭერით, რომ გვერდი არ გადაიტვირთოს
+.profileDetails {
+  margin-top: 14px;
+
+  summary {
+    width: fit-content;
+    color: $color-primary-dark;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  &[open] summary {
+    margin-bottom: 16px;
+  }
+}
+
+.dangerZone {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 560px;
+  margin-top: 36px !important;
+  border-color: rgba($color-danger, 0.3) !important;
+
+  h2 {
+    color: $color-danger;
+  }
+
+  > button {
+    align-self: flex-start;
+    width: auto;
+  }
+}
+
 .warning {
   margin: 10px 0 !important;
   padding: 12px 14px;

@@ -38,10 +38,18 @@ export default async function DoctorsPage() {
                   {doctor.name.trim().charAt(0).toLocaleUpperCase('ka-GE')}
                 </span>
               )}
-              <h2>{doctor.name}</h2>
+              <h2>
+                <Link className={styles.profileLink} href={`/doctors/${doctor.id}`}>
+                  {doctor.name}
+                </Link>
+              </h2>
               <p>{doctor.specialty}</p>
               <p>გამოცდილება: {doctor.experienceYears} წელი</p>
               <p>{doctor.clinic.name}</p>
+              {doctor.languages.length > 0 && <p>ენები: {doctor.languages.join(", ")}</p>}
+              {doctor.consultationFee !== null && (
+                <p className={styles.fee}>კონსულტაცია: {doctor.consultationFee} ₾</p>
+              )}
               {canBook && (
                 <Link className={styles.bookLink} href={`/booking?doctorId=${doctor.id}`}>
                   დაჯავშნა

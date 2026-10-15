@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Sidebar from "@/components/layout/Sidebar";
 import Card from "@/components/ui/Card";
 import { prisma } from "@/lib/prisma";
@@ -18,18 +19,20 @@ export default async function ClinicsPage() {
         <div className={styles.clinicCards}>
           {clinics.map((clinic) => (
             <Card key={clinic.id} className={styles.clinicCard}>
-              {clinic.imageUrl && (
-                <ClinicImage
-                  className={styles.clinicImage}
-                  src={clinic.imageUrl}
-                  alt={clinic.name}
-                />
-              )}
-              <h2>{clinic.name}</h2>
-              <p>{clinic.city}</p>
-              <p>{clinic.address}</p>
-              <p>{clinic.phone}</p>
-              <p>{clinic.specialty}</p>
+              <Link href={`/clinics/${clinic.id}`} className={styles.clinicLink}>
+                {clinic.imageUrl && (
+                  <ClinicImage
+                    className={styles.clinicImage}
+                    src={clinic.imageUrl}
+                    alt={clinic.name}
+                  />
+                )}
+                <h2>{clinic.name}</h2>
+                <p>{clinic.city}</p>
+                <p>{clinic.address}</p>
+                <p>{clinic.phone}</p>
+                <p>{clinic.specialty}</p>
+              </Link>
             </Card>
           ))}
         </div>

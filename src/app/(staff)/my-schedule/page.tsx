@@ -1,5 +1,7 @@
 import { headers } from "next/headers";
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import DoctorProfileForm from "@/components/doctors/DoctorProfileForm";
 import DoctorScheduleForm from "@/components/doctors/DoctorScheduleForm";
 import Sidebar from "@/components/layout/Sidebar";
 import { auth } from "@/lib/auth";
@@ -22,9 +24,8 @@ export default async function MySchedulePage() {
     redirect("/dashboard");
   }
 
-  // ექიმს ვპოულობთ ანგარიშის ელფოსტით
   const doctor = await prisma.doctor.findUnique({
-    where: { email: session.user.email },
+    where: { userId: session.user.id },
     include: {
       clinic: true,
       appointments: {
@@ -75,6 +76,7 @@ export default async function MySchedulePage() {
     );
   }
 
+  const now = new Date();
   const items = doctor.appointments.map((appointment) => ({
     id: appointment.id,
     day: formatDay(appointment.startsAt),
@@ -84,6 +86,7 @@ export default async function MySchedulePage() {
     patientEmail: appointment.patient.email,
     diagnosis: appointment.diagnosis,
     prescription: appointment.prescription,
+    hasStarted: appointment.startsAt <= now,
     previousVisits: doctor.appointments.filter(
       (other) =>
         other.patientId === appointment.patientId &&
@@ -112,6 +115,29 @@ export default async function MySchedulePage() {
               workEnd: doctor.workEnd,
               email: doctor.email,
               room: doctor.room,
+            }}
+          />
+        </section>
+
+        <section className={styles.card}>
+          <h2>ჩემი პროფილი</h2>
+          <p>
+            ეს ინფორმაცია ჩანს შენს{" "}
+            <Link href={`/doctors/${doctor.id}`}>საჯარო პროფილზე</Link>.
+          </p>
+          <h3>პროფილის ინფორმაცია</h3>
+          <DoctorProfileForm
+            doctor={{
+              id: doctor.id,
+              name: doctor.name,
+              specialty: doctor.specialty,
+              experienceYears: doctor.experienceYears,
+              avatarUrl: doctor.avatarUrl,
+              bio: doctor.bio,
+              education: doctor.education,
+              languages: doctor.languages,
+              services: doctor.services,
+              consultationFee: doctor.consultationFee,
             }}
           />
         </section>

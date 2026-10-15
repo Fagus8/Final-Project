@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import DeleteClinicButton from "@/components/clinics/DeleteClinicButton";
 import Sidebar from "@/components/layout/Sidebar";
 import ApproveClinicButton from "./_components/ApproveClinicButton";
 import EditClinicForm from "./_components/EditClinicForm";
@@ -78,6 +79,7 @@ export default async function AdminClinicsPage() {
                       })),
                     }}
                   />
+                  <DeleteClinicButton clinicId={clinic.id} clinicName={clinic.name} />
                 </div>
               </article>
             ))}

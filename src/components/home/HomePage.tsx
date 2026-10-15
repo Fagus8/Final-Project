@@ -42,6 +42,7 @@ export default async function HomePage() {
             specialty: doctor.specialty,
             experienceYears: doctor.experienceYears,
             clinicName: doctor.clinic.name,
+            avatarUrl: doctor.avatarUrl,
           }))}
         />
         {/* მოწვევა — მხოლოდ სტუმრისთვის */}

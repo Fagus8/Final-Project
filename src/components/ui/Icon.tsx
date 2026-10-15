@@ -13,15 +13,16 @@ export type IconName =
   | 'clock'
   | 'check'
   | 'arrowRight'
-  | 'plus'
   | 'door'
   | 'pin'
   | 'phone'
   | 'chart'
-  | 'download'
   | 'shield'
   | 'calendarPlus'
   | 'stethoscope'
+  | 'education'
+  | 'language'
+  | 'money'
   | 'home';
 
 type IconProps = {
@@ -147,12 +148,6 @@ export default function Icon({ name, size = 20 }: IconProps) {
           <path d="M5 12h14M13 6l6 6-6 6" />
         </svg>
       );
-    case 'plus':
-      return (
-        <svg {...sharedProps}>
-          <path d="M12 5v14M5 12h14" />
-        </svg>
-      );
     case 'door':
       return (
         <svg {...sharedProps}>
@@ -180,16 +175,34 @@ export default function Icon({ name, size = 20 }: IconProps) {
           <path d="M7 16v-4M12 16V8M17 16v-7" />
         </svg>
       );
-    case 'download':
-      return (
-        <svg {...sharedProps}>
-          <path d="M12 4v11M7 10l5 5 5-5M5 20h14" />
-        </svg>
-      );
     case 'home':
       return (
         <svg {...sharedProps}>
           <path d="M4 10.5 12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6h-6v6H5.5A1.5 1.5 0 0 1 4 19z" />
+        </svg>
+      );
+    case 'education':
+      return (
+        <svg {...sharedProps}>
+          <path d="M2.5 9 12 4.5 21.5 9 12 13.5z" />
+          <path d="M6.5 11v4.5c0 1.4 2.5 3 5.5 3s5.5-1.6 5.5-3V11" />
+          <path d="M21.5 9v5" />
+        </svg>
+      );
+    case 'language':
+      return (
+        <svg {...sharedProps}>
+          <circle cx="12" cy="12" r="9" />
+          <path d="M3 12h18" />
+          <path d="M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
+        </svg>
+      );
+    case 'money':
+      return (
+        <svg {...sharedProps}>
+          <rect x="3" y="6" width="18" height="12" rx="2" />
+          <circle cx="12" cy="12" r="2.5" />
+          <path d="M6.5 9.5v.01M17.5 14.5v.01" />
         </svg>
       );
     case 'shield':

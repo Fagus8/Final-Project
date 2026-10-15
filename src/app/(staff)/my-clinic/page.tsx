@@ -1,6 +1,8 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import AppointmentActions from "@/components/appointments/AppointmentActions";
+import DeleteClinicButton from "@/components/clinics/DeleteClinicButton";
+import DoctorProfileForm from "@/components/doctors/DoctorProfileForm";
 import DoctorScheduleForm from "@/components/doctors/DoctorScheduleForm";
 import list from "@/components/appointments/AppointmentList.module.scss";
 import Sidebar from "@/components/layout/Sidebar";
@@ -28,7 +30,10 @@ export default async function MyClinicPage() {
     where: { id: session.user.id },
     include: {
       doctors: {
-        include: { appointments: { include: { patient: true } } },
+        include: {
+          appointments: { include: { patient: true } },
+          user: { select: { email: true } },
+        },
         orderBy: { name: "asc" },
       },
     },
@@ -47,7 +52,12 @@ export default async function MyClinicPage() {
   }
 
   // ექიმები, რომლებიც თვითონ დარეგისტრირდნენ და დადასტურებას ელოდებიან
-  const pendingDoctors = clinic.doctors.filter((doctor) => !doctor.isApproved && doctor.email);
+  const pendingDoctors = clinic.doctors.filter((doctor) => !doctor.isApproved && doctor.userId);
+  // დადასტურებისას ანგარიში მიებმება იმ ექიმს, რომელსაც კლინიკამ ეს ელფოსტა მიუთითა
+  const invitedNames = new Map<string, string>();
+  clinic.doctors.forEach((doctor) => {
+    if (doctor.email && !doctor.userId) invitedNames.set(doctor.email, doctor.name);
+  });
   // კლინიკის დადასტურებამდე მის ექიმებსაც isApproved=false აქვთ, ამიტომ მაშინ ყველას ვაჩვენებთ
   const doctors = clinic.isApproved
     ? clinic.doctors.filter((doctor) => doctor.isApproved)
@@ -98,7 +108,13 @@ export default async function MyClinicPage() {
                   <div className={list.info}>
                     <h3>{doctor.name}</h3>
                     <p>{doctor.specialty} · გამოცდილება: {doctor.experienceYears} წელი</p>
-                    <p>{doctor.email}</p>
+                    <p>{doctor.user?.email}</p>
+                    {doctor.user && invitedNames.has(doctor.user.email) && (
+                      <p>
+                        დადასტურებისას ანგარიში მიებმება ექიმს:{" "}
+                        <strong>{invitedNames.get(doctor.user.email)}</strong>
+                      </p>
+                    )}
                   </div>
                   <ApproveDoctorButtons doctorId={doctor.id} />
                 </li>
@@ -161,6 +177,23 @@ export default async function MyClinicPage() {
                   room: doctor.room,
                 }}
               />
+              <details className={clinicStyles.profileDetails}>
+                <summary>პროფილის რედაქტირება (ფოტო, აღწერა, ფასი...)</summary>
+                <DoctorProfileForm
+                  doctor={{
+                    id: doctor.id,
+                    name: doctor.name,
+                    specialty: doctor.specialty,
+                    experienceYears: doctor.experienceYears,
+                    avatarUrl: doctor.avatarUrl,
+                    bio: doctor.bio,
+                    education: doctor.education,
+                    languages: doctor.languages,
+                    services: doctor.services,
+                    consultationFee: doctor.consultationFee,
+                  }}
+                />
+              </details>
             </div>
           ))}
         </section>
@@ -202,6 +235,12 @@ export default async function MyClinicPage() {
             ))}
           </ul>
         )}
+
+        <section className={`${styles.card} ${clinicStyles.dangerZone}`}>
+          <h2>კლინიკის წაშლა</h2>
+          <p>კლინიკა სისტემიდან სამუდამოდ წაიშლება. პაციენტები მიიღებენ შეტყობინებას ვიზიტების გაუქმების შესახებ.</p>
+          <DeleteClinicButton clinicId={clinic.id} clinicName={clinic.name} isOwnClinic />
+        </section>
       </main>
     </div>
   );

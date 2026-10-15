@@ -13,6 +13,7 @@ type BookingPageProps = {
     specialty?: string;
     clinicId?: string;
     doctorId?: string;
+    language?: string;
   }>;
 };
 
@@ -30,14 +31,15 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
     redirect("/dashboard");
   }
 
-  const { q = "", specialty = "", clinicId = "", doctorId } = await searchParams;
+  const { q = "", specialty = "", clinicId = "", doctorId, language = "" } = await searchParams;
 
   // ფილტრების სიებისთვის
   const allDoctors = await prisma.doctor.findMany({
     where: { isApproved: true, clinic: { isApproved: true } },
-    select: { specialty: true },
+    select: { specialty: true, languages: true },
   });
   const specialties = [...new Set(allDoctors.map((doctor) => doctor.specialty))].sort();
+  const languages = [...new Set(allDoctors.flatMap((doctor) => doctor.languages))].sort();
 
   const clinics = await prisma.clinic.findMany({
     where: { isApproved: true },
@@ -51,6 +53,7 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
       isApproved: true,
       clinic: { isApproved: true },
       ...(specialty ? { specialty } : {}),
+      ...(language ? { languages: { has: language } } : {}),
       ...(clinics.some((clinic) => clinic.id === clinicId) ? { clinicId } : {}),
       ...(q
         ? {
@@ -89,6 +92,15 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
             ))}
           </select>
 
+          {languages.length > 0 && (
+            <select name="language" defaultValue={language}>
+              <option value="">ნებისმიერი ენა</option>
+              {languages.map((item) => (
+                <option key={item} value={item}>{item}</option>
+              ))}
+            </select>
+          )}
+
           <button type="submit">ძებნა</button>
           <Link href="/booking">გასუფთავება</Link>
         </form>
@@ -102,6 +114,8 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
             room: doctor.room,
             clinicName: doctor.clinic.name,
             avatarUrl: doctor.avatarUrl,
+            consultationFee: doctor.consultationFee,
+            languages: doctor.languages,
           }))}
           initialDoctorId={doctors.some((doctor) => doctor.id === doctorId) ? doctorId : undefined}
         />

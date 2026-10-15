@@ -6,6 +6,8 @@ export type DoctorOption = {
   room: string | null;
   clinicName: string;
   avatarUrl?: string | null;
+  consultationFee: number | null;
+  languages: string[];
 };
 
 export type DoctorCardProps = {

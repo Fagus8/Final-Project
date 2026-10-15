@@ -1,0 +1,150 @@
+@use '../../styles/colors' as *;
+@use '../../styles/shared' as common;
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: $color-text-muted;
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+
+  input[type='text'],
+  input[type='number'],
+  textarea {
+    @include common.input;
+    min-height: 40px;
+    padding: 8px 12px;
+  }
+
+  textarea {
+    resize: vertical;
+    line-height: 1.5;
+  }
+}
+
+// ===== ფოტო =====
+.photoRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+}
+
+.photo {
+  display: grid;
+  width: 88px;
+  height: 88px;
+  flex: 0 0 88px;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $color-background-active, #d3eee8);
+  color: $color-primary-dark;
+  font-size: 34px;
+  font-weight: 700;
+  object-fit: cover;
+}
+
+.photoActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+
+  small {
+    flex-basis: 100%;
+    color: $color-text-muted;
+    font-size: 12.5px;
+  }
+}
+
+.form .uploadButton {
+  @include common.secondaryButton;
+  flex-direction: row;
+  min-height: 38px;
+  font-size: 14px;
+}
+
+.removeButton {
+  @include common.dangerButton;
+  min-height: 38px;
+  font-size: 14px;
+}
+
+// ===== ველები =====
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+
+  @media (max-width: 700px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.languages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+
+  legend {
+    margin-bottom: 8px;
+    padding: 0;
+    color: $color-text-muted;
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+
+  label {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1px solid $color-border;
+    border-radius: 999px;
+    background: $color-white;
+    color: $color-text;
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color $transition, background-color $transition;
+
+    &:has(input:checked) {
+      border-color: rgba($color-primary, 0.4);
+      background: $color-background-active;
+      color: $color-primary-dark;
+    }
+  }
+
+  input {
+    accent-color: $color-primary;
+  }
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+
+  button {
+    @include common.primaryButton;
+    min-height: 40px;
+  }
+}
+
+.message {
+  margin: 0;
+  color: $color-primary-dark;
+  font-size: 13.5px;
+  @include common.fadeUp(220ms);
+}

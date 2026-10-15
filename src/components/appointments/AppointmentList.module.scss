@@ -26,6 +26,27 @@
   }
 }
 
+.summary {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  min-width: 0;
+}
+
+.avatar {
+  display: grid;
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $color-background-active, #d3eee8);
+  color: $color-primary-dark;
+  font-size: 20px;
+  font-weight: 700;
+  object-fit: cover;
+}
+
 .info {
   min-width: 0;
 

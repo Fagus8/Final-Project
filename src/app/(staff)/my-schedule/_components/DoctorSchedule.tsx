@@ -18,6 +18,8 @@ export type ScheduleItem = {
   prescription: string | null;
   // რამდენჯერ ყოფილა ეს პაციენტი ამ ექიმთან ადრე
   previousVisits: number;
+  // დიაგნოზი მხოლოდ მაშინ იწერება, როცა ვიზიტის დრო დადგა
+  hasStarted: boolean;
 };
 
 export default function DoctorSchedule({ items, today }: { items: ScheduleItem[]; today: string }) {
@@ -64,7 +66,7 @@ export default function DoctorSchedule({ items, today }: { items: ScheduleItem[]
                   <AppointmentActions
                     appointmentId={item.id}
                     canCancel={item.status === "BOOKED"}
-                    canComplete
+                    canComplete={item.hasStarted}
                     diagnosis={item.diagnosis}
                     prescription={item.prescription}
                   />
