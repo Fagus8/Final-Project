@@ -1,9 +1,7 @@
-import { headers } from "next/headers";
 import { z } from "zod";
-import { auth } from "@/lib/auth";
-import { notify } from "@/lib/notifications";
+import { isUuid, jsonError, readJson } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
-import { formatDateTime } from "@/lib/slots";
+import { getSession } from "@/lib/session";
 
 // ორი მოქმედება: გაუქმება და დასრულება (დიაგნოზით)
 const actionSchema = z.discriminatedUnion("action", [
@@ -19,38 +17,29 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ appointmentId: string }> },
 ) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
 
   if (!session) {
-    return Response.json({ message: "შესვლა საჭიროა" }, { status: 401 });
+    return jsonError("შესვლა საჭიროა", 401);
   }
 
   const { appointmentId } = await params;
-  if (!z.string().uuid().safeParse(appointmentId).success) {
-    return Response.json({ message: "ვიზიტი ვერ მოიძებნა" }, { status: 404 });
+  if (!isUuid(appointmentId)) {
+    return jsonError("ვიზიტი ვერ მოიძებნა", 404);
   }
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json({ message: "მოთხოვნის მონაცემები არასწორია" }, { status: 400 });
-  }
-
-  const result = actionSchema.safeParse(body);
+  const result = actionSchema.safeParse(await readJson(request));
   if (!result.success) {
-    return Response.json({ message: "შეამოწმე შევსებული ველები" }, { status: 400 });
+    return jsonError("შეამოწმე შევსებული ველები", 400);
   }
 
   const appointment = await prisma.appointment.findUnique({
     where: { id: appointmentId },
-    include: { doctor: true, patient: true },
+    include: { doctor: true },
   });
 
   if (!appointment) {
-    return Response.json({ message: "ვიზიტი ვერ მოიძებნა" }, { status: 404 });
+    return jsonError("ვიზიტი ვერ მოიძებნა", 404);
   }
 
   // ვინ არის მომხმარებელი ამ ვიზიტთან მიმართებით
@@ -60,16 +49,16 @@ export async function PATCH(
   const isDoctor = appointment.doctor.userId === user.id;
   const isAdmin = user.role === "admin";
 
-  const when = formatDateTime(appointment.startsAt);
   const data = result.data;
 
+  // ---- გაუქმება ----
   if (data.action === "cancel") {
     if (!isPatient && !isClinic && !isDoctor && !isAdmin) {
-      return Response.json({ message: "ამ ვიზიტის გაუქმება არ შეგიძლია" }, { status: 403 });
+      return jsonError("ამ ვიზიტის გაუქმება არ შეგიძლია", 403);
     }
 
     if (appointment.status !== "BOOKED") {
-      return Response.json({ message: "გაუქმება მხოლოდ აქტიურ ვიზიტს შეიძლება" }, { status: 400 });
+      return jsonError("გაუქმება მხოლოდ აქტიურ ვიზიტს შეიძლება", 400);
     }
 
     await prisma.appointment.update({
@@ -77,26 +66,20 @@ export async function PATCH(
       data: { status: "CANCELLED" },
     });
 
-    // ყველას ვატყობინებთ, ვინც თვითონ არ გააუქმა
-    const message = `ვიზიტი გაუქმდა: ${appointment.patient.name} → ${appointment.doctor.name}, ${when}`;
-    if (!isPatient) await notify(appointment.patientId, message);
-    if (!isClinic) await notify(appointment.doctor.clinicId, message);
-    if (!isDoctor) await notify(appointment.doctor.userId, message);
-
     return Response.json({ message: "ვიზიტი გაუქმდა" });
   }
 
-  // დასრულება: ექიმი წერს დიაგნოზს და დანიშნულებას
+  // ---- დასრულება: ექიმი წერს დიაგნოზს და დანიშნულებას ----
   if (!isDoctor) {
-    return Response.json({ message: "დიაგნოზის ჩაწერა მხოლოდ ექიმს შეუძლია" }, { status: 403 });
+    return jsonError("დიაგნოზის ჩაწერა მხოლოდ ექიმს შეუძლია", 403);
   }
 
   if (appointment.status === "CANCELLED") {
-    return Response.json({ message: "გაუქმებულ ვიზიტს დიაგნოზი არ ეწერება" }, { status: 400 });
+    return jsonError("გაუქმებულ ვიზიტს დიაგნოზი არ ეწერება", 400);
   }
 
   if (appointment.startsAt.getTime() > Date.now()) {
-    return Response.json({ message: "ვიზიტის დრო ჯერ არ დამდგარა" }, { status: 400 });
+    return jsonError("ვიზიტის დრო ჯერ არ დამდგარა", 400);
   }
 
   await prisma.appointment.update({
@@ -107,11 +90,6 @@ export async function PATCH(
       prescription: data.prescription || null,
     },
   });
-
-  await notify(
-    appointment.patientId,
-    `ექიმმა ${appointment.doctor.name} ჩაწერა დიაგნოზი და დანიშნულება (${when})`,
-  );
 
   return Response.json({ message: "დიაგნოზი შენახულია" });
 }

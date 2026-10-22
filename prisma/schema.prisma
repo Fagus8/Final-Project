@@ -31,8 +31,7 @@ model User {
   // ექიმის ანგარიში — ექიმს ანგარიშთან userId აკავშირებს და არა ელფოსტა
   doctor Doctor?
 
-  appointments  Appointment[]
-  notifications Notification[]
+  appointments Appointment[]
 }
 
 model Session {
@@ -146,18 +145,6 @@ model Appointment {
 
   @@index([doctorId, startsAt])
   @@index([patientId])
-}
-
-model Notification {
-  id        String   @id @default(dbgenerated("pg_catalog.gen_random_uuid()")) @db.Uuid
-  message   String
-  isRead    Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  userId String @db.Uuid
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
 }
 
 model Clinic {

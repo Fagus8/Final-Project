@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { sendRequest } from "@/lib/request";
 import styles from "../AdminClinics.module.scss";
 
 // ადმინის ღილაკი: კლინიკის დამტკიცება. დამტკიცების შემდეგ კლინიკა
@@ -15,24 +16,14 @@ export default function ApproveClinicButton({ clinicId }: { clinicId: string }) 
     setIsApproving(true);
     setError("");
 
-    try {
-      const response = await fetch(
-        `/api/admin/clinics/${encodeURIComponent(clinicId)}/approve`,
-        { method: "POST" },
-      );
-      const result = await response.json();
+    const { ok, message } = await sendRequest(`/api/admin/clinics/${clinicId}/approve`, "POST");
 
-      if (!response.ok) {
-        setError(result.message || "დამტკიცება ვერ მოხერხდა");
-        return;
-      }
-
+    setIsApproving(false);
+    if (ok) {
       // გვერდს თავიდან ვტვირთავთ, რომ სტატუსი „დამტკიცებულია“ გამოჩნდეს
       router.refresh();
-    } catch {
-      setError("სერვერთან დაკავშირება ვერ მოხერხდა");
-    } finally {
-      setIsApproving(false);
+    } else {
+      setError(message);
     }
   }
 

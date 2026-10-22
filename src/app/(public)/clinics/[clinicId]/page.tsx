@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { z } from "zod";
 import Sidebar from "@/components/layout/Sidebar";
+import DoctorAvatar from "@/components/ui/DoctorAvatar";
 import Icon from "@/components/ui/Icon";
-import { auth } from "@/lib/auth";
+import { isUuid } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/session";
 import ClinicImage from "../_components/ClinicImage";
 import styles from "./ClinicDetails.module.scss";
 
@@ -14,7 +14,7 @@ export default async function ClinicDetailsPage(props: PageProps<"/clinics/[clin
   const { clinicId } = await props.params;
 
   // არასწორი id-ით ბაზა შეცდომას აგდებს, ამიტომ წინასწარ ვამოწმებთ
-  if (!z.string().uuid().safeParse(clinicId).success) {
+  if (!isUuid(clinicId)) {
     notFound();
   }
 
@@ -33,9 +33,7 @@ export default async function ClinicDetailsPage(props: PageProps<"/clinics/[clin
     notFound();
   }
 
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
   // „დაჯავშნა“ ღილაკი ჩანს სტუმრისთვის და პაციენტისთვის
   const canBook = !session || session.user.accountType === "PATIENT";
 
@@ -140,14 +138,7 @@ export default async function ClinicDetailsPage(props: PageProps<"/clinics/[clin
               {clinic.doctors.map((doctor) => (
                 <li key={doctor.id}>
                   <Link href={`/doctors/${doctor.id}`} className={styles.doctor}>
-                    {doctor.avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img className={styles.avatar} src={doctor.avatarUrl} alt="" />
-                    ) : (
-                      <span className={styles.avatar} aria-hidden="true">
-                        {doctor.name.trim().charAt(0).toLocaleUpperCase("ka-GE")}
-                      </span>
-                    )}
+                    <DoctorAvatar name={doctor.name} avatarUrl={doctor.avatarUrl} className={styles.avatar} />
                     <div>
                       <h3>{doctor.name}</h3>
                       <p>{doctor.specialty}</p>

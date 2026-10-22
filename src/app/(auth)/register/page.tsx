@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Icon, { type IconName } from "@/components/ui/Icon";
 import { authClient } from "@/lib/auth-client";
+import { sendRequest } from "@/lib/request";
 import styles from "./Register.module.scss";
 import ClinicFields from "./_components/ClinicFields";
 import DoctorFields from "./_components/DoctorFields";
@@ -20,10 +21,67 @@ const accountTypes: { value: RegistrationValues["accountType"]; label: string; i
   { value: "CLINIC", label: "კლინიკა", icon: "clinic" },
 ];
 
-// რეგისტრაციის გვერდი. ჯერ იქმნება ანგარიში (better-auth), შემდეგ
-// როლის მიხედვით იგზავნება დამატებითი მონაცემები:
+// ქმნის ანგარიშს better-auth-ით. აბრუნებს შეცდომის ტექსტს ან null-ს
+async function createAccount(values: RegistrationValues) {
+  const email = values.email.trim();
+
+  // თუ კლინიკის ანგარიში უკვე შეიქმნა, მაგრამ კლინიკის მონაცემები ვერ შეინახა,
+  // იმავე ანგარიშით ხელახლა გაგზავნა შეიძლება (ანგარიშს თავიდან აღარ ვქმნით)
+  if (values.accountType === "CLINIC") {
+    const { data: session } = await authClient.getSession();
+
+    if (session) {
+      const isSameClinic =
+        session.user.email.toLowerCase() === email.toLowerCase() &&
+        session.user.accountType === "CLINIC";
+
+      return isSameClinic ? null : "კლინიკის რეგისტრაციის გასაგრძელებლად შესაბამის ანგარიშში შედი.";
+    }
+  }
+
+  const { error } = await authClient.signUp.email({
+    // კლინიკის ანგარიშის სახელი კლინიკის სახელია
+    name: values.accountType === "CLINIC" ? values.clinicName.trim() : values.fullName.trim(),
+    email,
+    password: values.password,
+    accountType: values.accountType,
+  });
+
+  return error ? (error.message ?? "რეგისტრაცია ვერ მოხერხდა") : null;
+}
+
+// ინახავს როლის მიხედვით დამატებით მონაცემებს:
 // პაციენტი → ტელეფონი და სისხლის ჯგუფი, კლინიკა → კლინიკა და ექიმები,
 // ექიმი → მოთხოვნა არჩეულ კლინიკასთან
+function saveRoleDetails(values: RegistrationValues) {
+  if (values.accountType === "CLINIC") {
+    return sendRequest("/api/clinic-registration", "POST", {
+      name: values.clinicName,
+      city: values.city,
+      address: values.address,
+      phone: values.phone,
+      specialty: values.specialty,
+      imageUrl: values.imageUrl,
+      doctors: values.doctors,
+    });
+  }
+
+  if (values.accountType === "PATIENT") {
+    return sendRequest("/api/patient-registration", "POST", {
+      phone: values.phone,
+      bloodType: values.bloodType,
+    });
+  }
+
+  return sendRequest("/api/doctor-registration", "POST", {
+    specialty: values.doctorSpecialty,
+    experienceYears: values.doctorExperience,
+    clinicId: values.doctorClinicId,
+  });
+}
+
+// რეგისტრაციის გვერდი. ჯერ იქმნება ანგარიში (better-auth), შემდეგ
+// როლის მიხედვით იგზავნება დამატებითი მონაცემები
 export default function RegisterPage() {
   const router = useRouter();
 
@@ -67,112 +125,27 @@ export default function RegisterPage() {
 
     onSubmit: async (values, { setStatus }) => {
       try {
-        const email = values.email.trim();
-        // თუ კლინიკის ანგარიში უკვე შეიქმნა, მაგრამ კლინიკის მონაცემები ვერ შეინახა,
-        // იმავე ანგარიშით ხელახლა გაგზავნა შეიძლება (ანგარიშს თავიდან აღარ ვქმნით)
-        let canResumeClinicRegistration = false;
-
-        if (values.accountType === "CLINIC") {
-          const { data: session } = await authClient.getSession();
-
-          if (session) {
-            canResumeClinicRegistration =
-              session.user.email.toLowerCase() === email.toLowerCase() &&
-              session.user.accountType === "CLINIC";
-
-            if (!canResumeClinicRegistration) {
-              setStatus(
-                "კლინიკის რეგისტრაციის გასაგრძელებლად შესაბამის ანგარიშში შედი.",
-              );
-              return;
-            }
-          }
-        }
-
-        if (!canResumeClinicRegistration) {
-          const { error } = await authClient.signUp.email({
-            name:
-              values.accountType === "CLINIC"
-                ? values.clinicName.trim()
-                : values.fullName.trim(),
-            email,
-            password: values.password,
-            accountType: values.accountType,
-          });
-
-          if (error) {
-            setStatus(error.message);
-            return;
-          }
-        }
-
-        if (values.accountType === "CLINIC") {
-          const response = await fetch("/api/clinic-registration", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              name: values.clinicName,
-              city: values.city,
-              address: values.address,
-              phone: values.phone,
-              specialty: values.specialty,
-              imageUrl: values.imageUrl,
-              doctors: values.doctors,
-            }),
-          });
-
-          const result = await response.json();
-
-          if (!response.ok) {
-            setStatus(
-              result.message || "კლინიკის მონაცემების შენახვა ვერ მოხერხდა",
-            );
-            return;
-          }
-        }
-
-        // პაციენტის ტელეფონი და სისხლის ჯგუფი
-        if (values.accountType === "PATIENT") {
-          const response = await fetch("/api/patient-registration", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ phone: values.phone, bloodType: values.bloodType }),
-          });
-
-          if (!response.ok) {
-            const result = await response.json();
-            setStatus(result.message || "პაციენტის მონაცემების შენახვა ვერ მოხერხდა");
-            return;
-          }
-        }
-
-        // ექიმის მონაცემები იგზავნება კლინიკასთან დასადასტურებლად
-        if (values.accountType === "DOCTOR") {
-          const response = await fetch("/api/doctor-registration", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              specialty: values.doctorSpecialty,
-              experienceYears: values.doctorExperience,
-              clinicId: values.doctorClinicId,
-            }),
-          });
-
-          const result = await response.json();
-
-          if (!response.ok) {
-            setStatus(result.message || "ექიმის მონაცემების შენახვა ვერ მოხერხდა");
-            return;
-          }
-
-          router.push("/my-schedule");
-          router.refresh();
+        // ნაბიჯი 1: ანგარიშის შექმნა
+        const accountError = await createAccount(values);
+        if (accountError) {
+          setStatus(accountError);
           return;
         }
 
-        router.push("/");
+        // ნაბიჯი 2: როლის დამატებითი მონაცემები
+        const result = await saveRoleDetails(values);
+        if (!result.ok) {
+          setStatus(result.message);
+          return;
+        }
+
+        // ნაბიჯი 3: ექიმი თავის განრიგზე გადადის, დანარჩენი — მთავარ გვერდზე
+        if (values.accountType === "DOCTOR") {
+          router.push("/my-schedule");
+          router.refresh();
+        } else {
+          router.push("/");
+        }
       } catch {
         setStatus("სერვერთან დაკავშირება ვერ მოხერხდა. სცადე ხელახლა.");
       }

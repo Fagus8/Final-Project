@@ -1,17 +1,16 @@
-import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import Sidebar from "@/components/layout/Sidebar";
-import { auth } from "@/lib/auth";
+import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/session";
 import BookingSection from "./_components/BookingSection";
 import styles from "../Patient.module.scss";
 
-// ფილტრები URL-იდან მოდის, მაგ: /booking?specialty=კარდიოლოგი&q=ნინო.
-// ასე ძიების შედეგი ბმულით გაზიარებაც შეიძლება
+// ფილტრები URL-იდან მოდის, მაგ: /booking?specialty=კარდიოლოგი.
+// ასე შედეგი ბმულით გაზიარებაც შეიძლება
 type BookingPageProps = {
   searchParams: Promise<{
-    q?: string;
     specialty?: string;
     clinicId?: string;
     doctorId?: string;
@@ -22,9 +21,7 @@ type BookingPageProps = {
 // ვიზიტის დაჯავშნის გვერდი: ფილტრები, ექიმების სია და ჯავშნის ფორმა.
 // მონაცემებს სერვერზე ვკრებთ, არჩევა და ჯავშანი კი BookingSection-შია
 export default async function BookingPage({ searchParams }: BookingPageProps) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
 
   if (!session) {
     redirect("/login");
@@ -35,7 +32,7 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
     redirect("/dashboard");
   }
 
-  const { q = "", specialty = "", clinicId = "", doctorId, language = "" } = await searchParams;
+  const { specialty = "", clinicId = "", doctorId, language = "" } = await searchParams;
 
   // ფილტრების სიებისთვის: არსებული სპეციალობები და ენები, გამეორების გარეშე (Set)
   const allDoctors = await prisma.doctor.findMany({
@@ -51,26 +48,24 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
     orderBy: { name: "asc" },
   });
 
-  // ექიმების ძებნა სახელის, სპეციალობისა და კლინიკის მიხედვით.
-  // ცარიელი ფილტრი პირობას არ ამატებს; clinicId-ს მხოლოდ მაშინ ვიყენებთ,
-  // თუ ასეთი დამტკიცებული კლინიკა არსებობს. mode: "insensitive" — დიდ/პატარა ასოს არ არჩევს
+  // ძებნის პირობას ნაბიჯ-ნაბიჯ ვაწყობთ: ცარიელი ფილტრი პირობას არ ამატებს
+  const where: Prisma.DoctorWhereInput = { isApproved: true, clinic: { isApproved: true } };
+
+  if (specialty) {
+    where.specialty = specialty;
+  }
+
+  if (language) {
+    where.languages = { has: language };
+  }
+
+  // clinicId-ს მხოლოდ მაშინ ვიყენებთ, თუ ასეთი დამტკიცებული კლინიკა არსებობს
+  if (clinics.some((clinic) => clinic.id === clinicId)) {
+    where.clinicId = clinicId;
+  }
+
   const doctors = await prisma.doctor.findMany({
-    where: {
-      isApproved: true,
-      clinic: { isApproved: true },
-      ...(specialty ? { specialty } : {}),
-      ...(language ? { languages: { has: language } } : {}),
-      ...(clinics.some((clinic) => clinic.id === clinicId) ? { clinicId } : {}),
-      ...(q
-        ? {
-            OR: [
-              { name: { contains: q, mode: "insensitive" } },
-              { specialty: { contains: q, mode: "insensitive" } },
-              { clinic: { name: { contains: q, mode: "insensitive" } } },
-            ],
-          }
-        : {}),
-    },
+    where,
     include: { clinic: true },
     orderBy: { name: "asc" },
   });
@@ -83,8 +78,6 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
 
         {/* ჩვეულებრივი GET ფორმა: გაგზავნისას ფილტრები URL-ში ჩაიწერება */}
         <form className={styles.filters} action="/booking">
-          <input type="search" name="q" defaultValue={q} placeholder="ექიმის ან კლინიკის სახელი" />
-
           <select name="specialty" defaultValue={specialty}>
             <option value="">ყველა სპეციალობა</option>
             {specialties.map((item) => (

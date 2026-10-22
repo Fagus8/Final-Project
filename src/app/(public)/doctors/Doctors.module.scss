@@ -49,8 +49,8 @@
   font-weight: 600;
 }
 
-// ავატარი სურათის გარეშე — სახელის პირველი ასო
-.initial {
+// ექიმის ფოტო, ან ფოტოს გარეშე — სახელის პირველი ასო ფერად წრეში
+.avatar {
   display: grid;
   width: 56px;
   height: 56px;
@@ -61,13 +61,6 @@
   color: $color-primary-dark;
   font-size: 22px;
   font-weight: 700;
-}
-
-.avatar {
-  width: 56px;
-  height: 56px;
-  margin-bottom: 14px;
-  border-radius: 50%;
   object-fit: cover;
 }
 

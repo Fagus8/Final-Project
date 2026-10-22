@@ -1,32 +1,17 @@
-import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import AppointmentActions from "@/components/appointments/AppointmentActions";
 import list from "@/components/appointments/AppointmentList.module.scss";
 import Sidebar from "@/components/layout/Sidebar";
-import { auth } from "@/lib/auth";
+import DoctorAvatar from "@/components/ui/DoctorAvatar";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/session";
 import { formatDateTime, statusLabels } from "@/lib/slots";
 import styles from "../Patient.module.scss";
 
 // პაციენტის გვერდი „ჩემი ვიზიტები“: მომავალი ვიზიტები და ისტორია დიაგნოზებით
-
-// ექიმის ფოტო, ან თუ ფოტო არ აქვს, სახელის პირველი ასო
-function DoctorAvatar({ doctor }: { doctor: { name: string; avatarUrl: string | null } }) {
-  return doctor.avatarUrl ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img className={list.avatar} src={doctor.avatarUrl} alt="" />
-  ) : (
-    <span className={list.avatar} aria-hidden="true">
-      {doctor.name.trim().charAt(0).toLocaleUpperCase("ka-GE")}
-    </span>
-  );
-}
-
 export default async function MyAppointmentsPage() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
 
   if (!session) {
     redirect("/login");
@@ -66,7 +51,11 @@ export default async function MyAppointmentsPage() {
             {upcoming.map((appointment) => (
               <li key={appointment.id} className={list.item}>
                 <div className={list.summary}>
-                  <DoctorAvatar doctor={appointment.doctor} />
+                  <DoctorAvatar
+                    name={appointment.doctor.name}
+                    avatarUrl={appointment.doctor.avatarUrl}
+                    className={list.avatar}
+                  />
                   <div className={list.info}>
                     <h3>
                       {formatDateTime(appointment.startsAt)}
@@ -95,7 +84,11 @@ export default async function MyAppointmentsPage() {
             {history.map((appointment) => (
               <li key={appointment.id} className={list.item}>
                 <div className={list.summary}>
-                  <DoctorAvatar doctor={appointment.doctor} />
+                  <DoctorAvatar
+                    name={appointment.doctor.name}
+                    avatarUrl={appointment.doctor.avatarUrl}
+                    className={list.avatar}
+                  />
                   <div className={list.info}>
                     <h3>
                       {formatDateTime(appointment.startsAt)}

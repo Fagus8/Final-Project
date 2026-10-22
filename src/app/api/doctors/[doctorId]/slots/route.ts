@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { isUuid, jsonError } from "@/lib/api";
 import { getAvailableTimes } from "@/lib/appointments";
 import { prisma } from "@/lib/prisma";
 import { isValidDay } from "@/lib/slots";
@@ -11,12 +11,12 @@ export async function GET(
   const { doctorId } = await params;
   const date = new URL(request.url).searchParams.get("date") ?? "";
 
-  if (!z.string().uuid().safeParse(doctorId).success) {
-    return Response.json({ message: "ექიმი ვერ მოიძებნა" }, { status: 404 });
+  if (!isUuid(doctorId)) {
+    return jsonError("ექიმი ვერ მოიძებნა", 404);
   }
 
   if (!isValidDay(date)) {
-    return Response.json({ message: "თარიღი არასწორია" }, { status: 400 });
+    return jsonError("თარიღი არასწორია", 400);
   }
 
   // დაუდასტურებელ ექიმთან ჩაწერა არ შეიძლება, ამიტომ მის დროებსაც არ ვაჩვენებთ
@@ -26,7 +26,7 @@ export async function GET(
   });
 
   if (!doctor) {
-    return Response.json({ message: "ექიმი ვერ მოიძებნა" }, { status: 404 });
+    return jsonError("ექიმი ვერ მოიძებნა", 404);
   }
 
   // დაკავებული, გასული და კვირის დროები უკვე გაფილტრულია

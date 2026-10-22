@@ -1,11 +1,10 @@
-import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import DoctorProfileForm from "@/components/doctors/DoctorProfileForm";
 import DoctorScheduleForm from "@/components/doctors/DoctorScheduleForm";
 import Sidebar from "@/components/layout/Sidebar";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/session";
 import { formatDay, formatTime } from "@/lib/slots";
 import JoinClinicForm from "./_components/JoinClinicForm";
 import DoctorSchedule from "./_components/DoctorSchedule";
@@ -16,9 +15,7 @@ import styles from "../Staff.module.scss";
 // 2) მოთხოვნა გაგზავნილია, კლინიკას ჯერ არ დაუდასტურებია — ლოდინის შეტყობინება
 // 3) დადასტურებულია — სამუშაო საათები, პროფილი და ვიზიტების კალენდარი
 export default async function MySchedulePage() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
 
   if (!session) {
     redirect("/login");

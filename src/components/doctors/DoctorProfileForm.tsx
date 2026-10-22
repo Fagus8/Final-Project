@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import DoctorAvatar from "@/components/ui/DoctorAvatar";
+import { sendRequest } from "@/lib/request";
 import styles from "./DoctorProfileForm.module.scss";
 
 // ექიმის პროფილის ფორმა: ფოტო, სპეციალობა, გამოცდილება, ფასი, ბიოგრაფია,
@@ -9,7 +11,7 @@ import styles from "./DoctorProfileForm.module.scss";
 // შენახული მონაცემები ექიმის საჯარო გვერდზე (/doctors/[id]) ჩანს
 
 // ენები, რომლებიც ფორმაში მოსანიშნად ჩანს
-export const LANGUAGE_OPTIONS = [
+const LANGUAGE_OPTIONS = [
   "ქართული",
   "ინგლისური",
   "რუსული",
@@ -140,45 +142,29 @@ export default function DoctorProfileForm({ doctor }: DoctorProfileFormProps) {
     setIsSaving(true);
     setMessage("");
 
-    try {
-      const response = await fetch(`/api/doctors/${doctor.id}/profile`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          avatarUrl,
-          specialty,
-          experienceYears: Number(experienceYears) || 0,
-          consultationFee: consultationFee === "" ? null : Number(consultationFee),
-          bio,
-          education,
-          languages,
-          services: services.split("\n"),
-        }),
-      });
-      const result = await response.json();
+    const result = await sendRequest(`/api/doctors/${doctor.id}/profile`, "PATCH", {
+      avatarUrl,
+      specialty,
+      experienceYears: Number(experienceYears) || 0,
+      consultationFee: consultationFee === "" ? null : Number(consultationFee),
+      bio,
+      education,
+      languages,
+      services: services.split("\n"),
+    });
 
-      setMessage(result.message);
-      if (response.ok) {
-        router.refresh();
-      }
-    } catch {
-      setMessage("სერვერთან დაკავშირება ვერ მოხერხდა");
-    } finally {
-      setIsSaving(false);
+    setIsSaving(false);
+    setMessage(result.message);
+    if (result.ok) {
+      router.refresh();
     }
   }
 
   return (
     <form className={styles.form} onSubmit={save}>
       <div className={styles.photoRow}>
-        {avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img className={styles.photo} src={avatarUrl} alt={doctor.name} />
-        ) : (
-          <span className={styles.photo} aria-hidden="true">
-            {doctor.name.trim().charAt(0).toLocaleUpperCase("ka-GE")}
-          </span>
-        )}
+        <DoctorAvatar name={doctor.name} avatarUrl={avatarUrl || null} className={styles.photo} alt={doctor.name} />
+
         <div className={styles.photoActions}>
           <label className={styles.uploadButton}>
             ფოტოს ატვირთვა

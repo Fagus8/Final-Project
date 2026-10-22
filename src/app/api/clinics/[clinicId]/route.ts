@@ -1,8 +1,6 @@
-import { headers } from "next/headers";
-import { z } from "zod";
-import { auth } from "@/lib/auth";
+import { isUuid, jsonError } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
-import { formatDateTime } from "@/lib/slots";
+import { getSession } from "@/lib/session";
 
 // კლინიკის წაშლა — ადმინს ან თავად კლინიკას შეუძლია.
 // კლინიკა თავის ანგარიშზეა მიბმული, ამიტომ ვშლით ანგარიშს და მასთან ერთად
@@ -11,71 +9,34 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ clinicId: string }> },
 ) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
 
   if (!session) {
-    return Response.json({ message: "შესვლა საჭიროა" }, { status: 401 });
+    return jsonError("შესვლა საჭიროა", 401);
   }
 
   const { clinicId } = await params;
-  if (!z.string().uuid().safeParse(clinicId).success) {
-    return Response.json({ message: "კლინიკა ვერ მოიძებნა" }, { status: 404 });
+  if (!isUuid(clinicId)) {
+    return jsonError("კლინიკა ვერ მოიძებნა", 404);
   }
 
   const isAdmin = session.user.role === "admin";
   const isOwner = session.user.accountType === "CLINIC" && session.user.id === clinicId;
 
   if (!isAdmin && !isOwner) {
-    return Response.json({ message: "ამ კლინიკის წაშლა არ შეგიძლია" }, { status: 403 });
+    return jsonError("ამ კლინიკის წაშლა არ შეგიძლია", 403);
   }
 
-  const deleted = await prisma.$transaction(async (transaction) => {
-    const clinic = await transaction.clinic.findUnique({
-      where: { id: clinicId },
-      include: {
-        doctors: {
-          include: {
-            appointments: {
-              where: { status: "BOOKED", startsAt: { gte: new Date() } },
-            },
-          },
-        },
-      },
-    });
-
-    if (!clinic) {
-      return false;
-    }
-
-    // პაციენტებს ვატყობინებთ, რომ მომავალი ვიზიტები გაუქმდა
-    const patientMessages = clinic.doctors.flatMap((doctor) =>
-      doctor.appointments.map((appointment) => ({
-        userId: appointment.patientId,
-        message: `ვიზიტი გაუქმდა: კლინიკა „${clinic.name}“ წაიშალა (${doctor.name}, ${formatDateTime(appointment.startsAt)})`,
-      })),
-    );
-
-    // ექიმებს, რომლებსაც ანგარიში აქვთ, ვატყობინებთ, რომ კლინიკა აღარ არსებობს
-    const doctorUserIds = clinic.doctors.flatMap((doctor) => (doctor.userId ? [doctor.userId] : []));
-    const doctorMessages = doctorUserIds.map((userId) => ({
-      userId,
-      message: `კლინიკა „${clinic.name}“ წაიშალა. შეგიძლია სხვა კლინიკას შეუერთდე.`,
-    }));
-
-    await transaction.notification.createMany({
-      data: [...patientMessages, ...doctorMessages],
-    });
-
-    await transaction.user.delete({ where: { id: clinicId } });
-
-    return true;
+  const clinic = await prisma.clinic.findUnique({
+    where: { id: clinicId },
+    select: { id: true },
   });
 
-  if (!deleted) {
-    return Response.json({ message: "კლინიკა ვერ მოიძებნა" }, { status: 404 });
+  if (!clinic) {
+    return jsonError("კლინიკა ვერ მოიძებნა", 404);
   }
+
+  await prisma.user.delete({ where: { id: clinicId } });
 
   return Response.json({ message: "კლინიკა წაიშალა" });
 }

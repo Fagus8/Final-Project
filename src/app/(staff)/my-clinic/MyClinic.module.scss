@@ -42,22 +42,6 @@
   }
 }
 
-.reportHeader {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-
-.download {
-  @include common.secondaryButton;
-  min-height: 38px;
-  padding: 8px 14px;
-  font-size: 14px;
-}
-
 .table {
   width: 100%;
   border-collapse: collapse;

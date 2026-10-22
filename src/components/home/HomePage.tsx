@@ -1,7 +1,6 @@
-import { headers } from "next/headers";
 import Sidebar from "@/components/layout/Sidebar";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/session";
 import BookingSteps from "./BookingSteps";
 import FeaturedDoctors from "./FeaturedDoctors";
 import Hero from "./Hero";
@@ -10,19 +9,17 @@ import styles from "./Home.module.scss";
 
 // მთავარი გვერდი: მონაცემებს ბაზიდან იღებს და ნაწილებს აწყობს
 export default async function HomePage() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
   // დაჯავშნის ბლოკი კლინიკასა და ექიმს არ უჩანს
   const canBook = !session || session.user.accountType === "PATIENT";
 
-  // რეალური რიცხვები ბაზიდან
-  const approved = { isApproved: true, clinic: { isApproved: true } };
+  // რეალური რიცხვები ბაზიდან. საჯაროდ ჩანს მხოლოდ დამტკიცებული კლინიკის დადასტურებული ექიმი
+  const visibleDoctor = { isApproved: true, clinic: { isApproved: true } };
   const [clinicCount, doctorCount, doctors] = await Promise.all([
     prisma.clinic.count({ where: { isApproved: true } }),
-    prisma.doctor.count({ where: approved }),
+    prisma.doctor.count({ where: visibleDoctor }),
     prisma.doctor.findMany({
-      where: approved,
+      where: visibleDoctor,
       include: { clinic: true },
       orderBy: { experienceYears: "desc" },
       take: 3,

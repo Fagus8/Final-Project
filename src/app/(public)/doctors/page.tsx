@@ -1,18 +1,16 @@
-import Link from 'next/link';
-import { headers } from 'next/headers';
-import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
-import Card from '@/components/ui/Card';
-import Sidebar from '@/components/layout/Sidebar';
-import styles from './Doctors.module.scss';
+import Link from "next/link";
+import Sidebar from "@/components/layout/Sidebar";
+import Card from "@/components/ui/Card";
+import DoctorAvatar from "@/components/ui/DoctorAvatar";
+import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/session";
+import styles from "./Doctors.module.scss";
 
 // ექიმების სია, ყველასთვის ღია
 export default async function DoctorsPage() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
   // „დაჯავშნა“ ღილაკი ჩანს სტუმრისთვის და პაციენტისთვის, კლინიკისა და ექიმისთვის — არა
-  const canBook = !session || session.user.accountType === 'PATIENT';
+  const canBook = !session || session.user.accountType === "PATIENT";
 
   // ჩანს მხოლოდ დადასტურებული ექიმი დამტკიცებული კლინიკიდან
   const doctors = await prisma.doctor.findMany({
@@ -21,7 +19,7 @@ export default async function DoctorsPage() {
       clinic: { isApproved: true },
     },
     include: { clinic: true },
-    orderBy: { name: 'asc' },
+    orderBy: { name: "asc" },
   });
 
   return (
@@ -32,15 +30,12 @@ export default async function DoctorsPage() {
         <div className={styles.doctorCards}>
           {doctors.map((doctor) => (
             <Card key={doctor.id} className={styles.doctorCard}>
-              {/* ფოტო, ან თუ ფოტო არ აქვს, სახელის პირველი ასო */}
-              {doctor.avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img className={styles.avatar} src={doctor.avatarUrl} alt={doctor.name} />
-              ) : (
-                <span className={styles.initial} aria-hidden="true">
-                  {doctor.name.trim().charAt(0).toLocaleUpperCase('ka-GE')}
-                </span>
-              )}
+              <DoctorAvatar
+                name={doctor.name}
+                avatarUrl={doctor.avatarUrl}
+                className={styles.avatar}
+                alt={doctor.name}
+              />
               <h2>
                 <Link className={styles.profileLink} href={`/doctors/${doctor.id}`}>
                   {doctor.name}

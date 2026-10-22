@@ -82,10 +82,6 @@ export default function Hero({ canBook, clinicCount, doctorCount }: HeroProps) {
             <span>11:30</span>
           </div>
         </div>
-        {/* <div className={styles.mockBubble}>
-          <Icon name="bell" size={16} />
-          შეტყობინება გაიგზავნა
-        </div> */}
       </div>
     </section>
   );

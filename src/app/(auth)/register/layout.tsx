@@ -1,6 +1,5 @@
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 
 // სესია ყოველ ჯერზე უნდა შემოწმდეს, ამიტომ გვერდი არ იქეშება
 export const dynamic = "force-dynamic";
@@ -10,7 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function RegisterLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
 
   if (session) {
     redirect(session.user.role === "admin" ? "/admin/clinics" : "/dashboard");

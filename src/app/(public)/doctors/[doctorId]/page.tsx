@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { z } from "zod";
 import Sidebar from "@/components/layout/Sidebar";
+import DoctorAvatar from "@/components/ui/DoctorAvatar";
 import Icon from "@/components/ui/Icon";
-import { auth } from "@/lib/auth";
+import { isUuid } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/session";
 import styles from "./DoctorProfile.module.scss";
 
 // ექიმის საჯარო პროფილი: ფოტო, სპეციალობა, ბიოგრაფია, განათლება, ენები,
@@ -14,7 +14,7 @@ export default async function DoctorProfilePage(props: PageProps<"/doctors/[doct
   const { doctorId } = await props.params;
 
   // არასწორი id-ით ბაზა შეცდომას აგდებს, ამიტომ წინასწარ ვამოწმებთ
-  if (!z.string().uuid().safeParse(doctorId).success) {
+  if (!isUuid(doctorId)) {
     notFound();
   }
 
@@ -38,13 +38,9 @@ export default async function DoctorProfilePage(props: PageProps<"/doctors/[doct
     take: 6,
   });
 
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
   // „დაჯავშნა“ ღილაკი ჩანს სტუმრისთვის და პაციენტისთვის
   const canBook = !session || session.user.accountType === "PATIENT";
-
-  const initial = doctor.name.trim().charAt(0).toLocaleUpperCase("ka-GE");
 
   return (
     <div className={styles.page}>
@@ -55,14 +51,12 @@ export default async function DoctorProfilePage(props: PageProps<"/doctors/[doct
         </Link>
 
         <section className={styles.header}>
-          {doctor.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img className={styles.avatar} src={doctor.avatarUrl} alt={doctor.name} />
-          ) : (
-            <span className={styles.avatar} aria-hidden="true">
-              {initial}
-            </span>
-          )}
+          <DoctorAvatar
+            name={doctor.name}
+            avatarUrl={doctor.avatarUrl}
+            className={styles.avatar}
+            alt={doctor.name}
+          />
 
           <div className={styles.headerBody}>
             <h1>{doctor.name}</h1>
@@ -223,14 +217,11 @@ export default async function DoctorProfilePage(props: PageProps<"/doctors/[doct
               {colleagues.map((colleague) => (
                 <li key={colleague.id}>
                   <Link href={`/doctors/${colleague.id}`} className={styles.colleague}>
-                    {colleague.avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img className={styles.smallAvatar} src={colleague.avatarUrl} alt="" />
-                    ) : (
-                      <span className={styles.smallAvatar} aria-hidden="true">
-                        {colleague.name.trim().charAt(0).toLocaleUpperCase("ka-GE")}
-                      </span>
-                    )}
+                    <DoctorAvatar
+                      name={colleague.name}
+                      avatarUrl={colleague.avatarUrl}
+                      className={styles.smallAvatar}
+                    />
                     <div>
                       <h3>{colleague.name}</h3>
                       <p>{colleague.specialty}</p>

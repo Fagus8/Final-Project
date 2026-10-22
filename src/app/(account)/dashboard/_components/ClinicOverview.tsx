@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { formatDay, toDate } from "@/lib/slots";
+import { todayRange } from "@/lib/slots";
 import styles from "../../Account.module.scss";
+import StatCard from "./StatCard";
 
 // კლინიკის მიმოხილვა — სტატუსი, ექიმები, ვიზიტები
 export default async function ClinicOverview({ clinicId }: { clinicId: string }) {
@@ -14,9 +14,7 @@ export default async function ClinicOverview({ clinicId }: { clinicId: string })
   }
 
   const now = new Date();
-  // დღის საზღვრები თბილისის დროით
-  const todayStart = toDate(formatDay(now), "00:00");
-  const tomorrowStart = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+  const { todayStart, tomorrowStart } = todayRange();
 
   const [doctorCount, pendingDoctorCount, todayCount, upcomingCount] = await Promise.all([
     prisma.doctor.count({ where: { clinicId, isApproved: true } }),
@@ -54,25 +52,10 @@ export default async function ClinicOverview({ clinicId }: { clinicId: string })
       </section>
 
       <section className={styles.details} aria-label="კლინიკის სტატისტიკა">
-        <Link href="/my-clinic" className={`${styles.detailCard} ${styles.statLink}`}>
-          <span className={styles.detailLabel}>ექიმები</span>
-          <span className={styles.detailValue}>{doctorCount}</span>
-        </Link>
-
-        <Link href="/my-clinic" className={`${styles.detailCard} ${styles.statLink}`}>
-          <span className={styles.detailLabel}>ახალი ექიმების მოთხოვნები</span>
-          <span className={styles.detailValue}>{pendingDoctorCount}</span>
-        </Link>
-
-        <Link href="/my-clinic" className={`${styles.detailCard} ${styles.statLink}`}>
-          <span className={styles.detailLabel}>დღევანდელი ვიზიტები</span>
-          <span className={styles.detailValue}>{todayCount}</span>
-        </Link>
-
-        <Link href="/my-clinic" className={`${styles.detailCard} ${styles.statLink}`}>
-          <span className={styles.detailLabel}>მომავალი ვიზიტები</span>
-          <span className={styles.detailValue}>{upcomingCount}</span>
-        </Link>
+        <StatCard href="/my-clinic" label="ექიმები" value={doctorCount} />
+        <StatCard href="/my-clinic" label="ახალი ექიმების მოთხოვნები" value={pendingDoctorCount} />
+        <StatCard href="/my-clinic" label="დღევანდელი ვიზიტები" value={todayCount} />
+        <StatCard href="/my-clinic" label="მომავალი ვიზიტები" value={upcomingCount} />
       </section>
     </>
   );

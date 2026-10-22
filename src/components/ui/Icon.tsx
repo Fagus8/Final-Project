@@ -9,7 +9,6 @@ export type IconName =
   | 'clinic'
   | 'appointments'
   | 'profile'
-  | 'bell'
   | 'search'
   | 'logout'
   | 'logo'
@@ -106,13 +105,6 @@ export default function Icon({ name, size = 20 }: IconProps) {
         <svg {...sharedProps}>
           <circle cx="12" cy="8" r="4" />
           <path d="M5 20.5a7 7 0 0 1 14 0" />
-        </svg>
-      );
-    case 'bell':
-      return (
-        <svg {...sharedProps}>
-          <path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9" />
-          <path d="M10.3 20a1.9 1.9 0 0 0 3.4 0" />
         </svg>
       );
     case 'search':

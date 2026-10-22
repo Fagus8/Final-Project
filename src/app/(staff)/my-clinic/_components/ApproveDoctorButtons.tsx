@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import list from "@/components/appointments/AppointmentList.module.scss";
+import { sendRequest } from "@/lib/request";
 
 // კლინიკის ღილაკები ახალი ექიმის მოთხოვნაზე: დადასტურება ან უარყოფა
 export default function ApproveDoctorButtons({ doctorId }: { doctorId: string }) {
@@ -15,20 +16,13 @@ export default function ApproveDoctorButtons({ doctorId }: { doctorId: string })
     setIsSaving(true);
     setError("");
 
-    try {
-      const response = await fetch(`/api/doctors/${doctorId}/approve`, { method });
-      const result = await response.json();
+    const { ok, message } = await sendRequest(`/api/doctors/${doctorId}/approve`, method);
 
-      if (!response.ok) {
-        setError(result.message || "მოქმედება ვერ შესრულდა");
-        return;
-      }
-
+    setIsSaving(false);
+    if (ok) {
       router.refresh();
-    } catch {
-      setError("სერვერთან დაკავშირება ვერ მოხერხდა");
-    } finally {
-      setIsSaving(false);
+    } else {
+      setError(message);
     }
   }
 

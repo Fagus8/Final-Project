@@ -1,16 +1,14 @@
 import Link from "next/link";
-import { headers } from "next/headers";
 import Icon, { type IconName } from "@/components/ui/Icon";
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import NavLink from "./NavLink";
 import styles from "./Sidebar.module.scss";
 
 type MenuItem = { href: string; label: string; icon: IconName };
 
+// გვერდითი მენიუ. ბმულები იცვლება იმის მიხედვით, ვინ არის შესული
 export default async function Sidebar() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
   const isAdmin = session?.user.role === "admin";
   const isPatient = session?.user.accountType === "PATIENT";
   const isDoctor = session?.user.accountType === "DOCTOR";
@@ -24,8 +22,11 @@ export default async function Sidebar() {
     { href: "/", label: "მთავარი", icon: "home" },
     { href: "/doctors", label: "ექიმები", icon: "doctors" },
     { href: "/clinics", label: "კლინიკები", icon: "clinic" },
-    ...(canBook ? [{ href: "/booking", label: "ვიზიტის დაჯავშნა", icon: "calendarPlus" as const }] : []),
   ];
+
+  if (canBook) {
+    general.push({ href: "/booking", label: "ვიზიტის დაჯავშნა", icon: "calendarPlus" });
+  }
 
   // როლის მიხედვით ბმულები, პირველი — პირადი კაბინეტი
   const personal: MenuItem[] = session

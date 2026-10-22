@@ -1,4 +1,3 @@
-// src/app/layout.tsx
 import "@/styles/global.scss";
 import { Inter, Noto_Sans_Georgian } from "next/font/google";
 import Header from "@/components/layout/Header";

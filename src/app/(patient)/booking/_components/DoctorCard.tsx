@@ -1,26 +1,21 @@
 "use client";
 
+import DoctorAvatar from "@/components/ui/DoctorAvatar";
 import Icon from "@/components/ui/Icon";
 import styles from "./DoctorCard.module.scss";
-import type { DoctorCardProps } from "./types";
+import type { DoctorOption } from "./types";
+
+type DoctorCardProps = {
+  doctor: DoctorOption;
+  selected: boolean;
+  onSelect: (doctorId: string) => void;
+};
 
 // ექიმის ბარათი ჯავშნის სიაში. „არჩევა“ ექიმს ირჩევს და ჯავშნის ფორმას ხსნის
-export default function DoctorCard({
-  doctor,
-  selected,
-  onSelect,
-}: DoctorCardProps) {
+export default function DoctorCard({ doctor, selected, onSelect }: DoctorCardProps) {
   return (
     <article className={`${styles.card} ${selected ? styles.selected : ""}`}>
-      {/* ფოტო, ან თუ ფოტო არ აქვს — სახელის პირველი ასო */}
-      {doctor.avatarUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img className={styles.avatar} src={doctor.avatarUrl} alt="" />
-      ) : (
-        <div className={styles.avatar} aria-hidden="true">
-          {doctor.name.trim().charAt(0).toLocaleUpperCase("ka-GE")}
-        </div>
-      )}
+      <DoctorAvatar name={doctor.name} avatarUrl={doctor.avatarUrl} className={styles.avatar} />
 
       <div className={styles.details}>
         <h2>{doctor.name}</h2>

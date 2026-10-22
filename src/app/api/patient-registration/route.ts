@@ -1,8 +1,8 @@
-import { headers } from "next/headers";
 import { z } from "zod";
-import { auth } from "@/lib/auth";
+import { jsonError, readJson } from "@/lib/api";
 import { BLOOD_TYPES } from "@/lib/blood-types";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/session";
 
 const patientSchema = z.object({
   phone: z.string().trim().min(1).max(30),
@@ -12,32 +12,24 @@ const patientSchema = z.object({
 
 // პაციენტის დამატებითი მონაცემები: ტელეფონი და სისხლის ჯგუფი
 export async function POST(request: Request) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
 
   if (!session) {
-    return Response.json({ message: "შესვლა საჭიროა" }, { status: 401 });
+    return jsonError("შესვლა საჭიროა", 401);
   }
 
   if (session.user.accountType !== "PATIENT") {
-    return Response.json({ message: "ეს მოქმედება მხოლოდ პაციენტისთვისაა" }, { status: 403 });
+    return jsonError("ეს მოქმედება მხოლოდ პაციენტისთვისაა", 403);
   }
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json({ message: "მოთხოვნის მონაცემები არასწორია" }, { status: 400 });
-  }
-
-  const result = patientSchema.safeParse(body);
+  const result = patientSchema.safeParse(await readJson(request));
   if (!result.success) {
-    return Response.json({ message: "შეამოწმე შევსებული ველები" }, { status: 400 });
+    return jsonError("შეამოწმე შევსებული ველები", 400);
   }
 
   const data = { phone: result.data.phone, bloodType: result.data.bloodType || null };
 
+  // თუ ჩანაწერი უკვე არსებობს, ვაახლებთ; თუ არა — ვქმნით
   await prisma.patient.upsert({
     where: { id: session.user.id },
     create: { id: session.user.id, ...data },

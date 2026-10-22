@@ -1,13 +1,12 @@
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Sidebar from "@/components/layout/Sidebar";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/session";
 import styles from "./Patients.module.scss";
 
 // ადმინის გვერდი: რეგისტრირებული პაციენტების სია
 export default async function PatientsPage() {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
 
   if (!session) {
     redirect("/login");

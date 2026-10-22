@@ -1,7 +1,7 @@
-import { headers } from "next/headers";
 import { z } from "zod";
-import { auth } from "@/lib/auth";
+import { isUuid, jsonError, readJson } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/session";
 import { isValidTime } from "@/lib/slots";
 
 const doctorSchema = z.object({
@@ -17,50 +17,39 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ doctorId: string }> },
 ) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
 
   if (!session) {
-    return Response.json({ message: "შესვლა საჭიროა" }, { status: 401 });
+    return jsonError("შესვლა საჭიროა", 401);
   }
 
   const { doctorId } = await params;
-  if (!z.string().uuid().safeParse(doctorId).success) {
-    return Response.json({ message: "ექიმი ვერ მოიძებნა" }, { status: 404 });
+  if (!isUuid(doctorId)) {
+    return jsonError("ექიმი ვერ მოიძებნა", 404);
   }
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json({ message: "მოთხოვნის მონაცემები არასწორია" }, { status: 400 });
-  }
-
-  const result = doctorSchema.safeParse(body);
+  const result = doctorSchema.safeParse(await readJson(request));
   if (!result.success) {
-    return Response.json({ message: "დრო უნდა იყოს ფორმატით 10:00" }, { status: 400 });
+    return jsonError("დრო უნდა იყოს ფორმატით 10:00", 400);
   }
 
   const { workStart, workEnd, email, room } = result.data;
 
+  // "10:00" < "18:00" — ერთნაირი ფორმატის დროები ტექსტადაც სწორად დარდება
   if (workStart >= workEnd) {
-    return Response.json(
-      { message: "სამუშაოს დასაწყისი დასრულებაზე ადრე უნდა იყოს" },
-      { status: 400 },
-    );
+    return jsonError("სამუშაოს დასაწყისი დასრულებაზე ადრე უნდა იყოს", 400);
   }
 
   const doctor = await prisma.doctor.findUnique({ where: { id: doctorId } });
   if (!doctor) {
-    return Response.json({ message: "ექიმი ვერ მოიძებნა" }, { status: 404 });
+    return jsonError("ექიმი ვერ მოიძებნა", 404);
   }
 
   const isClinic = doctor.clinicId === session.user.id;
   const isDoctor = doctor.userId === session.user.id;
 
   if (!isClinic && !isDoctor) {
-    return Response.json({ message: "ამ ექიმის რედაქტირება არ შეგიძლია" }, { status: 403 });
+    return jsonError("ამ ექიმის რედაქტირება არ შეგიძლია", 403);
   }
 
   if (isClinic && email) {
@@ -70,18 +59,22 @@ export async function PATCH(
     });
 
     if (emailTaken) {
-      return Response.json({ message: "ეს ელფოსტა სხვა ექიმს უკვე აქვს" }, { status: 409 });
+      return jsonError("ეს ელფოსტა სხვა ექიმს უკვე აქვს", 409);
     }
   }
 
-  await prisma.doctor.update({
-    where: { id: doctorId },
-    data: {
-      workStart,
-      workEnd,
-      ...(isClinic ? { email: email || null, room: room || null } : {}),
-    },
-  });
+  // საათებს ორივე ცვლის, ელფოსტას და კაბინეტს — მხოლოდ კლინიკა
+  if (isClinic) {
+    await prisma.doctor.update({
+      where: { id: doctorId },
+      data: { workStart, workEnd, email: email || null, room: room || null },
+    });
+  } else {
+    await prisma.doctor.update({
+      where: { id: doctorId },
+      data: { workStart, workEnd },
+    });
+  }
 
   return Response.json({ message: "ცვლილებები შენახულია" });
 }

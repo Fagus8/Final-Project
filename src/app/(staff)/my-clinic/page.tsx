@@ -1,25 +1,27 @@
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import AppointmentActions from "@/components/appointments/AppointmentActions";
+import list from "@/components/appointments/AppointmentList.module.scss";
 import DeleteClinicButton from "@/components/clinics/DeleteClinicButton";
 import DoctorProfileForm from "@/components/doctors/DoctorProfileForm";
 import DoctorScheduleForm from "@/components/doctors/DoctorScheduleForm";
-import list from "@/components/appointments/AppointmentList.module.scss";
 import Sidebar from "@/components/layout/Sidebar";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/session";
 import { formatDateTime, statusLabels } from "@/lib/slots";
 import styles from "../Staff.module.scss";
 import ApproveDoctorButtons from "./_components/ApproveDoctorButtons";
 import clinicStyles from "./MyClinic.module.scss";
 
+// რამდენი ვიზიტია მოცემული სტატუსით
+function countByStatus(appointments: { status: string }[], status: string) {
+  return appointments.filter((appointment) => appointment.status === status).length;
+}
+
 // კლინიკის გვერდი „კლინიკის მართვა“: ახალი ექიმების მოთხოვნები, სტატისტიკა,
-// ანგარიში ექიმების მიხედვით (CSV), ექიმების საათები და კაბინეტები,
+// ანგარიში ექიმების მიხედვით, ექიმების საათები და კაბინეტები,
 // მომავალი და გაუქმებული ვიზიტები, კლინიკის წაშლა
 export default async function MyClinicPage() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
 
   if (!session) {
     redirect("/login");
@@ -74,10 +76,8 @@ export default async function MyClinicPage() {
 
   const now = new Date();
   const upcoming = appointments.filter((a) => a.status === "BOOKED" && a.startsAt >= now);
+  // გაუქმებული ვიზიტები — ბოლოს გაუქმებული ზემოთ
   const cancelled = appointments.filter((a) => a.status === "CANCELLED").reverse();
-
-  // რამდენი ვიზიტია მოცემული სტატუსით (სტატისტიკის ბარათებისთვის)
-  const countByStatus = (status: string) => appointments.filter((a) => a.status === status).length;
 
   // კაბინეტის კონფლიქტი: ორ ექიმს ერთი კაბინეტი აქვს და საათები ემთხვევა
   const roomWarnings: string[] = [];
@@ -131,16 +131,13 @@ export default async function MyClinicPage() {
         {/* სტატისტიკა */}
         <section className={clinicStyles.stats}>
           <div><span>სულ ვიზიტები</span><strong>{appointments.length}</strong></div>
-          <div><span>დაჯავშნილი</span><strong>{countByStatus("BOOKED")}</strong></div>
-          <div><span>დასრულებული</span><strong>{countByStatus("COMPLETED")}</strong></div>
-          <div><span>გაუქმებული</span><strong>{countByStatus("CANCELLED")}</strong></div>
+          <div><span>დაჯავშნილი</span><strong>{countByStatus(appointments, "BOOKED")}</strong></div>
+          <div><span>დასრულებული</span><strong>{countByStatus(appointments, "COMPLETED")}</strong></div>
+          <div><span>გაუქმებული</span><strong>{countByStatus(appointments, "CANCELLED")}</strong></div>
         </section>
 
         <section className={styles.card}>
-          <div className={clinicStyles.reportHeader}>
-            <h2>ანგარიში ექიმების მიხედვით</h2>
-            <a href="/api/clinic/report" className={clinicStyles.download}>CSV ჩამოტვირთვა</a>
-          </div>
+          <h2>ანგარიში ექიმების მიხედვით</h2>
           <table className={clinicStyles.table}>
             <thead>
               <tr>
@@ -155,8 +152,8 @@ export default async function MyClinicPage() {
                 <tr key={doctor.id}>
                   <td>{doctor.name}</td>
                   <td>{doctor.appointments.length}</td>
-                  <td>{doctor.appointments.filter((a) => a.status === "COMPLETED").length}</td>
-                  <td>{doctor.appointments.filter((a) => a.status === "CANCELLED").length}</td>
+                  <td>{countByStatus(doctor.appointments, "COMPLETED")}</td>
+                  <td>{countByStatus(doctor.appointments, "CANCELLED")}</td>
                 </tr>
               ))}
             </tbody>
@@ -243,7 +240,7 @@ export default async function MyClinicPage() {
 
         <section className={`${styles.card} ${clinicStyles.dangerZone}`}>
           <h2>კლინიკის წაშლა</h2>
-          <p>კლინიკა სისტემიდან სამუდამოდ წაიშლება. პაციენტები მიიღებენ შეტყობინებას ვიზიტების გაუქმების შესახებ.</p>
+          <p>კლინიკა სისტემიდან სამუდამოდ წაიშლება ექიმებთან და ვიზიტებთან ერთად.</p>
           <DeleteClinicButton clinicId={clinic.id} clinicName={clinic.name} isOwnClinic />
         </section>
       </main>

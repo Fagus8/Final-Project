@@ -1,8 +1,7 @@
-import { headers } from "next/headers";
 import { z } from "zod";
-import { auth } from "@/lib/auth";
-import { notify } from "@/lib/notifications";
+import { jsonError, readJson } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/session";
 
 const doctorSchema = z.object({
   specialty: z.string().trim().min(1),
@@ -13,28 +12,19 @@ const doctorSchema = z.object({
 // ექიმი თვითონ რეგისტრირდება და ირჩევს კლინიკას.
 // კლინიკა მას „ახალი ექიმების“ სიაში ნახავს და დაადასტურებს.
 export async function POST(request: Request) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
 
   if (!session) {
-    return Response.json({ message: "შესვლა საჭიროა" }, { status: 401 });
+    return jsonError("შესვლა საჭიროა", 401);
   }
 
   if (session.user.accountType !== "DOCTOR") {
-    return Response.json({ message: "ეს მოქმედება მხოლოდ ექიმის ანგარიშისთვისაა" }, { status: 403 });
+    return jsonError("ეს მოქმედება მხოლოდ ექიმის ანგარიშისთვისაა", 403);
   }
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json({ message: "მოთხოვნის მონაცემები არასწორია" }, { status: 400 });
-  }
-
-  const result = doctorSchema.safeParse(body);
+  const result = doctorSchema.safeParse(await readJson(request));
   if (!result.success) {
-    return Response.json({ message: "შეამოწმე შევსებული ველები" }, { status: 400 });
+    return jsonError("შეამოწმე შევსებული ველები", 400);
   }
 
   // ერთ ანგარიშს მხოლოდ ერთი ექიმის ჩანაწერი აქვს
@@ -51,7 +41,7 @@ export async function POST(request: Request) {
   });
 
   if (!clinic) {
-    return Response.json({ message: "კლინიკა ვერ მოიძებნა" }, { status: 404 });
+    return jsonError("კლინიკა ვერ მოიძებნა", 404);
   }
 
   // ელფოსტას აქ არ ვწერთ: ის შეიძლება კლინიკის მოწვეულ ექიმს ეკუთვნოდეს.
@@ -66,8 +56,6 @@ export async function POST(request: Request) {
       isApproved: false,
     },
   });
-
-  await notify(clinic.id, `ახალი ექიმი ითხოვს დადასტურებას: ${session.user.name} (${result.data.specialty})`);
 
   return Response.json({ message: "მოთხოვნა გაიგზავნა კლინიკასთან" });
 }

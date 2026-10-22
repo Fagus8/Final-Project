@@ -1,27 +1,25 @@
-import { headers } from "next/headers";
-import { z } from "zod";
-import { auth } from "@/lib/auth";
+import { isUuid, jsonError } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/session";
 
+// ადმინი ამტკიცებს კლინიკას. ამის შემდეგ კლინიკა და მისი ექიმები საიტზე ჩნდება
 export async function POST(
   _request: Request,
   { params }: { params: Promise<{ clinicId: string }> },
 ) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
 
   if (!session) {
-    return Response.json({ message: "შესვლა საჭიროა" }, { status: 401 });
+    return jsonError("შესვლა საჭიროა", 401);
   }
 
   if (session.user.role !== "admin") {
-    return Response.json({ message: "ადმინის უფლება საჭიროა" }, { status: 403 });
+    return jsonError("ადმინის უფლება საჭიროა", 403);
   }
 
   const { clinicId } = await params;
-  if (!z.string().uuid().safeParse(clinicId).success) {
-    return Response.json({ message: "კლინიკა ვერ მოიძებნა" }, { status: 404 });
+  if (!isUuid(clinicId)) {
+    return jsonError("კლინიკა ვერ მოიძებნა", 404);
   }
 
   const clinic = await prisma.clinic.findUnique({
@@ -30,7 +28,7 @@ export async function POST(
   });
 
   if (!clinic) {
-    return Response.json({ message: "კლინიკა ვერ მოიძებნა" }, { status: 404 });
+    return jsonError("კლინიკა ვერ მოიძებნა", 404);
   }
 
   await prisma.$transaction([

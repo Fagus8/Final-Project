@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatDateTime } from "@/lib/slots";
 import styles from "../../Account.module.scss";
+import StatCard from "./StatCard";
 
 // პაციენტის ჯანმრთელობის მიმოხილვა — ვიზიტები, დიაგნოზი, დანიშნულება
 export default async function PatientOverview({ patientId }: { patientId: string }) {
@@ -51,15 +51,8 @@ export default async function PatientOverview({ patientId }: { patientId: string
           <span className={styles.detailValue}>{patient?.bloodType ?? "უცნობია"}</span>
         </article>
 
-        <Link href="/my-appointments" className={`${styles.detailCard} ${styles.statLink}`}>
-          <span className={styles.detailLabel}>მომავალი ვიზიტები</span>
-          <span className={styles.detailValue}>{upcomingCount}</span>
-        </Link>
-
-        <Link href="/my-appointments" className={`${styles.detailCard} ${styles.statLink}`}>
-          <span className={styles.detailLabel}>ჩატარებული ვიზიტები</span>
-          <span className={styles.detailValue}>{completedCount}</span>
-        </Link>
+        <StatCard href="/my-appointments" label="მომავალი ვიზიტები" value={upcomingCount} />
+        <StatCard href="/my-appointments" label="ჩატარებული ვიზიტები" value={completedCount} />
       </section>
 
       {/* ბოლო დიაგნოზი ჩანს მხოლოდ მაშინ, თუ ექიმს უკვე ჩაუწერია */}

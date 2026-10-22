@@ -4,12 +4,14 @@ import { APIError, createAuthMiddleware } from 'better-auth/api';
 import { admin } from 'better-auth/plugins';
 import { prisma } from './prisma';
 
+// ავტორიზაციის სერვერული ნაწილი (better-auth): ელფოსტა + პაროლი, სესიები ბაზაში
 export const auth = betterAuth({
+  // id-ები UUID ფორმატით, როგორც ბაზის სხვა ცხრილებში
   advanced: {
-  database: {
-    generateId: 'uuid',
+    database: {
+      generateId: 'uuid',
+    },
   },
-},
   database: prismaAdapter(prisma, {
     provider: 'postgresql',
   }),

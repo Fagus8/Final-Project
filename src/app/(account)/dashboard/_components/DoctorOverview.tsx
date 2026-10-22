@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { formatDateTime, formatDay, formatTime, toDate } from "@/lib/slots";
+import { formatDateTime, formatDay, formatTime, todayRange } from "@/lib/slots";
 import styles from "../../Account.module.scss";
+import StatCard from "./StatCard";
 
 // ექიმის სამუშაო დღის მიმოხილვა — დღევანდელი და მომავალი პაციენტები
 export default async function DoctorOverview({ userId }: { userId: string }) {
@@ -30,9 +31,7 @@ export default async function DoctorOverview({ userId }: { userId: string }) {
   }
 
   const now = new Date();
-  // დღის საზღვრები თბილისის დროით
-  const todayStart = toDate(formatDay(now), "00:00");
-  const tomorrowStart = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+  const { todayStart, tomorrowStart } = todayRange();
 
   // ოთხი მოთხოვნა ერთდროულად: დღევანდელი ვიზიტები, შემდეგი პაციენტი,
   // მომავალი ვიზიტები და ნამკურნალები პაციენტები (groupBy — თითო პაციენტი ერთხელ)
@@ -88,20 +87,9 @@ export default async function DoctorOverview({ userId }: { userId: string }) {
       </section>
 
       <section className={styles.details} aria-label="ვიზიტების სტატისტიკა">
-        <Link href="/my-schedule" className={`${styles.detailCard} ${styles.statLink}`}>
-          <span className={styles.detailLabel}>დღევანდელი ვიზიტები</span>
-          <span className={styles.detailValue}>{todayCount}</span>
-        </Link>
-
-        <Link href="/my-schedule" className={`${styles.detailCard} ${styles.statLink}`}>
-          <span className={styles.detailLabel}>მომავალი ვიზიტები</span>
-          <span className={styles.detailValue}>{upcomingCount}</span>
-        </Link>
-
-        <Link href="/my-schedule" className={`${styles.detailCard} ${styles.statLink}`}>
-          <span className={styles.detailLabel}>ნამკურნალები პაციენტები</span>
-          <span className={styles.detailValue}>{patientGroups.length}</span>
-        </Link>
+        <StatCard href="/my-schedule" label="დღევანდელი ვიზიტები" value={todayCount} />
+        <StatCard href="/my-schedule" label="მომავალი ვიზიტები" value={upcomingCount} />
+        <StatCard href="/my-schedule" label="ნამკურნალები პაციენტები" value={patientGroups.length} />
       </section>
     </>
   );

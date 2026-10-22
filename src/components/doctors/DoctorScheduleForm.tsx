@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { sendRequest } from "@/lib/request";
 import styles from "./DoctorScheduleForm.module.scss";
 
 type DoctorScheduleFormProps = {
@@ -32,23 +33,14 @@ export default function DoctorScheduleForm({ doctor, isClinic = false }: DoctorS
     setIsSaving(true);
     setMessage("");
 
-    try {
-      const response = await fetch(`/api/doctors/${doctor.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        // ექიმი მხოლოდ საათებს აგზავნის; ელფოსტას და კაბინეტს სერვერი მხოლოდ კლინიკისგან იღებს
-        body: JSON.stringify(isClinic ? { workStart, workEnd, email, room } : { workStart, workEnd }),
-      });
-      const result = await response.json();
+    // ექიმი მხოლოდ საათებს აგზავნის; ელფოსტას და კაბინეტს სერვერი მხოლოდ კლინიკისგან იღებს
+    const body = isClinic ? { workStart, workEnd, email, room } : { workStart, workEnd };
+    const result = await sendRequest(`/api/doctors/${doctor.id}`, "PATCH", body);
 
-      setMessage(result.message);
-      if (response.ok) {
-        router.refresh();
-      }
-    } catch {
-      setMessage("სერვერთან დაკავშირება ვერ მოხერხდა");
-    } finally {
-      setIsSaving(false);
+    setIsSaving(false);
+    setMessage(result.message);
+    if (result.ok) {
+      router.refresh();
     }
   }
 

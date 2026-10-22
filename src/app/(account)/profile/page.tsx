@@ -1,16 +1,13 @@
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import Sidebar from "@/components/layout/Sidebar";
+import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/session";
 import styles from "../Account.module.scss";
 
 // პაციენტის პროფილი: ანგარიშის მონაცემები (ჯანმრთელობის ინფორმაცია
 // პირად კაბინეტშია)
 export default async function ProfilePage() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
 
   if (!session) {
     redirect("/login");

@@ -4,7 +4,21 @@ import dayjs from "dayjs";
 import "dayjs/locale/ka";
 import Calendar from "@/components/ui/Calendar";
 import styles from "./BookingForm.module.scss";
-import type { BookingFormProps } from "./types";
+import type { DoctorOption } from "./types";
+
+type BookingFormProps = {
+  doctor: DoctorOption;
+  // "2026-10-15" ფორმატით
+  selectedDate: string;
+  availableTimes: string[];
+  // "10:30" ან null, თუ დრო ჯერ არ აურჩევია
+  selectedTime: string | null;
+  isLoadingTimes: boolean;
+  isSubmitting: boolean;
+  onDateChange: (date: string) => void;
+  onTimeSelect: (time: string) => void;
+  onConfirm: () => void;
+};
 
 // ჯავშნის ფორმა: თარიღი კალენდრიდან, დრო თავისუფალი სლოტებიდან.
 // მონაცემებს და მოქმედებებს მშობელი კომპონენტი (BookingSection) აწვდის

@@ -4,19 +4,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { toDate } from "@/lib/slots";
 import { POST } from "./route";
 
-// ავტორიზაცია, ბაზა და შეტყობინებები ჩანაცვლებულია, რომ ტესტი ბაზის გარეშე გაეშვას
+// ავტორიზაცია და ბაზა ჩანაცვლებულია, რომ ტესტი ბაზის გარეშე გაეშვას
 const mocks = vi.hoisted(() => ({
   getSession: vi.fn(),
   findDoctor: vi.fn(),
   findAppointment: vi.fn(),
   createAppointment: vi.fn(),
   transaction: vi.fn(),
-  notify: vi.fn(),
 }));
 
 vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
 vi.mock("@/lib/auth", () => ({ auth: { api: { getSession: mocks.getSession } } }));
-vi.mock("@/lib/notifications", () => ({ notify: mocks.notify }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     doctor: { findFirst: mocks.findDoctor },
@@ -75,7 +73,6 @@ describe("POST /api/appointments", () => {
     expect(mocks.createAppointment).toHaveBeenCalledWith({
       data: { doctorId: DOCTOR_ID, patientId: "patient-1", startsAt: toDate("2026-10-15", "10:30") },
     });
-    expect(mocks.notify).toHaveBeenCalledWith("doctor-user-1", expect.any(String));
   });
 
   it("ორმაგი ჯავშანი: ექიმი ამ დროს უკვე დაკავებულია → 409", async () => {

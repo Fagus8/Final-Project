@@ -1,7 +1,7 @@
-import { headers } from "next/headers";
 import { z } from "zod";
-import { auth } from "@/lib/auth";
+import { jsonError, readJson } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/session";
 
 // კლინიკის რეგისტრაციის მეორე ნაბიჯი: ანგარიში უკვე შექმნილია,
 // აქ ვინახავთ კლინიკის მონაცემებს და ექიმებს (ადმინის დამტკიცებამდე დამალულია)
@@ -13,41 +13,34 @@ const clinicSchema = z.object({
   phone: z.string().trim().min(1),
   specialty: z.string().trim().min(1),
   imageUrl: z.string().trim(),
-  doctors: z.array(
-    z.object({
-      name: z.string().trim().min(1),
-      specialty: z.string().trim().min(1),
-      experienceYears: z.number().int().min(0),
-    }),
-  ).min(1),
+  doctors: z
+    .array(
+      z.object({
+        name: z.string().trim().min(1),
+        specialty: z.string().trim().min(1),
+        experienceYears: z.number().int().min(0),
+      }),
+    )
+    .min(1),
 });
 
 export async function POST(request: Request) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
 
   if (!session) {
-    return Response.json({ message: "შესასვლელი ხარ ანგარიშში" }, { status: 401 });
+    return jsonError("შესასვლელი ხარ ანგარიშში", 401);
   }
 
   if (session.user.accountType !== "CLINIC") {
-    return Response.json({ message: "ეს მოქმედება მხოლოდ კლინიკის ანგარიშისთვისაა" }, { status: 403 });
+    return jsonError("ეს მოქმედება მხოლოდ კლინიკის ანგარიშისთვისაა", 403);
   }
 
-  let body: unknown;
-
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json({ message: "მოთხოვნის მონაცემები არასწორია" }, { status: 400 });
-  }
-
-  const result = clinicSchema.safeParse(body);
-
+  const result = clinicSchema.safeParse(await readJson(request));
   if (!result.success) {
-    return Response.json({ message: "შეამოწმე შევსებული ველები" }, { status: 400 });
+    return jsonError("შეამოწმე შევსებული ველები", 400);
   }
+
+  const { doctors, imageUrl, ...clinicData } = result.data;
 
   // კლინიკის id = ანგარიშის id. upsert-ის update ცარიელია: თუ კლინიკა
   // უკვე არსებობს (ფორმა ორჯერ გაიგზავნა), არაფერი იცვლება
@@ -55,27 +48,19 @@ export async function POST(request: Request) {
     where: { id: session.user.id },
     create: {
       id: session.user.id,
-      name: result.data.name,
-      city: result.data.city,
-      address: result.data.address,
-      phone: result.data.phone,
-      specialty: result.data.specialty,
-      imageUrl: result.data.imageUrl || null,
+      ...clinicData,
+      imageUrl: imageUrl || null,
       isApproved: false,
       doctors: {
-        create: result.data.doctors.map((doctor) => ({
-          name: doctor.name,
-          specialty: doctor.specialty,
-          experienceYears: doctor.experienceYears,
-          isApproved: false,
-        })),
+        create: doctors.map((doctor) => ({ ...doctor, isApproved: false })),
       },
     },
     update: {},
     select: { id: true },
   });
 
-  return Response.json(
-    { message: "კლინიკა და ექიმები გაიგზავნა დასამტკიცებლად", clinicId: clinic.id },
-  );
+  return Response.json({
+    message: "კლინიკა და ექიმები გაიგზავნა დასამტკიცებლად",
+    clinicId: clinic.id,
+  });
 }

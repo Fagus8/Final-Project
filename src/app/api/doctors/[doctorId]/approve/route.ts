@@ -1,36 +1,42 @@
-import { headers } from "next/headers";
-import { z } from "zod";
-import { auth } from "@/lib/auth";
-import { notify } from "@/lib/notifications";
+import { isUuid, jsonError } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/session";
 
-// კლინიკა ადასტურებს (POST) ან უარყოფს (DELETE) ექიმის მოთხოვნას
+// კლინიკა ადასტურებს (POST) ან უარყოფს (DELETE) ექიმის მოთხოვნას.
+// მოთხოვნა = დაუდასტურებელი ექიმი, რომელსაც ანგარიში აქვს.
+
+// ეძებს ამ კლინიკის მოლოდინში მყოფ ექიმს. თუ ვერ იპოვა, აბრუნებს შეცდომის პასუხს
 async function findPendingDoctor(doctorId: string) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
 
   if (!session) {
-    return { error: Response.json({ message: "შესვლა საჭიროა" }, { status: 401 }) };
+    return { error: jsonError("შესვლა საჭიროა", 401) };
   }
 
-  if (!z.string().uuid().safeParse(doctorId).success) {
-    return { error: Response.json({ message: "ექიმი ვერ მოიძებნა" }, { status: 404 }) };
+  if (!isUuid(doctorId)) {
+    return { error: jsonError("ექიმი ვერ მოიძებნა", 404) };
   }
 
-  // მოთხოვნა = დაუდასტურებელი ექიმი, რომელსაც ანგარიში აქვს
   const doctor = await prisma.doctor.findFirst({
     where: { id: doctorId, clinicId: session.user.id, isApproved: false, userId: { not: null } },
     include: { user: { select: { email: true } } },
   });
 
   if (!doctor || !doctor.userId || !doctor.user) {
-    return { error: Response.json({ message: "ექიმის მოთხოვნა ვერ მოიძებნა" }, { status: 404 }) };
+    return { error: jsonError("ექიმის მოთხოვნა ვერ მოიძებნა", 404) };
   }
 
-  return { doctor: { ...doctor, userId: doctor.userId, accountEmail: doctor.user.email } };
+  return {
+    doctor: {
+      id: doctor.id,
+      clinicId: doctor.clinicId,
+      userId: doctor.userId,
+      accountEmail: doctor.user.email,
+    },
+  };
 }
 
+// დადასტურება
 export async function POST(
   _request: Request,
   { params }: { params: Promise<{ doctorId: string }> },
@@ -51,19 +57,18 @@ export async function POST(
       prisma.doctor.update({ where: { id: invited.id }, data: { userId: doctor.userId } }),
     ]);
   } else {
-    // ელფოსტას ვწერთ, თუ სხვა ექიმს უკვე არ აქვს
+    // ელფოსტას ვწერთ მხოლოდ მაშინ, თუ სხვა ექიმს უკვე არ აქვს (ველი უნიკალურია)
     const emailTaken = await prisma.doctor.findUnique({ where: { email: doctor.accountEmail } });
     await prisma.doctor.update({
       where: { id: doctor.id },
-      data: { isApproved: true, ...(emailTaken ? {} : { email: doctor.accountEmail }) },
+      data: emailTaken ? { isApproved: true } : { isApproved: true, email: doctor.accountEmail },
     });
   }
-
-  await notify(doctor.userId, "კლინიკამ დაადასტურა შენი რეგისტრაცია. პაციენტებს უკვე შეუძლიათ შენთან ჩაწერა.");
 
   return Response.json({ message: "ექიმი დადასტურდა" });
 }
 
+// უარყოფა: მოთხოვნის ჩანაწერი იშლება, ექიმს სხვა კლინიკის არჩევა შეუძლია
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ doctorId: string }> },
@@ -73,8 +78,6 @@ export async function DELETE(
   if (error) return error;
 
   await prisma.doctor.delete({ where: { id: doctor.id } });
-
-  await notify(doctor.userId, "კლინიკამ უარყო შენი მოთხოვნა. შეგიძლია სხვა კლინიკა აირჩიო.");
 
   return Response.json({ message: "მოთხოვნა უარყოფილია" });
 }

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { sendRequest } from "@/lib/request";
 import BookingForm from "./BookingForm";
 import DoctorCard from "./DoctorCard";
 import styles from "../../Patient.module.scss";
@@ -39,19 +40,13 @@ export default function BookingSection({ doctors, initialDoctorId }: BookingSect
     fetch(`/api/doctors/${doctorId}/slots?date=${date}`)
       .then((response) => response.json())
       .then((result) => {
-        if (!ignore) {
-          setTimes(result.times ?? []);
-        }
+        if (!ignore) setTimes(result.times ?? []);
       })
       .catch(() => {
-        if (!ignore) {
-          setError("დროების ჩატვირთვა ვერ მოხერხდა");
-        }
+        if (!ignore) setError("დროების ჩატვირთვა ვერ მოხერხდა");
       })
       .finally(() => {
-        if (!ignore) {
-          setIsLoadingTimes(false);
-        }
+        if (!ignore) setIsLoadingTimes(false);
       });
 
     return () => {
@@ -60,12 +55,17 @@ export default function BookingSection({ doctors, initialDoctorId }: BookingSect
   }, [doctorId, date]);
 
   // ექიმის ან თარიღის შეცვლისას წინა არჩევანს და შეტყობინებებს ვასუფთავებთ
-  function selectDoctor(id: string) {
-    setDoctorId(id);
+  function clearSelection() {
     setTime(null);
     setTimes([]);
     setMessage("");
     setError("");
+  }
+
+  function selectDoctor(id: string) {
+    setDoctorId(id);
+    clearSelection();
+    // თარიღი თუ უკვე არჩეულია, ახალი ექიმის დროები მაშინვე ჩაიტვირთება
     if (date) {
       setIsLoadingTimes(true);
     }
@@ -73,10 +73,7 @@ export default function BookingSection({ doctors, initialDoctorId }: BookingSect
 
   function selectDate(newDate: string) {
     setDate(newDate);
-    setTime(null);
-    setTimes([]);
-    setMessage("");
-    setError("");
+    clearSelection();
     setIsLoadingTimes(true);
   }
 
@@ -89,32 +86,21 @@ export default function BookingSection({ doctors, initialDoctorId }: BookingSect
     setIsSubmitting(true);
     setError("");
 
-    try {
-      const response = await fetch("/api/appointments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ doctorId, date, time }),
-      });
-      const result = await response.json();
+    const result = await sendRequest("/api/appointments", "POST", { doctorId, date, time });
 
-      if (!response.ok) {
-        setError(result.message || "დაჯავშნა ვერ მოხერხდა");
-        // შეიძლება ვინმემ უკვე დაიკავა ეს დრო, ამიტომ სიიდან ვაშორებთ
-        setTimes((current) => current.filter((item) => item !== time));
-        setTime(null);
-        return;
-      }
+    setIsSubmitting(false);
+    // წარმატებისას დრო დაიკავა ჩვენმა ჯავშანმა, წარუმატებლობისას — შეიძლება სხვამ.
+    // ორივე შემთხვევაში ამ დროს სიიდან ვაშორებთ
+    setTimes((current) => current.filter((item) => item !== time));
+    setTime(null);
 
-      // დაჯავშნილი დრო სიიდან ქრება, რომ ხელახლა ვერ აირჩიოს
-      setMessage(`${result.message}! ნახე „ჩემი ვიზიტები“ გვერდზე.`);
-      setTimes((current) => current.filter((item) => item !== time));
-      setTime(null);
-      router.refresh();
-    } catch {
-      setError("სერვერთან დაკავშირება ვერ მოხერხდა");
-    } finally {
-      setIsSubmitting(false);
+    if (!result.ok) {
+      setError(result.message);
+      return;
     }
+
+    setMessage(`${result.message}! ნახე „ჩემი ვიზიტები“ გვერდზე.`);
+    router.refresh();
   }
 
   return (

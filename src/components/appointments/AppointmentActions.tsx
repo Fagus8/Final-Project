@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { sendRequest } from "@/lib/request";
 import styles from "./AppointmentList.module.scss";
 
 type AppointmentActionsProps = {
@@ -36,27 +37,17 @@ export default function AppointmentActions({
     setIsSaving(true);
     setError("");
 
-    try {
-      const response = await fetch(`/api/appointments/${appointmentId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const result = await response.json();
+    const { ok, message } = await sendRequest(`/api/appointments/${appointmentId}`, "PATCH", body);
 
-      if (!response.ok) {
-        setError(result.message || "მოქმედება ვერ შესრულდა");
-        return;
-      }
-
-      // წარმატებისას ფორმას ვხურავთ და გვერდს ვაახლებთ (ახალი სტატუსი გამოჩნდება)
-      setShowForm(false);
-      router.refresh();
-    } catch {
-      setError("სერვერთან დაკავშირება ვერ მოხერხდა");
-    } finally {
-      setIsSaving(false);
+    setIsSaving(false);
+    if (!ok) {
+      setError(message);
+      return;
     }
+
+    // წარმატებისას ფორმას ვხურავთ და გვერდს ვაახლებთ (ახალი სტატუსი გამოჩნდება)
+    setShowForm(false);
+    router.refresh();
   }
 
   return (

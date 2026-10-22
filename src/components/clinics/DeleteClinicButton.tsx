@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { sendRequest } from "@/lib/request";
 import styles from "./DeleteClinicButton.module.scss";
 
 type DeleteClinicButtonProps = {
@@ -36,27 +37,19 @@ export default function DeleteClinicButton({
     setIsDeleting(true);
     setError("");
 
-    try {
-      const response = await fetch(`/api/clinics/${encodeURIComponent(clinicId)}`, {
-        method: "DELETE",
-      });
-      const result = await response.json();
+    const { ok, message } = await sendRequest(`/api/clinics/${clinicId}`, "DELETE");
 
-      if (!response.ok) {
-        setError(result.message || "წაშლა ვერ მოხერხდა");
-        return;
-      }
-
-      // საკუთარი კლინიკის წაშლისას ანგარიშიც იშლება, ამიტომ მთავარ გვერდზე გადავდივართ
-      if (isOwnClinic) {
-        router.replace("/");
-      }
-      router.refresh();
-    } catch {
-      setError("სერვერთან დაკავშირება ვერ მოხერხდა");
-    } finally {
-      setIsDeleting(false);
+    setIsDeleting(false);
+    if (!ok) {
+      setError(message);
+      return;
     }
+
+    // საკუთარი კლინიკის წაშლისას ანგარიშიც იშლება, ამიტომ მთავარ გვერდზე გადავდივართ
+    if (isOwnClinic) {
+      router.replace("/");
+    }
+    router.refresh();
   }
 
   // პირველი ნაბიჯი: მხოლოდ ღილაკი. დაჭერის შემდეგ ჩნდება დადასტურების ფორმა

@@ -69,6 +69,14 @@ export function isSunday(date: string) {
   return toDate(date, "12:00").getUTCDay() === 0;
 }
 
+// დღევანდელი დღის დასაწყისი და ხვალინდელის დასაწყისი, თბილისის დროით.
+// გამოიყენება „დღევანდელი ვიზიტების“ დასათვლელად
+export function todayRange() {
+  const todayStart = toDate(formatDay(new Date()), "00:00");
+  const tomorrowStart = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+  return { todayStart, tomorrowStart };
+}
+
 export const statusLabels: Record<string, string> = {
   BOOKED: "დაჯავშნილი",
   COMPLETED: "დასრულებული",

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import formStyles from "@/components/doctors/DoctorScheduleForm.module.scss";
+import { sendRequest } from "@/lib/request";
 
 type JoinClinicFormProps = {
   clinics: { id: string; name: string; city: string }[];
@@ -23,23 +24,17 @@ export default function JoinClinicForm({ clinics }: JoinClinicFormProps) {
     setIsSaving(true);
     setMessage("");
 
-    try {
-      const response = await fetch("/api/doctor-registration", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ specialty, experienceYears, clinicId }),
-      });
-      const result = await response.json();
+    const result = await sendRequest("/api/doctor-registration", "POST", {
+      specialty,
+      experienceYears,
+      clinicId,
+    });
 
-      setMessage(result.message);
-      // გვერდი თავიდან იტვირთება და „მოთხოვნა გაგზავნილია“ გამოჩნდება
-      if (response.ok) {
-        router.refresh();
-      }
-    } catch {
-      setMessage("სერვერთან დაკავშირება ვერ მოხერხდა");
-    } finally {
-      setIsSaving(false);
+    setIsSaving(false);
+    setMessage(result.message);
+    // გვერდი თავიდან იტვირთება და „მოთხოვნა გაგზავნილია“ გამოჩნდება
+    if (result.ok) {
+      router.refresh();
     }
   }
 

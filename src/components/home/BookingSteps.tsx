@@ -5,7 +5,7 @@ import styles from "./Home.module.scss";
 const steps: { icon: IconName; title: string; text: string }[] = [
   { icon: "search", title: "იპოვე ექიმი", text: "მოძებნე სპეციალობით, სახელით ან კლინიკით." },
   { icon: "appointments", title: "აირჩიე დრო", text: "კალენდარში მხოლოდ თავისუფალი საათები ჩანს." },
-  { icon: "check", title: "მიიღე დადასტურება", text: "შეტყობინება მაშინვე მოგივა — შენც და ექიმსაც." },
+  { icon: "check", title: "მიიღე დადასტურება", text: "ვიზიტი მაშინვე გამოჩნდება „ჩემი ვიზიტების“ გვერდზე." },
 ];
 
 // „დაჯავშნე სამ ნაბიჯში“ — როგორ მუშაობს საიტი

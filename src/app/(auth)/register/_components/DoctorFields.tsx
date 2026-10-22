@@ -2,20 +2,17 @@
 
 import type { FormikProps } from "formik";
 import { useEffect, useState } from "react";
+import FormField from "./FormField";
 import type { RegistrationValues } from "./registration-schema";
 import styles from "../Register.module.scss";
-
-type DoctorFieldsProps = {
-  formik: FormikProps<RegistrationValues>;
-};
 
 type ClinicOption = { id: string; name: string; city: string };
 
 // ექიმის დამატებითი ველები: სპეციალობა, გამოცდილება და კლინიკა
-export default function DoctorFields({ formik }: DoctorFieldsProps) {
+export default function DoctorFields({ formik }: { formik: FormikProps<RegistrationValues> }) {
   const [clinics, setClinics] = useState<ClinicOption[]>([]);
 
-  // დამტკიცებული კლინიკების სია
+  // დამტკიცებული კლინიკების სია ჩამოსაშლელი მენიუსთვის
   useEffect(() => {
     fetch("/api/clinics")
       .then((response) => response.json())
@@ -23,25 +20,21 @@ export default function DoctorFields({ formik }: DoctorFieldsProps) {
       .catch(() => setClinics([]));
   }, []);
 
+  const clinicError = formik.touched.doctorClinicId && formik.errors.doctorClinicId;
+
   return (
     <section className={styles.clinicSection}>
       <h3 className={styles.sectionTitle}>ექიმის ინფორმაცია</h3>
 
-      <div className={styles["input-field"]}>
-        <label htmlFor="doctorSpecialty">სპეციალობა</label>
-        <input id="doctorSpecialty" type="text" placeholder="მაგ: კარდიოლოგი" {...formik.getFieldProps("doctorSpecialty")} />
-        {formik.touched.doctorSpecialty && formik.errors.doctorSpecialty ? (
-          <div className={styles["error-text"]}>{formik.errors.doctorSpecialty}</div>
-        ) : null}
-      </div>
-
-      <div className={styles["input-field"]}>
-        <label htmlFor="doctorExperience">გამოცდილება — წელი</label>
-        <input id="doctorExperience" type="number" min="0" step="1" {...formik.getFieldProps("doctorExperience")} />
-        {formik.touched.doctorExperience && formik.errors.doctorExperience ? (
-          <div className={styles["error-text"]}>{formik.errors.doctorExperience}</div>
-        ) : null}
-      </div>
+      <FormField formik={formik} name="doctorSpecialty" label="სპეციალობა" placeholder="მაგ: კარდიოლოგი" />
+      <FormField
+        formik={formik}
+        name="doctorExperience"
+        type="number"
+        min="0"
+        step="1"
+        label="გამოცდილება — წელი"
+      />
 
       <div className={styles["input-field"]}>
         <label htmlFor="doctorClinicId">კლინიკა, სადაც მუშაობ</label>
@@ -53,9 +46,7 @@ export default function DoctorFields({ formik }: DoctorFieldsProps) {
             </option>
           ))}
         </select>
-        {formik.touched.doctorClinicId && formik.errors.doctorClinicId ? (
-          <div className={styles["error-text"]}>{formik.errors.doctorClinicId}</div>
-        ) : null}
+        {clinicError && <div className={styles["error-text"]}>{clinicError}</div>}
       </div>
 
       <p>რეგისტრაციის შემდეგ კლინიკა დაადასტურებს, რომ მასთან მუშაობ.</p>

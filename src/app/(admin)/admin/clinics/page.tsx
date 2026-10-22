@@ -1,18 +1,15 @@
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import DeleteClinicButton from "@/components/clinics/DeleteClinicButton";
 import Sidebar from "@/components/layout/Sidebar";
+import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/session";
 import ApproveClinicButton from "./_components/ApproveClinicButton";
 import EditClinicForm from "./_components/EditClinicForm";
 import styles from "./AdminClinics.module.scss";
 
 // ადმინის გვერდი: ყველა კლინიკა, მათი დამტკიცება, რედაქტირება და წაშლა
 export default async function AdminClinicsPage() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
 
   if (!session) {
     redirect("/login");

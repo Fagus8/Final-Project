@@ -1,7 +1,7 @@
-import { headers } from "next/headers";
 import { z } from "zod";
-import { auth } from "@/lib/auth";
+import { isUuid, jsonError, readJson } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/session";
 
 // ადმინი ცვლის კლინიკის მონაცემებს და ექიმების სიას
 
@@ -27,44 +27,33 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ clinicId: string }> },
 ) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
 
   if (!session) {
-    return Response.json({ message: "შესვლა საჭიროა" }, { status: 401 });
+    return jsonError("შესვლა საჭიროა", 401);
   }
 
   if (session.user.role !== "admin") {
-    return Response.json({ message: "ადმინის უფლება საჭიროა" }, { status: 403 });
+    return jsonError("ადმინის უფლება საჭიროა", 403);
   }
 
   const { clinicId } = await params;
-  if (!z.string().uuid().safeParse(clinicId).success) {
-    return Response.json({ message: "კლინიკა ვერ მოიძებნა" }, { status: 404 });
+  if (!isUuid(clinicId)) {
+    return jsonError("კლინიკა ვერ მოიძებნა", 404);
   }
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json({ message: "მოთხოვნის მონაცემები არასწორია" }, { status: 400 });
-  }
-
-  const result = clinicUpdateSchema.safeParse(body);
+  const result = clinicUpdateSchema.safeParse(await readJson(request));
   if (!result.success) {
-    return Response.json({ message: "შეამოწმე შევსებული ველები" }, { status: 400 });
+    return jsonError("შეამოწმე შევსებული ველები", 400);
   }
+
+  const { doctors, imageUrl, ...clinicData } = result.data;
 
   // ყველაფერი ერთ ტრანზაქციაშია: ან მთლიანად შეინახება, ან არაფერი
-  const updateResult = await prisma.$transaction(async (transaction) => {
+  const outcome = await prisma.$transaction(async (transaction) => {
     const clinic = await transaction.clinic.findUnique({
       where: { id: clinicId },
-      select: {
-        id: true,
-        isApproved: true,
-        doctors: { select: { id: true } },
-      },
+      select: { isApproved: true, doctors: { select: { id: true } } },
     });
 
     if (!clinic) {
@@ -72,60 +61,36 @@ export async function PATCH(
     }
 
     // გაგზავნილი id-ები ამ კლინიკის ექიმებს უნდა ეკუთვნოდეს და არ უნდა მეორდებოდეს.
-    // თუ არა, ფორმა მოძველებულია (სხვამ უკვე შეცვალა) — "stale"
-    const submittedDoctorIds = result.data.doctors.flatMap((doctor) =>
-      doctor.id ? [doctor.id] : [],
-    );
-    const currentDoctorIds = clinic.doctors.map((doctor) => doctor.id);
-    if (
-      new Set(submittedDoctorIds).size !== submittedDoctorIds.length ||
-      submittedDoctorIds.some((id) => !currentDoctorIds.includes(id))
-    ) {
+    // თუ არა, ფორმა მოძველებულია (სხვამ უკვე შეცვალა)
+    const submittedIds: string[] = [];
+    for (const doctor of doctors) {
+      if (doctor.id) submittedIds.push(doctor.id);
+    }
+    const currentIds = clinic.doctors.map((doctor) => doctor.id);
+    const hasDuplicates = new Set(submittedIds).size !== submittedIds.length;
+    const hasForeignId = submittedIds.some((id) => !currentIds.includes(id));
+
+    if (hasDuplicates || hasForeignId) {
       return "stale";
     }
 
     await transaction.clinic.update({
       where: { id: clinicId },
-      data: {
-        name: result.data.name,
-        city: result.data.city,
-        address: result.data.address,
-        phone: result.data.phone,
-        specialty: result.data.specialty,
-        imageUrl: result.data.imageUrl || null,
-      },
+      data: { ...clinicData, imageUrl: imageUrl || null },
     });
 
     // სიიდან ამოღებულ ექიმებს ვშლით
     await transaction.doctor.deleteMany({
-      where: {
-        clinicId,
-        ...(submittedDoctorIds.length > 0
-          ? { id: { notIn: submittedDoctorIds } }
-          : {}),
-      },
+      where: { clinicId, id: { notIn: submittedIds } },
     });
 
     // დანარჩენს ვაახლებთ, ახლებს ვქმნით (დამტკიცებულ კლინიკაში — მაშინვე დამტკიცებულს)
-    for (const doctor of result.data.doctors) {
-      if (doctor.id) {
-        await transaction.doctor.update({
-          where: { id: doctor.id },
-          data: {
-            name: doctor.name,
-            specialty: doctor.specialty,
-            experienceYears: doctor.experienceYears,
-          },
-        });
+    for (const { id, ...doctorData } of doctors) {
+      if (id) {
+        await transaction.doctor.update({ where: { id }, data: doctorData });
       } else {
         await transaction.doctor.create({
-          data: {
-            clinicId,
-            name: doctor.name,
-            specialty: doctor.specialty,
-            experienceYears: doctor.experienceYears,
-            isApproved: clinic.isApproved,
-          },
+          data: { ...doctorData, clinicId, isApproved: clinic.isApproved },
         });
       }
     }
@@ -133,15 +98,12 @@ export async function PATCH(
     return "updated";
   });
 
-  if (updateResult === "not-found") {
-    return Response.json({ message: "კლინიკა ვერ მოიძებნა" }, { status: 404 });
+  if (outcome === "not-found") {
+    return jsonError("კლინიკა ვერ მოიძებნა", 404);
   }
 
-  if (updateResult === "stale") {
-    return Response.json(
-      { message: "კლინიკის ექიმების სია შეიცვალა. განაახლე გვერდი და სცადე ხელახლა." },
-      { status: 409 },
-    );
+  if (outcome === "stale") {
+    return jsonError("კლინიკის ექიმების სია შეიცვალა. განაახლე გვერდი და სცადე ხელახლა.", 409);
   }
 
   return Response.json({ message: "კლინიკის მონაცემები განახლებულია" });
