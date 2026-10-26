@@ -76,9 +76,3 @@ export function todayRange() {
   const tomorrowStart = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
   return { todayStart, tomorrowStart };
 }
-
-export const statusLabels: Record<string, string> = {
-  BOOKED: "დაჯავშნილი",
-  COMPLETED: "დასრულებული",
-  CANCELLED: "გაუქმებული",
-};

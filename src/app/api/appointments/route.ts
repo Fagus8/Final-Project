@@ -3,7 +3,7 @@ import { jsonError, readJson } from "@/lib/api";
 import { visibleDoctorWhere } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
-import { generateTimes, isSunday, isValidDay, isValidTime, toDate } from "@/lib/slots";
+import { generateTimes, isSunday, isValidDay, isValidTime, toDate } from "@/lib/time";
 
 const bookingSchema = z.object({
   doctorId: z.string().uuid(),

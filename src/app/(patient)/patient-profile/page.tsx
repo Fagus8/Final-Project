@@ -1,12 +1,13 @@
 import { redirect } from "next/navigation";
-import Sidebar from "@/components/layout/Sidebar";
+import Sidebar from "@/components/navigation/Sidebar";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
-import styles from "../Account.module.scss";
+// ბარათების სტილი პირად კაბინეტთან საერთოა
+import styles from "../../(account)/Account.module.scss";
 
 // პაციენტის პროფილი: ანგარიშის მონაცემები (ჯანმრთელობის ინფორმაცია
 // პირად კაბინეტშია)
-export default async function ProfilePage() {
+export default async function PatientProfilePage() {
   const session = await getSession();
 
   if (!session) {

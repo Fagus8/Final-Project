@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import Sidebar from "@/components/layout/Sidebar";
+import Sidebar from "@/components/navigation/Sidebar";
 import type { Prisma } from "@/generated/prisma/client";
 import { visibleDoctorWhere } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";

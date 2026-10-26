@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import Sidebar from "@/components/layout/Sidebar";
+import Sidebar from "@/components/navigation/Sidebar";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import ClinicOverview from "./_components/ClinicOverview";
@@ -14,11 +14,11 @@ const roleIntro: Record<string, { text: string; link?: { href: string; label: st
   PATIENT: { text: "აქ ნახავ შენს ვიზიტებს, დიაგნოზებს და დანიშნულებებს." },
   DOCTOR: {
     text: "აქ ნახავ შენს დღევანდელ და მომავალ პაციენტებს.",
-    link: { href: "/my-schedule", label: "ჩემი განრიგი" },
+    link: { href: "/doctor-schedule", label: "ჩემი განრიგი" },
   },
   CLINIC: {
     text: "აქ ნახავ კლინიკის ექიმებსა და ვიზიტებს.",
-    link: { href: "/my-clinic", label: "კლინიკის მართვა" },
+    link: { href: "/manage-clinic", label: "კლინიკის მართვა" },
   },
 };
 

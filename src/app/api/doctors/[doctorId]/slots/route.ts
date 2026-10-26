@@ -1,8 +1,8 @@
 import { isUuid, jsonError } from "@/lib/api";
-import { getAvailableTimes } from "@/lib/appointments";
+import { getAvailableTimes } from "@/lib/availability";
 import { visibleDoctorWhere } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
-import { isValidDay } from "@/lib/slots";
+import { isValidDay } from "@/lib/time";
 
 // ექიმის თავისუფალი დროები: /api/doctors/{id}/slots?date=2026-10-15
 export async function GET(

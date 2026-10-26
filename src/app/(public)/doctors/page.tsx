@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Sidebar from "@/components/layout/Sidebar";
+import Sidebar from "@/components/navigation/Sidebar";
 import Card from "@/components/ui/Card";
 import DoctorAvatar from "@/components/ui/DoctorAvatar";
 import { visibleDoctorWhere } from "@/lib/doctors";

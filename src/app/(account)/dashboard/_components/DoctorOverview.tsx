@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { formatDateTime, formatDay, formatTime, todayRange } from "@/lib/slots";
+import { formatDateTime, formatDay, formatTime, todayRange } from "@/lib/time";
 import styles from "../../Account.module.scss";
 import StatCard from "./StatCard";
 
@@ -16,7 +16,7 @@ export default async function DoctorOverview({ userId }: { userId: string }) {
     return (
       <p className={styles.detailCard}>
         შენი ანგარიში ჯერ არცერთ კლინიკას არ უკავშირდება.{" "}
-        <Link href="/my-schedule">აირჩიე კლინიკა →</Link>
+        <Link href="/doctor-schedule">აირჩიე კლინიკა →</Link>
       </p>
     );
   }
@@ -87,9 +87,9 @@ export default async function DoctorOverview({ userId }: { userId: string }) {
       </section>
 
       <section className={styles.details} aria-label="ვიზიტების სტატისტიკა">
-        <StatCard href="/my-schedule" label="დღევანდელი ვიზიტები" value={todayCount} />
-        <StatCard href="/my-schedule" label="მომავალი ვიზიტები" value={upcomingCount} />
-        <StatCard href="/my-schedule" label="ნამკურნალები პაციენტები" value={patientGroups.length} />
+        <StatCard href="/doctor-schedule" label="დღევანდელი ვიზიტები" value={todayCount} />
+        <StatCard href="/doctor-schedule" label="მომავალი ვიზიტები" value={upcomingCount} />
+        <StatCard href="/doctor-schedule" label="ნამკურნალები პაციენტები" value={patientGroups.length} />
       </section>
     </>
   );

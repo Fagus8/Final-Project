@@ -1,6 +1,6 @@
 import "@/styles/global.scss";
 import { Inter, Noto_Sans_Georgian } from "next/font/google";
-import Header from "@/components/layout/Header";
+import Header from "@/components/navigation/Header";
 
 // Inter-ს ქართული ასოები არ აქვს, ამიტომ ქართულისთვის Noto Sans Georgian-ს ვიყენებთ
 const georgian = Noto_Sans_Georgian({

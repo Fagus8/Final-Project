@@ -1,4 +1,4 @@
-// slots.ts-ის ტესტები: დროის სლოტები, თბილისის დრო და ვალიდაცია.
+// time.ts-ის ტესტები: დროის სლოტები, თბილისის დრო და ვალიდაცია.
 // გაშვება: npm test
 import { describe, expect, it } from "vitest";
 import {
@@ -10,7 +10,7 @@ import {
   isValidDay,
   isValidTime,
   toDate,
-} from "./slots";
+} from "./time";
 
 describe("generateTimes", () => {
   it("ყოფს სამუშაო საათებს 30-წუთიან სლოტებად", () => {

@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { formatDateTime } from "@/lib/slots";
+import { formatDateTime } from "@/lib/time";
 import styles from "../../Account.module.scss";
 import StatCard from "./StatCard";
 
@@ -45,8 +45,8 @@ export default async function PatientOverview({ patientId }: { patientId: string
         <span className={styles.detailValue}>{patient?.bloodType ?? "უცნობია"}</span>
       </article>
 
-      <StatCard href="/my-appointments" label="მომავალი ვიზიტები" value={upcomingCount} />
-      <StatCard href="/my-appointments" label="ჩატარებული ვიზიტები" value={completedCount} />
+      <StatCard href="/patient-visits" label="მომავალი ვიზიტები" value={upcomingCount} />
+      <StatCard href="/patient-visits" label="ჩატარებული ვიზიტები" value={completedCount} />
     </section>
   );
 }

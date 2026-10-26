@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import DoctorAvatar from "@/components/ui/DoctorAvatar";
-import { sendRequest } from "@/lib/request";
+import { sendRequest } from "@/lib/api-client";
 import styles from "./DoctorProfileForm.module.scss";
 
 // ექიმის პროფილის ფორმა: ფოტო, სპეციალობა, გამოცდილება, ფასი, ბიოგრაფია,

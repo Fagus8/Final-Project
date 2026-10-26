@@ -35,20 +35,20 @@ export default async function Sidebar() {
 
   if (isPatient && !isAdmin) {
     personal.push(
-      { href: "/my-appointments", label: "ჩემი ვიზიტები", icon: "appointments" },
-      { href: "/profile", label: "ჩემი პროფილი", icon: "profile" },
+      { href: "/patient-visits", label: "ჩემი ვიზიტები", icon: "appointments" },
+      { href: "/patient-profile", label: "ჩემი პროფილი", icon: "profile" },
     );
   }
 
   if (isDoctor) {
     personal.push(
-      { href: "/my-schedule", label: "ჩემი განრიგი", icon: "appointments" },
-      { href: "/my-profile", label: "ჩემი პროფილი", icon: "profile" },
+      { href: "/doctor-schedule", label: "ჩემი განრიგი", icon: "appointments" },
+      { href: "/doctor-profile", label: "ჩემი პროფილი", icon: "profile" },
     );
   }
 
   if (isClinic) {
-    personal.push({ href: "/my-clinic", label: "კლინიკის მართვა", icon: "chart" });
+    personal.push({ href: "/manage-clinic", label: "კლინიკის მართვა", icon: "chart" });
   }
 
   if (isAdmin) {

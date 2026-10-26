@@ -4,7 +4,7 @@
 import "dotenv/config";
 import { auth } from "../src/lib/auth";
 import { prisma } from "../src/lib/prisma";
-import { formatDay, isSunday, toDate } from "../src/lib/slots";
+import { formatDay, isSunday, toDate } from "../src/lib/time";
 
 const PASSWORD = "demo1234";
 const ADMIN_EMAIL = "admin@medical.ge";

@@ -1,13 +1,13 @@
 import { redirect } from "next/navigation";
-import DoctorScheduleForm from "@/components/doctors/DoctorScheduleForm";
-import Sidebar from "@/components/layout/Sidebar";
+import DoctorSettingsForm from "@/components/doctors/DoctorSettingsForm";
+import Sidebar from "@/components/navigation/Sidebar";
 import { findDoctorInvitation } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
-import { formatDay, formatTime } from "@/lib/slots";
+import { formatDay, formatTime } from "@/lib/time";
 import AcceptInvitationButton from "./_components/AcceptInvitationButton";
 import JoinClinicForm from "./_components/JoinClinicForm";
-import DoctorSchedule from "./_components/DoctorSchedule";
+import DoctorAppointments from "./_components/DoctorAppointments";
 import styles from "../Staff.module.scss";
 
 // ექიმის გვერდი „ჩემი განრიგი“. სამი მდგომარეობა აქვს:
@@ -15,8 +15,8 @@ import styles from "../Staff.module.scss";
 //    დანარჩენს კლინიკის არჩევის ფორმა
 // 2) მოთხოვნა გაგზავნილია, კლინიკას ჯერ არ დაუდასტურებია — ლოდინის შეტყობინება
 // 3) დადასტურებულია — სამუშაო საათები და ვიზიტების კალენდარი
-// (პროფილის ინფორმაცია ცალკე გვერდზეა — „ჩემი პროფილი“, /my-profile)
-export default async function MySchedulePage({ searchParams }: PageProps<"/my-schedule">) {
+// (პროფილის ინფორმაცია ცალკე გვერდზეა — „ჩემი პროფილი“, /doctor-profile)
+export default async function DoctorSchedulePage({ searchParams }: PageProps<"/doctor-schedule">) {
   const session = await getSession();
 
   if (!session) {
@@ -145,7 +145,7 @@ export default async function MySchedulePage({ searchParams }: PageProps<"/my-sc
             {doctor.room && <> · კაბინეტი {doctor.room}</>}
           </p>
           <h3>სამუშაო საათები (ორშაბათი–შაბათი)</h3>
-          <DoctorScheduleForm
+          <DoctorSettingsForm
             doctor={{
               id: doctor.id,
               workStart: doctor.workStart,
@@ -156,7 +156,7 @@ export default async function MySchedulePage({ searchParams }: PageProps<"/my-sc
           />
         </section>
 
-        <DoctorSchedule items={items} today={formatDay(new Date())} />
+        <DoctorAppointments items={items} today={formatDay(new Date())} />
       </main>
     </div>
   );

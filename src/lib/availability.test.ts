@@ -1,8 +1,8 @@
 // getAvailableTimes-ის ტესტები: რომელი დროები ჩანს თავისუფლად.
 // ბაზა ჩანაცვლებულია (mock), საათი კი დაფიქსირებულია (fake timers)
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getAvailableTimes } from "./appointments";
-import { toDate } from "./slots";
+import { getAvailableTimes } from "./availability";
+import { toDate } from "./time";
 
 // ბაზის ნაცვლად — vi.mock ფაილის თავში აიწევა, ამიტომ vi.hoisted გვჭირდება
 const { findMany } = vi.hoisted(() => ({ findMany: vi.fn() }));

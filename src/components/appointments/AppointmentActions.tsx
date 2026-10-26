@@ -2,8 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { sendRequest } from "@/lib/request";
-import styles from "./AppointmentList.module.scss";
+import { sendRequest } from "@/lib/api-client";
+import styles from "@/components/ui/List.module.scss";
+import actionStyles from "./AppointmentActions.module.scss";
 
 type AppointmentActionsProps = {
   appointmentId: string;
@@ -77,7 +78,7 @@ export default function AppointmentActions({
       {/* დიაგნოზის ფორმა: შენახვისას ვიზიტი „დასრულებული“ ხდება */}
       {canComplete && showForm && (
         <form
-          className={styles.diagnosisForm}
+          className={actionStyles.diagnosisForm}
           onSubmit={(event) => {
             event.preventDefault();
             sendAction({

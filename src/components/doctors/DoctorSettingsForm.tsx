@@ -2,10 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { sendRequest } from "@/lib/request";
-import styles from "./DoctorScheduleForm.module.scss";
+import { sendRequest } from "@/lib/api-client";
+import styles from "@/components/ui/InlineForm.module.scss";
 
-type DoctorScheduleFormProps = {
+type DoctorSettingsFormProps = {
   doctor: {
     id: string;
     workStart: string;
@@ -21,7 +21,7 @@ type DoctorScheduleFormProps = {
 
 // ექიმის სამუშაო საათების ფორმა („ჩემი განრიგი“ და „კლინიკის მართვა“).
 // ამ საათებიდან იქმნება 30-წუთიანი სლოტები ჯავშნისთვის
-export default function DoctorScheduleForm({ doctor, isClinic = false }: DoctorScheduleFormProps) {
+export default function DoctorSettingsForm({ doctor, isClinic = false }: DoctorSettingsFormProps) {
   const router = useRouter();
   const [workStart, setWorkStart] = useState(doctor.workStart);
   const [workEnd, setWorkEnd] = useState(doctor.workEnd);

@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { todayRange } from "@/lib/slots";
+import { todayRange } from "@/lib/time";
 import styles from "../../Account.module.scss";
 import StatCard from "./StatCard";
 
@@ -52,10 +52,10 @@ export default async function ClinicOverview({ clinicId }: { clinicId: string })
       </section>
 
       <section className={styles.details} aria-label="კლინიკის სტატისტიკა">
-        <StatCard href="/my-clinic" label="ექიმები" value={doctorCount} />
-        <StatCard href="/my-clinic" label="ახალი ექიმების მოთხოვნები" value={pendingDoctorCount} />
-        <StatCard href="/my-clinic" label="დღევანდელი ვიზიტები" value={todayCount} />
-        <StatCard href="/my-clinic" label="მომავალი ვიზიტები" value={upcomingCount} />
+        <StatCard href="/manage-clinic" label="ექიმები" value={doctorCount} />
+        <StatCard href="/manage-clinic" label="ახალი ექიმების მოთხოვნები" value={pendingDoctorCount} />
+        <StatCard href="/manage-clinic" label="დღევანდელი ვიზიტები" value={todayCount} />
+        <StatCard href="/manage-clinic" label="მომავალი ვიზიტები" value={upcomingCount} />
       </section>
     </>
   );

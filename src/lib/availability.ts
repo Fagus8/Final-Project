@@ -1,5 +1,5 @@
 import { prisma } from "./prisma";
-import { formatTime, generateTimes, isSunday, toDate } from "./slots";
+import { formatTime, generateTimes, isSunday, toDate } from "./time";
 
 type DoctorHours = {
   id: string;

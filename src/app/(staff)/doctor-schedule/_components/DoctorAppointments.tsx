@@ -3,8 +3,8 @@
 import { useState } from "react";
 import Calendar from "@/components/ui/Calendar";
 import AppointmentActions from "@/components/appointments/AppointmentActions";
-import list from "@/components/appointments/AppointmentList.module.scss";
-import { statusLabels } from "@/lib/slots";
+import list from "@/components/ui/List.module.scss";
+import { statusLabels } from "@/lib/appointment-status";
 import styles from "../../Staff.module.scss";
 
 export type ScheduleItem = {
@@ -22,7 +22,7 @@ export type ScheduleItem = {
   hasStarted: boolean;
 };
 
-export default function DoctorSchedule({ items, today }: { items: ScheduleItem[]; today: string }) {
+export default function DoctorAppointments({ items, today }: { items: ScheduleItem[]; today: string }) {
   const [selectedDate, setSelectedDate] = useState(today);
 
   // დღეები, რომლებზეც აქტიური ვიზიტებია

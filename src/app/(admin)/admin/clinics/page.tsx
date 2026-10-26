@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import DeleteClinicButton from "@/components/clinics/DeleteClinicButton";
-import Sidebar from "@/components/layout/Sidebar";
+import Sidebar from "@/components/navigation/Sidebar";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import ApproveClinicButton from "./_components/ApproveClinicButton";

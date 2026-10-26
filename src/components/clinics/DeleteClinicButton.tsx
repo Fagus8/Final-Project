@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { sendRequest } from "@/lib/request";
+import { sendRequest } from "@/lib/api-client";
 import styles from "./DeleteClinicButton.module.scss";
 
 type DeleteClinicButtonProps = {

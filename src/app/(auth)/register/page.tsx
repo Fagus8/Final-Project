@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Icon, { type IconName } from "@/components/ui/Icon";
 import { authClient } from "@/lib/auth-client";
-import { sendRequest } from "@/lib/request";
+import { sendRequest } from "@/lib/api-client";
 import styles from "./Register.module.scss";
 import ClinicFields from "./_components/ClinicFields";
 import DoctorFields from "./_components/DoctorFields";
@@ -144,7 +144,7 @@ export default function RegisterPage() {
             specialty: values.doctorSpecialty.trim(),
             experience: String(values.doctorExperience),
           });
-          router.push(`/my-schedule?${params}`);
+          router.push(`/doctor-schedule?${params}`);
           router.refresh();
         } else {
           router.push("/");

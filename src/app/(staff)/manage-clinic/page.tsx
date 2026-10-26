@@ -1,17 +1,18 @@
 import { redirect } from "next/navigation";
 import AppointmentActions from "@/components/appointments/AppointmentActions";
-import list from "@/components/appointments/AppointmentList.module.scss";
+import list from "@/components/ui/List.module.scss";
 import DeleteClinicButton from "@/components/clinics/DeleteClinicButton";
 import DoctorProfileForm from "@/components/doctors/DoctorProfileForm";
-import DoctorScheduleForm from "@/components/doctors/DoctorScheduleForm";
-import Sidebar from "@/components/layout/Sidebar";
+import DoctorSettingsForm from "@/components/doctors/DoctorSettingsForm";
+import Sidebar from "@/components/navigation/Sidebar";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
-import { formatDateTime, statusLabels } from "@/lib/slots";
+import { statusLabels } from "@/lib/appointment-status";
+import { formatDateTime } from "@/lib/time";
 import styles from "../Staff.module.scss";
 import AddDoctorForm from "./_components/AddDoctorForm";
 import ApproveDoctorButtons from "./_components/ApproveDoctorButtons";
-import clinicStyles from "./MyClinic.module.scss";
+import clinicStyles from "./ManageClinic.module.scss";
 
 // რამდენი ვიზიტია მოცემული სტატუსით
 function countByStatus(appointments: { status: string }[], status: string) {
@@ -21,7 +22,7 @@ function countByStatus(appointments: { status: string }[], status: string) {
 // კლინიკის გვერდი „კლინიკის მართვა“: ახალი ექიმების მოთხოვნები, სტატისტიკა,
 // ანგარიში ექიმების მიხედვით, ახალი ექიმის დამატება, ექიმების საათები და კაბინეტები,
 // მომავალი და გაუქმებული ვიზიტები, კლინიკის წაშლა
-export default async function MyClinicPage() {
+export default async function ManageClinicPage() {
   const session = await getSession();
 
   if (!session) {
@@ -205,7 +206,7 @@ export default async function MyClinicPage() {
                   და მოთხოვნას დაადასტურებ.
                 </p>
               )}
-              <DoctorScheduleForm
+              <DoctorSettingsForm
                 isClinic
                 doctor={{
                   id: doctor.id,

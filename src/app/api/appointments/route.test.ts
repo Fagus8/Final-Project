@@ -1,7 +1,7 @@
 // ჯავშნის API-ის (POST /api/appointments) ტესტები: წარმატებული ჯავშანი,
 // ორმაგი ჯავშანი, არასწორი დრო და უფლებები
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { toDate } from "@/lib/slots";
+import { toDate } from "@/lib/time";
 import { POST } from "./route";
 
 // ავტორიზაცია და ბაზა ჩანაცვლებულია, რომ ტესტი ბაზის გარეშე გაეშვას

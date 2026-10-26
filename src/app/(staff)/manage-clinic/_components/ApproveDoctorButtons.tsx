@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import list from "@/components/appointments/AppointmentList.module.scss";
-import { sendRequest } from "@/lib/request";
+import list from "@/components/ui/List.module.scss";
+import { sendRequest } from "@/lib/api-client";
 
 // კლინიკის ღილაკები ახალი ექიმის მოთხოვნაზე: დადასტურება ან უარყოფა
 export default function ApproveDoctorButtons({ doctorId }: { doctorId: string }) {

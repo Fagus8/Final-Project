@@ -2,7 +2,7 @@ import { z } from "zod";
 import { doctorEmailSchema, isUuid, jsonError, readJson } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
-import { isValidTime } from "@/lib/slots";
+import { isValidTime } from "@/lib/time";
 
 const doctorSchema = z.object({
   workStart: z.string().refine(isValidTime, "დრო უნდა იყოს ფორმატით 10:00"),

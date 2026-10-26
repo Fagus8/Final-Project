@@ -1,16 +1,17 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import AppointmentActions from "@/components/appointments/AppointmentActions";
-import list from "@/components/appointments/AppointmentList.module.scss";
-import Sidebar from "@/components/layout/Sidebar";
+import list from "@/components/ui/List.module.scss";
+import Sidebar from "@/components/navigation/Sidebar";
 import DoctorAvatar from "@/components/ui/DoctorAvatar";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
-import { formatDateTime, statusLabels } from "@/lib/slots";
+import { statusLabels } from "@/lib/appointment-status";
+import { formatDateTime } from "@/lib/time";
 import styles from "../Patient.module.scss";
 
 // პაციენტის გვერდი „ჩემი ვიზიტები“: მომავალი ვიზიტები და ისტორია დიაგნოზებით
-export default async function MyAppointmentsPage() {
+export default async function PatientVisitsPage() {
   const session = await getSession();
 
   if (!session) {

@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import formStyles from "@/components/doctors/DoctorScheduleForm.module.scss";
-import { sendRequest } from "@/lib/request";
+import formStyles from "@/components/ui/InlineForm.module.scss";
+import { sendRequest } from "@/lib/api-client";
 
 // კლინიკა „კლინიკის მართვიდან“ ამატებს ახალ ექიმს.
 // ელფოსტა სავალდებულოა: ამ ელფოსტით დარეგისტრირებული ექიმი ამ ჩანაწერს მიებმება

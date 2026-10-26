@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import DoctorProfileForm from "@/components/doctors/DoctorProfileForm";
-import Sidebar from "@/components/layout/Sidebar";
+import Sidebar from "@/components/navigation/Sidebar";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import styles from "../Staff.module.scss";
 
 // ექიმის გვერდი „ჩემი პროფილი“: ანგარიშის მონაცემები და საჯარო პროფილის რედაქტირება
-export default async function MyProfilePage() {
+export default async function DoctorProfileEditPage() {
   const session = await getSession();
 
   if (!session) {
@@ -39,7 +39,7 @@ export default async function MyProfilePage() {
             ) : (
               <>
                 შენი ანგარიში ჯერ არცერთ კლინიკას არ უკავშირდება.{" "}
-                <Link href="/my-schedule">აირჩიე კლინიკა →</Link>
+                <Link href="/doctor-schedule">აირჩიე კლინიკა →</Link>
               </>
             )}
           </p>

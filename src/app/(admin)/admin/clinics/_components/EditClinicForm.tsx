@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { sendRequest } from "@/lib/request";
+import { sendRequest } from "@/lib/api-client";
 import styles from "../AdminClinics.module.scss";
 
 // ადმინის ფორმა: კლინიკის მონაცემების და მისი ექიმების რედაქტირება

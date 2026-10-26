@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { sendRequest } from "@/lib/request";
+import { sendRequest } from "@/lib/api-client";
 import BookingForm from "./BookingForm";
 import DoctorCard from "./DoctorCard";
 import styles from "../../Patient.module.scss";
