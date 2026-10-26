@@ -39,6 +39,11 @@ const apiDocument = {
           name: { type: 'string', minLength: 1 },
           specialty: { type: 'string', minLength: 1 },
           experienceYears: { type: 'integer', minimum: 0 },
+          email: {
+            type: 'string',
+            format: 'email',
+            description: 'ახალი ექიმისთვის სავალდებულოა: ამ ელფოსტით დარეგისტრირებული ექიმის ანგარიში ამ ჩანაწერს მიებმება.',
+          },
         },
       },
       ClinicInput: {
@@ -180,6 +185,66 @@ const apiDocument = {
           },
           '403': {
             description: 'კლინიკის მონაცემების გაგზავნა მხოლოდ კლინიკის ანგარიშს შეუძლია.',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Message' } } },
+          },
+        },
+      },
+    },
+    '/api/clinics/{clinicId}/doctors': {
+      post: {
+        tags: ['კლინიკები'],
+        summary: 'კლინიკა ამატებს ახალ (მოწვეულ) ექიმს',
+        description:
+          'ხელმისაწვდომია მხოლოდ ამავე კლინიკის ანგარიშისთვის. ექიმი საიტზე გამოჩნდება, როცა მითითებული ელფოსტით დარეგისტრირდება და კლინიკა მის მოთხოვნას დაადასტურებს.',
+        security: [{ sessionCookie: [] }],
+        parameters: [
+          {
+            name: 'clinicId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['name', 'specialty', 'experienceYears', 'email'],
+                properties: {
+                  name: { type: 'string', minLength: 1 },
+                  specialty: { type: 'string', minLength: 1 },
+                  experienceYears: { type: 'integer', minimum: 0 },
+                  email: { type: 'string', format: 'email' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'ექიმი დაემატა.',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Message' } } },
+          },
+          '400': {
+            description: 'ექიმის მონაცემები არასწორია.',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Message' } } },
+          },
+          '401': {
+            description: 'საჭიროა ანგარიშში შესვლა.',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Message' } } },
+          },
+          '403': {
+            description: 'ექიმის დამატება მხოლოდ ამ კლინიკის ანგარიშს შეუძლია.',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Message' } } },
+          },
+          '404': {
+            description: 'კლინიკა ვერ მოიძებნა.',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Message' } } },
+          },
+          '409': {
+            description: 'ეს ელფოსტა სხვა ექიმს უკვე აქვს.',
             content: { 'application/json': { schema: { $ref: '#/components/schemas/Message' } } },
           },
         },

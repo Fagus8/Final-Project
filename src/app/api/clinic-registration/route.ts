@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { jsonError, readJson } from "@/lib/api";
+import { checkDoctorEmails, doctorEmailSchema, jsonError, readJson } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 
@@ -19,6 +19,7 @@ const clinicSchema = z.object({
         name: z.string().trim().min(1),
         specialty: z.string().trim().min(1),
         experienceYears: z.number().int().min(0),
+        email: doctorEmailSchema,
       }),
     )
     .min(1),
@@ -41,6 +42,14 @@ export async function POST(request: Request) {
   }
 
   const { doctors, imageUrl, ...clinicData } = result.data;
+
+  // თუ კლინიკა უკვე შენახულია (ფორმა ორჯერ გაიგზავნა), ელფოსტებს აღარ ვამოწმებთ —
+  // მისივე ექიმები „დაკავებულად“ არ უნდა ჩაითვალოს
+  const existing = await prisma.clinic.findUnique({ where: { id: session.user.id }, select: { id: true } });
+  if (!existing) {
+    const emailError = await checkDoctorEmails(doctors.map((doctor) => doctor.email));
+    if (emailError) return emailError;
+  }
 
   // კლინიკის id = ანგარიშის id. upsert-ის update ცარიელია: თუ კლინიკა
   // უკვე არსებობს (ფორმა ორჯერ გაიგზავნა), არაფერი იცვლება

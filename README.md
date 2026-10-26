@@ -55,7 +55,7 @@ Next.js 16 · React 19 · TypeScript · PostgreSQL · Prisma 7 · Better Auth ·
 | --- | --- |
 | ადმინისტრატორი | `admin@medical.ge` |
 | კლინიკა | `clinic.tbilisi@medical.ge`, `clinic.batumi@medical.ge` |
-| ექიმი | `nino.beridze@medical.ge`, `levan.japaridze@medical.ge` |
+| ექიმი | `nino.beridze@medical.ge`, `giorgi.lomidze@medical.ge`, `mariam.kapanadze@medical.ge`, `levan.japaridze@medical.ge`, `tamar.kharadze@medical.ge` |
 | პაციენტი | `ana@medical.ge`, `davit@medical.ge`, `elene@medical.ge` |
 
 ## ბრძანებები
@@ -82,6 +82,7 @@ Next.js 16 · React 19 · TypeScript · PostgreSQL · Prisma 7 · Better Auth ·
 | `/profile` | ჩემი პროფილი | პაციენტი |
 | `/my-appointments` | ჩემი ვიზიტები და დიაგნოზები | პაციენტი |
 | `/my-schedule` | განრიგი და დიაგნოზის ჩაწერა | ექიმი |
+| `/my-profile` | ჩემი პროფილი (საჯარო პროფილის რედაქტირება) | ექიმი |
 | `/my-clinic` | კლინიკის მართვა | კლინიკა |
 | `/admin/clinics`, `/admin/patients` | ადმინისტრირება | ადმინისტრატორი |
 | `/docs` | API დოკუმენტაცია | ყველა |

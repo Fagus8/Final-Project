@@ -36,8 +36,8 @@ const clinics = [
     specialty: "მრავალპროფილური",
     doctors: [
       { name: "ნინო ბერიძე", specialty: "კარდიოლოგი", experienceYears: 12, room: "204", email: "nino.beridze@medical.ge" },
-      { name: "გიორგი ლომიძე", specialty: "თერაპევტი", experienceYears: 8, room: "105" },
-      { name: "მარიამ კაპანაძე", specialty: "პედიატრი", experienceYears: 15, room: "301" },
+      { name: "გიორგი ლომიძე", specialty: "თერაპევტი", experienceYears: 8, room: "105", email: "giorgi.lomidze@medical.ge" },
+      { name: "მარიამ კაპანაძე", specialty: "პედიატრი", experienceYears: 15, room: "301", email: "mariam.kapanadze@medical.ge" },
     ],
   },
   {
@@ -49,7 +49,7 @@ const clinics = [
     specialty: "ოჯახის მედიცინა",
     doctors: [
       { name: "ლევან ჯაფარიძე", specialty: "ნევროლოგი", experienceYears: 10, room: "12", email: "levan.japaridze@medical.ge" },
-      { name: "თამარ ხარაძე", specialty: "დერმატოლოგი", experienceYears: 6, room: "14" },
+      { name: "თამარ ხარაძე", specialty: "დერმატოლოგი", experienceYears: 6, room: "14", email: "tamar.kharadze@medical.ge" },
     ],
   },
 ];
@@ -69,7 +69,8 @@ async function main() {
   const admin = await createUser("ადმინისტრატორი", ADMIN_EMAIL, "PATIENT");
   await prisma.user.update({ where: { id: admin.id }, data: { role: "admin" } });
 
-  // კლინიკები და ექიმები. ზოგ ექიმს საკუთარი ანგარიში აქვს
+  // კლინიკები და ექიმები. ყველა ექიმს საკუთარი ანგარიში აქვს — საჯაროდ
+  // მხოლოდ ანგარიშიანი ექიმი ჩანს (src/lib/doctors.ts)
   const doctorIds: string[] = [];
   for (const clinic of clinics) {
     const clinicUser = await createUser(clinic.name, clinic.email, "CLINIC");
@@ -86,15 +87,15 @@ async function main() {
     });
 
     for (const doctor of clinic.doctors) {
-      const doctorUser = doctor.email ? await createUser(doctor.name, doctor.email, "DOCTOR") : null;
+      const doctorUser = await createUser(doctor.name, doctor.email, "DOCTOR");
       const created = await prisma.doctor.create({
         data: {
           name: doctor.name,
           specialty: doctor.specialty,
           experienceYears: doctor.experienceYears,
           room: doctor.room,
-          email: doctor.email ?? null,
-          userId: doctorUser?.id ?? null,
+          email: doctor.email,
+          userId: doctorUser.id,
           isApproved: true,
           clinicId: clinicUser.id,
           languages: ["ქართული", "ინგლისური"],
@@ -139,7 +140,7 @@ async function main() {
   console.log("სადემონსტრაციო მონაცემები შეიქმნა. ყველა ანგარიშის პაროლი:", PASSWORD);
   console.log("ადმინი:", ADMIN_EMAIL);
   console.log("კლინიკები:", clinics.map((clinic) => clinic.email).join(", "));
-  console.log("ექიმები:", clinics.flatMap((c) => c.doctors.flatMap((d) => d.email ?? [])).join(", "));
+  console.log("ექიმები:", clinics.flatMap((c) => c.doctors.map((d) => d.email)).join(", "));
   console.log("პაციენტები:", patients.map((patient) => patient.email).join(", "));
 }
 

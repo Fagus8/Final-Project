@@ -1,20 +1,22 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import DoctorProfileForm from "@/components/doctors/DoctorProfileForm";
 import DoctorScheduleForm from "@/components/doctors/DoctorScheduleForm";
 import Sidebar from "@/components/layout/Sidebar";
+import { findDoctorInvitation } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { formatDay, formatTime } from "@/lib/slots";
+import AcceptInvitationButton from "./_components/AcceptInvitationButton";
 import JoinClinicForm from "./_components/JoinClinicForm";
 import DoctorSchedule from "./_components/DoctorSchedule";
 import styles from "../Staff.module.scss";
 
 // ექიმის გვერდი „ჩემი განრიგი“. სამი მდგომარეობა აქვს:
-// 1) ექიმი ჯერ არცერთ კლინიკას არ უკავშირდება — კლინიკის არჩევის ფორმა
+// 1) ექიმი ჯერ არცერთ კლინიკას არ უკავშირდება — მოწვეულს მოწვევის მიღება,
+//    დანარჩენს კლინიკის არჩევის ფორმა
 // 2) მოთხოვნა გაგზავნილია, კლინიკას ჯერ არ დაუდასტურებია — ლოდინის შეტყობინება
-// 3) დადასტურებულია — სამუშაო საათები, პროფილი და ვიზიტების კალენდარი
-export default async function MySchedulePage() {
+// 3) დადასტურებულია — სამუშაო საათები და ვიზიტების კალენდარი
+// (პროფილის ინფორმაცია ცალკე გვერდზეა — „ჩემი პროფილი“, /my-profile)
+export default async function MySchedulePage({ searchParams }: PageProps<"/my-schedule">) {
   const session = await getSession();
 
   if (!session) {
@@ -37,8 +39,36 @@ export default async function MySchedulePage() {
     },
   });
 
-  // 1) კლინიკა ჯერ არ აურჩევია: ვაჩვენებთ დამტკიცებულ კლინიკებს
+  // 1) ექიმი ჯერ არცერთ კლინიკას არ უკავშირდება
   if (!doctor) {
+    // მოწვეულს კლინიკის არჩევა არ სჭირდება — მხოლოდ მოწვევის მიღება
+    const invitation = await findDoctorInvitation(session.user.email);
+    if (invitation) {
+      return (
+        <div className={styles.page}>
+          <Sidebar />
+          <main className={styles.main}>
+            <h1 className={styles.title}>ჩემი განრიგი</h1>
+            <section className={styles.card}>
+              <h2>მოწვევა კლინიკიდან</h2>
+              <p>
+                კლინიკამ <strong>{invitation.clinic.name}</strong> დაგამატა ექიმად. მიიღე მოწვევა
+                და კლინიკა დაადასტურებს მოთხოვნას.
+              </p>
+              <AcceptInvitationButton />
+            </section>
+          </main>
+        </div>
+      );
+    }
+
+    // მოწვევის გარეშე — ექიმი თავად ირჩევს დამტკიცებულ კლინიკას.
+    // რეგისტრაციისას შეყვანილი სპეციალობა და გამოცდილება URL-ით მოდის
+    const { specialty, experience } = await searchParams;
+    const defaults = {
+      specialty: typeof specialty === "string" ? specialty : "",
+      experienceYears: Math.max(0, Math.trunc(Number(experience)) || 0),
+    };
     const clinics = await prisma.clinic.findMany({
       where: { isApproved: true },
       select: { id: true, name: true, city: true },
@@ -57,7 +87,7 @@ export default async function MySchedulePage() {
               კლინიკა დაადასტურებს მოთხოვნას.
             </p>
             <h3>ექიმის მონაცემები</h3>
-            <JoinClinicForm clinics={clinics} />
+            <JoinClinicForm clinics={clinics} defaults={defaults} />
           </section>
         </main>
       </div>
@@ -122,29 +152,6 @@ export default async function MySchedulePage() {
               workEnd: doctor.workEnd,
               email: doctor.email,
               room: doctor.room,
-            }}
-          />
-        </section>
-
-        <section className={styles.card}>
-          <h2>ჩემი პროფილი</h2>
-          <p>
-            ეს ინფორმაცია ჩანს შენს{" "}
-            <Link href={`/doctors/${doctor.id}`}>საჯარო პროფილზე</Link>.
-          </p>
-          <h3>პროფილის ინფორმაცია</h3>
-          <DoctorProfileForm
-            doctor={{
-              id: doctor.id,
-              name: doctor.name,
-              specialty: doctor.specialty,
-              experienceYears: doctor.experienceYears,
-              avatarUrl: doctor.avatarUrl,
-              bio: doctor.bio,
-              education: doctor.education,
-              languages: doctor.languages,
-              services: doctor.services,
-              consultationFee: doctor.consultationFee,
             }}
           />
         </section>

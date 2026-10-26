@@ -4,6 +4,7 @@ import Sidebar from "@/components/layout/Sidebar";
 import DoctorAvatar from "@/components/ui/DoctorAvatar";
 import Icon from "@/components/ui/Icon";
 import { isUuid } from "@/lib/api";
+import { visibleDoctorWhere } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import styles from "./DoctorProfile.module.scss";
@@ -18,9 +19,9 @@ export default async function DoctorProfilePage(props: PageProps<"/doctors/[doct
     notFound();
   }
 
-  // დაუდასტურებელი ექიმის ან დაუმტკიცებელი კლინიკის პროფილი არ ჩანს (404)
+  // დაუდასტურებელი/დაურეგისტრირებელი ექიმის ან დაუმტკიცებელი კლინიკის პროფილი არ ჩანს (404)
   const doctor = await prisma.doctor.findFirst({
-    where: { id: doctorId, isApproved: true, clinic: { isApproved: true } },
+    where: { id: doctorId, ...visibleDoctorWhere },
     include: {
       clinic: true,
       _count: { select: { appointments: { where: { status: "COMPLETED" } } } },
@@ -33,7 +34,7 @@ export default async function DoctorProfilePage(props: PageProps<"/doctors/[doct
 
   // იმავე კლინიკის სხვა ექიმები
   const colleagues = await prisma.doctor.findMany({
-    where: { clinicId: doctor.clinicId, isApproved: true, id: { not: doctor.id } },
+    where: { ...visibleDoctorWhere, clinicId: doctor.clinicId, id: { not: doctor.id } },
     orderBy: { name: "asc" },
     take: 6,
   });

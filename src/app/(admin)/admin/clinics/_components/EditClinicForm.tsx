@@ -15,6 +15,8 @@ type DoctorDraft = {
   name: string;
   specialty: string;
   experienceYears: number;
+  // მხოლოდ ახალ ექიმს — ანგარიშის დასაკავშირებლად
+  email?: string;
 };
 
 type ClinicData = {
@@ -76,7 +78,7 @@ export default function EditClinicForm({ clinic }: { clinic: ClinicData }) {
       ...current,
       doctors: [
         ...current.doctors,
-        { localKey: crypto.randomUUID(), name: "", specialty: "", experienceYears: 0 },
+        { localKey: crypto.randomUUID(), name: "", specialty: "", experienceYears: 0, email: "" },
       ],
     }));
   }
@@ -103,11 +105,12 @@ export default function EditClinicForm({ clinic }: { clinic: ClinicData }) {
       specialty: draft.specialty,
       imageUrl: draft.imageUrl,
       // localKey სერვერს არ სჭირდება. ახალ ექიმს id არ აქვს (undefined JSON-ში არ იგზავნება)
-      doctors: draft.doctors.map(({ id, name, specialty, experienceYears }) => ({
+      doctors: draft.doctors.map(({ id, name, specialty, experienceYears, email }) => ({
         id,
         name,
         specialty,
         experienceYears,
+        email: id ? undefined : email,
       })),
     });
 
@@ -187,6 +190,18 @@ export default function EditClinicForm({ clinic }: { clinic: ClinicData }) {
               onChange={(event) => updateDoctor(index, { experienceYears: Number(event.target.value) })}
             />
           </label>
+          {/* არსებული ექიმის ელფოსტას კლინიკა „კლინიკის მართვაში“ ცვლის */}
+          {!doctor.id && (
+            <label className={styles.field}>
+              ექიმის ელფოსტა
+              <input
+                required
+                type="email"
+                value={doctor.email ?? ""}
+                onChange={(event) => updateDoctor(index, { email: event.target.value })}
+              />
+            </label>
+          )}
         </fieldset>
       ))}
       <button className={styles.addDoctorButton} type="button" onClick={addDoctor}>

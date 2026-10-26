@@ -56,6 +56,13 @@ export default function ClinicFields({ formik }: { formik: FormikProps<Registrat
                   step="1"
                   label="გამოცდილება — წელი"
                 />
+                <FormField
+                  formik={formik}
+                  name={`doctors.${index}.email`}
+                  id={`doctor-${index}-email`}
+                  type="email"
+                  label="ექიმის ელ.ფოსტა (ანგარიშის დასაკავშირებლად)"
+                />
 
                 {/* მინიმუმ ერთი ექიმი უნდა დარჩეს */}
                 {formik.values.doctors.length > 1 && (
@@ -69,7 +76,7 @@ export default function ClinicFields({ formik }: { formik: FormikProps<Registrat
             <button
               type="button"
               className={styles.addDoctorButton}
-              onClick={() => push({ name: "", specialty: "", experienceYears: 0 })}
+              onClick={() => push({ name: "", specialty: "", experienceYears: 0, email: "" })}
             >
               ექიმის დამატება
             </button>

@@ -20,7 +20,6 @@ export const registerSchema = z
     // მხოლოდ ექიმის რეგისტრაციისთვის
     doctorSpecialty: z.string(),
     doctorExperience: z.number().int().min(0, "გამოცდილების წელი უნდა იყოს 0 ან მეტი"),
-    doctorClinicId: z.string(),
     doctors: z.array(
       z.object({
         name: z.string(),
@@ -29,6 +28,8 @@ export const registerSchema = z
           .number()
           .int()
           .min(0, "გამოცდილების წელი უნდა იყოს 0 ან მეტი"),
+        // ამ ელფოსტით დარეგისტრირებული ექიმი ამ ჩანაწერს მიებმება
+        email: z.string(),
       }),
     ),
   })
@@ -49,9 +50,10 @@ export const registerSchema = z
       requireText(values.phone, ["phone"], "ტელეფონის ნომერი სავალდებულოა");
     }
 
+    // ექიმი რეგისტრაციისას კლინიკას არ ირჩევს: მოწვეულის მოთხოვნა ავტომატურად
+    // მომწვევ კლინიკას ეგზავნება, დანარჩენი კლინიკას „ჩემ განრიგში“ ირჩევს
     if (values.accountType === "DOCTOR") {
       requireText(values.doctorSpecialty, ["doctorSpecialty"], "სპეციალობა სავალდებულოა");
-      requireText(values.doctorClinicId, ["doctorClinicId"], "აირჩიე კლინიკა");
     }
 
     // დანარჩენი შემოწმებები მხოლოდ კლინიკისთვისაა
@@ -73,6 +75,8 @@ export const registerSchema = z
       });
     }
 
+    const doctorEmails = values.doctors.map((doctor) => doctor.email.trim().toLowerCase());
+
     values.doctors.forEach((doctor, index) => {
       requireText(
         doctor.name,
@@ -84,6 +88,21 @@ export const registerSchema = z
         ["doctors", index, "specialty"],
         "სპეციალიზაცია სავალდებულოა",
       );
+
+      const email = doctorEmails[index];
+      if (!z.string().email().safeParse(email).success) {
+        context.addIssue({
+          code: "custom",
+          path: ["doctors", index, "email"],
+          message: "ექიმის ელ.ფოსტა სავალდებულოა",
+        });
+      } else if (doctorEmails.indexOf(email) !== index) {
+        context.addIssue({
+          code: "custom",
+          path: ["doctors", index, "email"],
+          message: "ეს ელ.ფოსტა სხვა ექიმზეა მითითებული",
+        });
+      }
     });
   });
 

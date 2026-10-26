@@ -3,12 +3,12 @@ import { formatDateTime } from "@/lib/slots";
 import styles from "../../Account.module.scss";
 import StatCard from "./StatCard";
 
-// პაციენტის ჯანმრთელობის მიმოხილვა — ვიზიტები, დიაგნოზი, დანიშნულება
+// პაციენტის ჯანმრთელობის მიმოხილვა — შემდეგი ვიზიტი, სისხლის ჯგუფი, ვიზიტების რაოდენობა
 export default async function PatientOverview({ patientId }: { patientId: string }) {
   const now = new Date();
-  // ხუთი მოთხოვნა ერთდროულად: სისხლის ჯგუფი, შემდეგი ვიზიტი, მომავალი და
-  // ჩატარებული ვიზიტების რაოდენობა, ბოლო ვიზიტი დიაგნოზით
-  const [patient, nextAppointment, upcomingCount, completedCount, lastRecord] = await Promise.all([
+  // ოთხი მოთხოვნა ერთდროულად: სისხლის ჯგუფი, შემდეგი ვიზიტი, მომავალი და
+  // ჩატარებული ვიზიტების რაოდენობა
+  const [patient, nextAppointment, upcomingCount, completedCount] = await Promise.all([
     prisma.patient.findUnique({ where: { id: patientId }, select: { bloodType: true } }),
     prisma.appointment.findFirst({
       where: { patientId, status: "BOOKED", startsAt: { gte: now } },
@@ -19,58 +19,34 @@ export default async function PatientOverview({ patientId }: { patientId: string
       where: { patientId, status: "BOOKED", startsAt: { gte: now } },
     }),
     prisma.appointment.count({ where: { patientId, status: "COMPLETED" } }),
-    prisma.appointment.findFirst({
-      where: { patientId, diagnosis: { not: null } },
-      include: { doctor: true },
-      orderBy: { startsAt: "desc" },
-    }),
   ]);
 
   return (
-    <>
-      <section className={styles.details} aria-label="ჯანმრთელობის მიმოხილვა">
-        <article className={styles.detailCard}>
-          <span className={styles.detailLabel}>შემდეგი ვიზიტი</span>
-          {nextAppointment ? (
-            <>
-              <span className={styles.detailValue}>
-                {formatDateTime(nextAppointment.startsAt)}
-              </span>
-              <span className={styles.detailLabel}>
-                {nextAppointment.doctor.name} · {nextAppointment.doctor.specialty},{" "}
-                {nextAppointment.doctor.clinic.name}
-              </span>
-            </>
-          ) : (
-            <span className={styles.detailValue}>დაგეგმილი ვიზიტი არ გაქვს</span>
-          )}
-        </article>
-
-        <article className={styles.detailCard}>
-          <span className={styles.detailLabel}>სისხლის ჯგუფი</span>
-          <span className={styles.detailValue}>{patient?.bloodType ?? "უცნობია"}</span>
-        </article>
-
-        <StatCard href="/my-appointments" label="მომავალი ვიზიტები" value={upcomingCount} />
-        <StatCard href="/my-appointments" label="ჩატარებული ვიზიტები" value={completedCount} />
-      </section>
-
-      {/* ბოლო დიაგნოზი ჩანს მხოლოდ მაშინ, თუ ექიმს უკვე ჩაუწერია */}
-      {lastRecord && (
-        <section className={styles.details} aria-label="ბოლო დიაგნოზი">
-          <article className={styles.detailCard}>
-            <span className={styles.detailLabel}>
-              ბოლო დიაგნოზი · {formatDateTime(lastRecord.startsAt)}, {lastRecord.doctor.name}
+    <section className={styles.details} aria-label="ჯანმრთელობის მიმოხილვა">
+      <article className={styles.detailCard}>
+        <span className={styles.detailLabel}>შემდეგი ვიზიტი</span>
+        {nextAppointment ? (
+          <>
+            <span className={styles.detailValue}>
+              {formatDateTime(nextAppointment.startsAt)}
             </span>
-            <span className={styles.detailValue}>{lastRecord.diagnosis}</span>
-            {lastRecord.prescription && (
-              <span>
-                <strong>დანიშნულება:</strong> {lastRecord.prescription}
-              </span>
-            )}
-          </article>
-        </section>
-      )}
-    </>
+            <span className={styles.detailLabel}>
+              {nextAppointment.doctor.name} · {nextAppointment.doctor.specialty},{" "}
+              {nextAppointment.doctor.clinic.name}
+            </span>
+          </>
+        ) : (
+          <span className={styles.detailValue}>დაგეგმილი ვიზიტი არ გაქვს</span>
+        )}
+      </article>
+
+      <article className={styles.detailCard}>
+        <span className={styles.detailLabel}>სისხლის ჯგუფი</span>
+        <span className={styles.detailValue}>{patient?.bloodType ?? "უცნობია"}</span>
+      </article>
+
+      <StatCard href="/my-appointments" label="მომავალი ვიზიტები" value={upcomingCount} />
+      <StatCard href="/my-appointments" label="ჩატარებული ვიზიტები" value={completedCount} />
+    </section>
   );
 }

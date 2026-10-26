@@ -7,13 +7,15 @@ import { sendRequest } from "@/lib/request";
 
 type JoinClinicFormProps = {
   clinics: { id: string; name: string; city: string }[];
+  // რეგისტრაციისას შეყვანილი მონაცემები, რომ ექიმმა ხელახლა არ აკრიფოს
+  defaults?: { specialty: string; experienceYears: number };
 };
 
 // ექიმი, რომელიც ჯერ არცერთ კლინიკას არ უკავშირდება, აქედან აგზავნის მოთხოვნას
-export default function JoinClinicForm({ clinics }: JoinClinicFormProps) {
+export default function JoinClinicForm({ clinics, defaults }: JoinClinicFormProps) {
   const router = useRouter();
-  const [specialty, setSpecialty] = useState("");
-  const [experienceYears, setExperienceYears] = useState(0);
+  const [specialty, setSpecialty] = useState(defaults?.specialty ?? "");
+  const [experienceYears, setExperienceYears] = useState(defaults?.experienceYears ?? 0);
   const [clinicId, setClinicId] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");

@@ -52,6 +52,8 @@ export default async function AdminClinicsPage() {
                       {clinic.doctors.map((doctor) => (
                         <li key={doctor.id}>
                           {doctor.name} — {doctor.specialty}, {doctor.experienceYears} წელი
+                          {/* მოწვეული ექიმი საიტზე რეგისტრაციამდე არ ჩანს */}
+                          {!doctor.userId && <> · ელოდება ექიმის რეგისტრაციას</>}
                         </li>
                       ))}
                     </ul>

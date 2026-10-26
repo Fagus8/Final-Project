@@ -18,8 +18,11 @@ export default async function ProfilePage() {
     redirect("/dashboard");
   }
 
-  // ტელეფონი და სისხლის ჯგუფი; რეგისტრაციამდე შექმნილ ანგარიშს შეიძლება არ ჰქონდეს
-  const patient = await prisma.patient.findUnique({ where: { id: session.user.id } });
+  // ტელეფონი; რეგისტრაციამდე შექმნილ ანგარიშს შეიძლება არ ჰქონდეს
+  const patient = await prisma.patient.findUnique({
+    where: { id: session.user.id },
+    select: { phone: true },
+  });
 
   return (
     <div className={styles.page}>
@@ -39,10 +42,6 @@ export default async function ProfilePage() {
           <article className={styles.detailCard}>
             <span className={styles.detailLabel}>ტელეფონი</span>
             <span className={styles.detailValue}>{patient?.phone ?? "არ არის მითითებული"}</span>
-          </article>
-          <article className={styles.detailCard}>
-            <span className={styles.detailLabel}>სისხლის ჯგუფი</span>
-            <span className={styles.detailValue}>{patient?.bloodType ?? "უცნობია"}</span>
           </article>
           <article className={styles.detailCard}>
             <span className={styles.detailLabel}>ანგარიშის ტიპი</span>

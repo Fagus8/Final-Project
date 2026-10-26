@@ -18,6 +18,8 @@ body {
   line-height: 1.55;
   background-color: $color-background;
   color: $color-text;
+  // გრძელი უწყვეტი ტექსტი (დიაგნოზი, მისამართი, email) ბარათიდან არ გადავიდეს
+  overflow-wrap: anywhere;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -49,6 +51,8 @@ textarea {
 
 button {
   cursor: pointer;
+  // ღილაკის წარწერა სიტყვის შუაში არ გაწყდეს
+  overflow-wrap: normal;
 }
 
 // კლავიატურით ნავიგაციისას მკაფიო ჩარჩო

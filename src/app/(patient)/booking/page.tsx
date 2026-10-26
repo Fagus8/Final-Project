@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import Sidebar from "@/components/layout/Sidebar";
 import type { Prisma } from "@/generated/prisma/client";
+import { visibleDoctorWhere } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import BookingSection from "./_components/BookingSection";
@@ -36,7 +37,7 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
 
   // ფილტრების სიებისთვის: არსებული სპეციალობები და ენები, გამეორების გარეშე (Set)
   const allDoctors = await prisma.doctor.findMany({
-    where: { isApproved: true, clinic: { isApproved: true } },
+    where: visibleDoctorWhere,
     select: { specialty: true, languages: true },
   });
   const specialties = [...new Set(allDoctors.map((doctor) => doctor.specialty))].sort();
@@ -49,7 +50,7 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
   });
 
   // ძებნის პირობას ნაბიჯ-ნაბიჯ ვაწყობთ: ცარიელი ფილტრი პირობას არ ამატებს
-  const where: Prisma.DoctorWhereInput = { isApproved: true, clinic: { isApproved: true } };
+  const where: Prisma.DoctorWhereInput = { ...visibleDoctorWhere };
 
   if (specialty) {
     where.specialty = specialty;

@@ -1,5 +1,6 @@
 import { isUuid, jsonError } from "@/lib/api";
 import { getAvailableTimes } from "@/lib/appointments";
+import { visibleDoctorWhere } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { isValidDay } from "@/lib/slots";
 
@@ -19,9 +20,9 @@ export async function GET(
     return jsonError("თარიღი არასწორია", 400);
   }
 
-  // დაუდასტურებელ ექიმთან ჩაწერა არ შეიძლება, ამიტომ მის დროებსაც არ ვაჩვენებთ
+  // დაუდასტურებელ ან დაურეგისტრირებელ ექიმთან ჩაწერა არ შეიძლება, ამიტომ მის დროებსაც არ ვაჩვენებთ
   const doctor = await prisma.doctor.findFirst({
-    where: { id: doctorId, isApproved: true },
+    where: { id: doctorId, ...visibleDoctorWhere },
     select: { id: true, workStart: true, workEnd: true },
   });
 

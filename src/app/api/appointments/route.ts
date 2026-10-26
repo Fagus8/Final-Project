@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { jsonError, readJson } from "@/lib/api";
+import { visibleDoctorWhere } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { generateTimes, isSunday, isValidDay, isValidTime, toDate } from "@/lib/slots";
@@ -30,7 +31,7 @@ export async function POST(request: Request) {
   const { doctorId, date, time } = result.data;
 
   const doctor = await prisma.doctor.findFirst({
-    where: { id: doctorId, isApproved: true },
+    where: { id: doctorId, ...visibleDoctorWhere },
   });
 
   if (!doctor) {

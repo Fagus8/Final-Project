@@ -12,6 +12,8 @@ type DoctorScheduleFormProps = {
     workEnd: string;
     email: string | null;
     room: string | null;
+    // ანგარიშმიუბმელ ექიმს ელფოსტა სავალდებულოა
+    hasAccount?: boolean;
   };
   // კლინიკას შეუძლია ელფოსტისა და კაბინეტის შეცვლაც
   isClinic?: boolean;
@@ -64,7 +66,13 @@ export default function DoctorScheduleForm({ doctor, isClinic = false }: DoctorS
           </label>
           <label>
             ექიმის ელფოსტა
-            <input type="email" value={email} placeholder="ანგარიშის დასაკავშირებლად" onChange={(e) => setEmail(e.target.value)} />
+            <input
+              type="email"
+              required={!doctor.hasAccount}
+              value={email}
+              placeholder="ანგარიშის დასაკავშირებლად"
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </label>
         </>
       )}

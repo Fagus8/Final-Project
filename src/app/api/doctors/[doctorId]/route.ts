@@ -1,14 +1,15 @@
 import { z } from "zod";
-import { isUuid, jsonError, readJson } from "@/lib/api";
+import { doctorEmailSchema, isUuid, jsonError, readJson } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { isValidTime } from "@/lib/slots";
 
 const doctorSchema = z.object({
-  workStart: z.string().refine(isValidTime),
-  workEnd: z.string().refine(isValidTime),
+  workStart: z.string().refine(isValidTime, "დრო უნდა იყოს ფორმატით 10:00"),
+  workEnd: z.string().refine(isValidTime, "დრო უნდა იყოს ფორმატით 10:00"),
   // ამ ორს მხოლოდ კლინიკა ცვლის
-  email: z.string().trim().toLowerCase().optional(),
+  // "" — ელფოსტის წაშლა (მხოლოდ ანგარიშმიბმულ ექიმს შეიძლება)
+  email: z.union([doctorEmailSchema, z.literal("")]).optional(),
   room: z.string().trim().optional(),
 });
 
@@ -30,7 +31,7 @@ export async function PATCH(
 
   const result = doctorSchema.safeParse(await readJson(request));
   if (!result.success) {
-    return jsonError("დრო უნდა იყოს ფორმატით 10:00", 400);
+    return jsonError(result.error.issues[0]?.message ?? "შეამოწმე შევსებული ველები", 400);
   }
 
   const { workStart, workEnd, email, room } = result.data;
@@ -50,6 +51,11 @@ export async function PATCH(
 
   if (!isClinic && !isDoctor) {
     return jsonError("ამ ექიმის რედაქტირება არ შეგიძლია", 403);
+  }
+
+  // ანგარიშის გარეშე ექიმს ელფოსტა უნდა დარჩეს, თორემ ანგარიში ვეღარ მიებმება
+  if (isClinic && !email && !doctor.userId) {
+    return jsonError("ექიმის ელფოსტა სავალდებულოა", 400);
   }
 
   if (isClinic && email) {

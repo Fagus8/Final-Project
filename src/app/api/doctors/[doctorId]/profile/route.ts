@@ -30,11 +30,13 @@ const profileSchema = z.object({
   languages: listSchema,
   services: listSchema,
   consultationFee: z.number().int().min(0).max(10_000).nullable(),
-  experienceYears: z.number().int().min(0).max(80),
-  specialty: z.string().trim().min(1, "სპეციალობა სავალდებულოა").max(80),
+  // ამ ორს მხოლოდ კლინიკა ცვლის (ექიმის გაგზავნილს ვაიგნორებთ)
+  experienceYears: z.number().int().min(0).max(80).optional(),
+  specialty: z.string().trim().min(1, "სპეციალობა სავალდებულოა").max(80).optional(),
 });
 
-// ექიმის პროფილის რედაქტირება — თავად ექიმი ან მისი კლინიკა
+// ექიმის პროფილის რედაქტირება — თავად ექიმი ან მისი კლინიკა.
+// სპეციალობა და გამოცდილება საჯაროდ ჩანს და კლინიკა აგებს პასუხს, ამიტომ მათ მხოლოდ კლინიკა ცვლის
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ doctorId: string }> },
@@ -80,8 +82,9 @@ export async function PATCH(
       languages: data.languages,
       services: data.services,
       consultationFee: data.consultationFee,
-      experienceYears: data.experienceYears,
-      specialty: data.specialty,
+      // undefined ველს Prisma არ ცვლის
+      experienceYears: isClinic ? data.experienceYears : undefined,
+      specialty: isClinic ? data.specialty : undefined,
     },
   });
 

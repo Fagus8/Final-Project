@@ -2,6 +2,7 @@ import Link from "next/link";
 import Sidebar from "@/components/layout/Sidebar";
 import Card from "@/components/ui/Card";
 import DoctorAvatar from "@/components/ui/DoctorAvatar";
+import { visibleDoctorWhere } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import styles from "./Doctors.module.scss";
@@ -12,12 +13,9 @@ export default async function DoctorsPage() {
   // „დაჯავშნა“ ღილაკი ჩანს სტუმრისთვის და პაციენტისთვის, კლინიკისა და ექიმისთვის — არა
   const canBook = !session || session.user.accountType === "PATIENT";
 
-  // ჩანს მხოლოდ დადასტურებული ექიმი დამტკიცებული კლინიკიდან
+  // ჩანს მხოლოდ დარეგისტრირებული, დადასტურებული ექიმი დამტკიცებული კლინიკიდან
   const doctors = await prisma.doctor.findMany({
-    where: {
-      isApproved: true,
-      clinic: { isApproved: true },
-    },
+    where: visibleDoctorWhere,
     include: { clinic: true },
     orderBy: { name: "asc" },
   });

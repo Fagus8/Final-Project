@@ -52,7 +52,7 @@ async function createAccount(values: RegistrationValues) {
 
 // ინახავს როლის მიხედვით დამატებით მონაცემებს:
 // პაციენტი → ტელეფონი და სისხლის ჯგუფი, კლინიკა → კლინიკა და ექიმები,
-// ექიმი → მოთხოვნა არჩეულ კლინიკასთან
+// ექიმი → თუ კლინიკამ მოიწვია, მოთხოვნა ავტომატურად მომწვევ კლინიკას ეგზავნება
 function saveRoleDetails(values: RegistrationValues) {
   if (values.accountType === "CLINIC") {
     return sendRequest("/api/clinic-registration", "POST", {
@@ -73,10 +73,9 @@ function saveRoleDetails(values: RegistrationValues) {
     });
   }
 
-  return sendRequest("/api/doctor-registration", "POST", {
+  return sendRequest("/api/doctor-invitation", "POST", {
     specialty: values.doctorSpecialty,
     experienceYears: values.doctorExperience,
-    clinicId: values.doctorClinicId,
   });
 }
 
@@ -100,8 +99,7 @@ export default function RegisterPage() {
       imageUrl: "",
       doctorSpecialty: "",
       doctorExperience: 0,
-      doctorClinicId: "",
-      doctors: [{ name: "", specialty: "", experienceYears: 0 }],
+      doctors: [{ name: "", specialty: "", experienceYears: 0, email: "" }],
     },
     // Zod-ის შეცდომებს formik-ის ფორმატში გადავიყვანთ (ველის სახელი → ტექსტი)
     validate: (values) => {
@@ -139,9 +137,14 @@ export default function RegisterPage() {
           return;
         }
 
-        // ნაბიჯი 3: ექიმი თავის განრიგზე გადადის, დანარჩენი — მთავარ გვერდზე
+        // ნაბიჯი 3: ექიმი თავის განრიგზე გადადის, დანარჩენი — მთავარ გვერდზე.
+        // მოწვევის გარეშე ექიმი იქ კლინიკას აირჩევს — შეყვანილი მონაცემები ფორმაში წინასწარ ჩაიწერება
         if (values.accountType === "DOCTOR") {
-          router.push("/my-schedule");
+          const params = new URLSearchParams({
+            specialty: values.doctorSpecialty.trim(),
+            experience: String(values.doctorExperience),
+          });
+          router.push(`/my-schedule?${params}`);
           router.refresh();
         } else {
           router.push("/");

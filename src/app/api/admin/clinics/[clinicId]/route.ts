@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isUuid, jsonError, readJson } from "@/lib/api";
+import { checkDoctorEmails, doctorEmailSchema, isUuid, jsonError, readJson } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 
@@ -19,6 +19,8 @@ const clinicUpdateSchema = z.object({
       name: z.string().trim().min(1),
       specialty: z.string().trim().min(1),
       experienceYears: z.number().int().min(0),
+      // მხოლოდ ახალ ექიმს (არსებულის ელფოსტას კლინიკა ცვლის)
+      email: doctorEmailSchema.optional(),
     }),
   ),
 });
@@ -48,6 +50,14 @@ export async function PATCH(
   }
 
   const { doctors, imageUrl, ...clinicData } = result.data;
+
+  // ახალ ექიმს ელფოსტა სავალდებულოა და სხვა ექიმს არ უნდა ჰქონდეს
+  const newDoctors = doctors.filter((doctor) => !doctor.id);
+  if (newDoctors.some((doctor) => !doctor.email)) {
+    return jsonError("ახალ ექიმს ელფოსტა სავალდებულოა", 400);
+  }
+  const emailError = await checkDoctorEmails(newDoctors.map((doctor) => doctor.email!));
+  if (emailError) return emailError;
 
   // ყველაფერი ერთ ტრანზაქციაშია: ან მთლიანად შეინახება, ან არაფერი
   const outcome = await prisma.$transaction(async (transaction) => {
@@ -85,12 +95,12 @@ export async function PATCH(
     });
 
     // დანარჩენს ვაახლებთ, ახლებს ვქმნით (დამტკიცებულ კლინიკაში — მაშინვე დამტკიცებულს)
-    for (const { id, ...doctorData } of doctors) {
+    for (const { id, email, ...doctorData } of doctors) {
       if (id) {
         await transaction.doctor.update({ where: { id }, data: doctorData });
       } else {
         await transaction.doctor.create({
-          data: { ...doctorData, clinicId, isApproved: clinic.isApproved },
+          data: { ...doctorData, email, clinicId, isApproved: clinic.isApproved },
         });
       }
     }

@@ -38,6 +38,8 @@ type DoctorProfileFormProps = {
     services: string[];
     consultationFee: number | null;
   };
+  // სპეციალობას და გამოცდილებას მხოლოდ კლინიკა ცვლის; ექიმს მხოლოდ უჩანს
+  isClinic?: boolean;
 };
 
 // სურათს ვჭრით კვადრატად და ვაპატარავებთ, რომ ბაზაში ცოტა ადგილი დაიკავოს
@@ -84,7 +86,7 @@ function resizePhoto(file: File): Promise<string> {
   });
 }
 
-export default function DoctorProfileForm({ doctor }: DoctorProfileFormProps) {
+export default function DoctorProfileForm({ doctor, isClinic = false }: DoctorProfileFormProps) {
   const router = useRouter();
   const [avatarUrl, setAvatarUrl] = useState(doctor.avatarUrl ?? "");
   const [specialty, setSpecialty] = useState(doctor.specialty);
@@ -144,8 +146,8 @@ export default function DoctorProfileForm({ doctor }: DoctorProfileFormProps) {
 
     const result = await sendRequest(`/api/doctors/${doctor.id}/profile`, "PATCH", {
       avatarUrl,
-      specialty,
-      experienceYears: Number(experienceYears) || 0,
+      // სპეციალობას და გამოცდილებას მხოლოდ კლინიკა აგზავნის
+      ...(isClinic && { specialty, experienceYears: Number(experienceYears) || 0 }),
       consultationFee: consultationFee === "" ? null : Number(consultationFee),
       bio,
       education,
@@ -186,6 +188,7 @@ export default function DoctorProfileForm({ doctor }: DoctorProfileFormProps) {
             id={id("specialty")}
             type="text"
             required
+            disabled={!isClinic}
             value={specialty}
             onChange={(e) => setSpecialty(e.target.value)}
           />
@@ -198,6 +201,7 @@ export default function DoctorProfileForm({ doctor }: DoctorProfileFormProps) {
             min="0"
             max="80"
             step="1"
+            disabled={!isClinic}
             value={experienceYears}
             onChange={(e) => setExperienceYears(e.target.value)}
           />
@@ -215,6 +219,9 @@ export default function DoctorProfileForm({ doctor }: DoctorProfileFormProps) {
           />
         </label>
       </div>
+      {!isClinic && (
+        <small>სპეციალობას და გამოცდილებას კლინიკა ცვლის — ცვლილებისთვის მიმართე კლინიკას.</small>
+      )}
 
       <label htmlFor={id("bio")}>
         ჩემ შესახებ

@@ -41,7 +41,10 @@ export default async function Sidebar() {
   }
 
   if (isDoctor) {
-    personal.push({ href: "/my-schedule", label: "ჩემი განრიგი", icon: "appointments" });
+    personal.push(
+      { href: "/my-schedule", label: "ჩემი განრიგი", icon: "appointments" },
+      { href: "/my-profile", label: "ჩემი პროფილი", icon: "profile" },
+    );
   }
 
   if (isClinic) {

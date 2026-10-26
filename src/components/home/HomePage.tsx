@@ -1,4 +1,5 @@
 import Sidebar from "@/components/layout/Sidebar";
+import { visibleDoctorWhere } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import BookingSteps from "./BookingSteps";
@@ -13,13 +14,12 @@ export default async function HomePage() {
   // დაჯავშნის ბლოკი კლინიკასა და ექიმს არ უჩანს
   const canBook = !session || session.user.accountType === "PATIENT";
 
-  // რეალური რიცხვები ბაზიდან. საჯაროდ ჩანს მხოლოდ დამტკიცებული კლინიკის დადასტურებული ექიმი
-  const visibleDoctor = { isApproved: true, clinic: { isApproved: true } };
+  // რეალური რიცხვები ბაზიდან. ექიმებიდან ითვლება მხოლოდ საჯაროდ ხილული
   const [clinicCount, doctorCount, doctors] = await Promise.all([
     prisma.clinic.count({ where: { isApproved: true } }),
-    prisma.doctor.count({ where: visibleDoctor }),
+    prisma.doctor.count({ where: visibleDoctorWhere }),
     prisma.doctor.findMany({
-      where: visibleDoctor,
+      where: visibleDoctorWhere,
       include: { clinic: true },
       orderBy: { experienceYears: "desc" },
       take: 3,

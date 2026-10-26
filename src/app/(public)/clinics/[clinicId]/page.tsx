@@ -4,6 +4,7 @@ import Sidebar from "@/components/layout/Sidebar";
 import DoctorAvatar from "@/components/ui/DoctorAvatar";
 import Icon from "@/components/ui/Icon";
 import { isUuid } from "@/lib/api";
+import { visibleDoctorWhere } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import ClinicImage from "../_components/ClinicImage";
@@ -23,7 +24,7 @@ export default async function ClinicDetailsPage(props: PageProps<"/clinics/[clin
     where: { id: clinicId, isApproved: true },
     include: {
       doctors: {
-        where: { isApproved: true },
+        where: visibleDoctorWhere,
         orderBy: { name: "asc" },
       },
     },
