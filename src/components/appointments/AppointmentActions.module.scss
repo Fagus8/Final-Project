@@ -1,27 +1,88 @@
 @use '../../styles/colors' as *;
 @use '../../styles/shared' as common;
 
+// დიაგნოზის მოდალური ფანჯარა
+.dialog {
+  width: min(620px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  // global.scss-ის `* { margin: 0 }` dialog-ის ცენტრირებას აუქმებს — ვაბრუნებთ
+  margin: auto;
+  padding: 0;
+  border: none;
+  border-radius: $radius-lg;
+  background: $color-white;
+  color: $color-text;
+  box-shadow: $shadow-lg;
+
+  &[open] {
+    @include common.fadeUp(220ms);
+  }
+
+  &::backdrop {
+    background: rgba($color-heading, 0.45);
+    backdrop-filter: blur(2px);
+  }
+}
+
 .diagnosisForm {
   display: flex;
-  width: 100%;
   flex-direction: column;
-  gap: 12px;
-  padding: 14px;
-  border-radius: $radius-sm;
-  background: $color-background;
-  @include common.fadeUp(220ms);
+  gap: 16px;
+  padding: 24px;
 
   label {
     display: flex;
     flex-direction: column;
     gap: 6px;
     color: $color-heading;
-    font-size: 13.5px;
+    font-size: 14px;
     font-weight: 600;
   }
 
   textarea {
     @include common.input;
+    line-height: 1.55;
     resize: vertical;
   }
+
+  @media (max-width: 560px) {
+    padding: 18px;
+  }
+}
+
+.dialogHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  h2 {
+    font-size: 19px;
+  }
+}
+
+.closeButton {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  place-items: center;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  background: $color-white;
+  color: $color-text;
+  font-size: 22px;
+  line-height: 1;
+  transition: background $transition, color $transition;
+
+  &:hover {
+    background: $color-background;
+    color: $color-heading;
+  }
+}
+
+.dialogButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }

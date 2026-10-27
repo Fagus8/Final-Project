@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { sendRequest } from "@/lib/api-client";
 import styles from "@/components/ui/List.module.scss";
 import actionStyles from "./AppointmentActions.module.scss";
@@ -32,6 +32,23 @@ export default function AppointmentActions({
   // ფორმა არსებული დიაგნოზით ივსება, რომ ექიმმა შეცვლა შეძლოს
   const [diagnosisText, setDiagnosisText] = useState(diagnosis ?? "");
   const [prescriptionText, setPrescriptionText] = useState(prescription ?? "");
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  // დიაგნოზის ფორმა მოდალურ ფანჯარაში იხსნება (<dialog>: Esc-ით იხურება, ფოკუსი შიგნით რჩება)
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (showForm && !dialog.open) dialog.showModal();
+    if (!showForm && dialog.open) dialog.close();
+  }, [showForm]);
+
+  function openForm() {
+    // ყოველ გახსნაზე ფორმა შენახული მნიშვნელობებით ივსება
+    setDiagnosisText(diagnosis ?? "");
+    setPrescriptionText(prescription ?? "");
+    setError("");
+    setShowForm(true);
+  }
 
   // ყველა მოქმედება ერთ API-ზე იგზავნება
   async function sendAction(body: object) {
@@ -69,54 +86,79 @@ export default function AppointmentActions({
         </button>
       )}
 
-      {canComplete && !showForm && (
-        <button type="button" className={styles.primaryButton} onClick={() => setShowForm(true)}>
+      {canComplete && (
+        <button type="button" className={styles.primaryButton} onClick={openForm}>
           {diagnosis ? "დიაგნოზის შეცვლა" : "დიაგნოზის ჩაწერა"}
         </button>
       )}
 
       {/* დიაგნოზის ფორმა: შენახვისას ვიზიტი „დასრულებული“ ხდება */}
-      {canComplete && showForm && (
-        <form
-          className={actionStyles.diagnosisForm}
-          onSubmit={(event) => {
-            event.preventDefault();
-            sendAction({
-              action: "complete",
-              diagnosis: diagnosisText,
-              prescription: prescriptionText,
-            });
+      {canComplete && (
+        <dialog
+          ref={dialogRef}
+          className={actionStyles.dialog}
+          aria-labelledby={`diagnosis-title-${appointmentId}`}
+          onClose={() => setShowForm(false)}
+          // ფონზე (ფანჯრის გარეთ) დაჭერა ფანჯარას ხურავს
+          onClick={(event) => {
+            if (event.target === event.currentTarget && !isSaving) setShowForm(false);
           }}
         >
-          <label>
-            დიაგნოზი
-            <textarea
-              required
-              rows={2}
-              value={diagnosisText}
-              onChange={(event) => setDiagnosisText(event.target.value)}
-            />
-          </label>
-          <label>
-            დანიშნულება / რეცეპტი
-            <textarea
-              rows={3}
-              value={prescriptionText}
-              onChange={(event) => setPrescriptionText(event.target.value)}
-            />
-          </label>
-          <div className={styles.formButtons}>
-            <button type="submit" className={styles.primaryButton} disabled={isSaving}>
-              {isSaving ? "ინახება..." : "შენახვა"}
-            </button>
-            <button type="button" className={styles.cancelButton} onClick={() => setShowForm(false)}>
-              დახურვა
-            </button>
-          </div>
-        </form>
+          <form
+            className={actionStyles.diagnosisForm}
+            onSubmit={(event) => {
+              event.preventDefault();
+              sendAction({
+                action: "complete",
+                diagnosis: diagnosisText,
+                prescription: prescriptionText,
+              });
+            }}
+          >
+            <div className={actionStyles.dialogHeader}>
+              <h2 id={`diagnosis-title-${appointmentId}`}>
+                {diagnosis ? "დიაგნოზის შეცვლა" : "დიაგნოზის ჩაწერა"}
+              </h2>
+              <button
+                type="button"
+                className={actionStyles.closeButton}
+                aria-label="დახურვა"
+                onClick={() => setShowForm(false)}
+              >
+                ×
+              </button>
+            </div>
+            <label>
+              დიაგნოზი
+              <textarea
+                required
+                rows={3}
+                value={diagnosisText}
+                onChange={(event) => setDiagnosisText(event.target.value)}
+              />
+            </label>
+            <label>
+              დანიშნულება / რეცეპტი
+              <textarea
+                rows={9}
+                value={prescriptionText}
+                onChange={(event) => setPrescriptionText(event.target.value)}
+              />
+            </label>
+            {error && <p className={styles.error} role="alert">{error}</p>}
+            <div className={actionStyles.dialogButtons}>
+              <button type="button" className={styles.cancelButton} onClick={() => setShowForm(false)}>
+                დახურვა
+              </button>
+              <button type="submit" className={styles.primaryButton} disabled={isSaving}>
+                {isSaving ? "ინახება..." : "შენახვა"}
+              </button>
+            </div>
+          </form>
+        </dialog>
       )}
 
-      {error && <p className={styles.error} role="alert">{error}</p>}
+      {error && !showForm && <p className={styles.error} role="alert">{error}</p>}
     </div>
   );
 }
