@@ -1,0 +1,6 @@
+# Netlify-ის build: ჯერ Prisma კლიენტის გენერაცია, შემდეგ ბაზის მიგრაციები
+# (DATABASE_URL Netlify-ის Environment variables-იდან), ბოლოს Next.js-ის build.
+# migrate deploy მხოლოდ ჯერ გაუშვებელ მიგრაციებს ამატებს — მონაცემებს არ შლის.
+# ამის გარეშე ახალი კოდი ძველ ბაზას ხვდება და გვერდები 500-ს აბრუნებს.
+[build]
+  command = "npx prisma generate && npx prisma migrate deploy && npm run build"
