@@ -124,11 +124,12 @@
   }
 }
 
-// ძალიან ვიწრო ეკრანზე (<376px) მხოლოდ ლოგოს ხატულა ჩანს
+// მობილურზე (≤480px) მხოლოდ ლოგოს ხატულა ჩანს — ადგილი „შესვლა“ და „რეგისტრაცია“
+// ღილაკებს რჩება (ტექსტით ისინი 390–414px ტელეფონებზე ეკრანს სცდებოდა)
 .brandName {
   display: none;
 
-  @include common.up(sm) {
+  @include common.up(md) {
     display: inline;
   }
 }
@@ -151,10 +152,15 @@
 
 .actions {
   display: flex;
-  flex: 0 0 auto;
+  flex: 0 1 auto;
+  min-width: 0;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   margin-left: auto;
+
+  @include common.up(md) {
+    gap: 8px;
+  }
 }
 
 .iconButton {
@@ -213,9 +219,10 @@
 .ghostLink {
   @include common.buttonBase;
   min-height: 38px;
-  padding: 8px 10px;
+  padding: 8px;
   color: $color-heading;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
+  white-space: nowrap;
 
   &:hover,
   &:focus-visible {
@@ -227,7 +234,8 @@
   @include common.primaryButton;
   min-height: 38px;
   padding: 8px 10px;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
+  white-space: nowrap;
 }
 
 // ვიწრო ეკრანზე: ანგარიშის ბმულში მხოლოდ ავატარი, ღილაკები კომპაქტური
@@ -267,9 +275,11 @@
 @include common.up(md) {
   .ghostLink {
     padding-inline: 14px;
+    font-size: 0.875rem;
   }
 
   .primaryLink {
     padding-inline: 16px;
+    font-size: 0.875rem;
   }
 }
