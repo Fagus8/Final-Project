@@ -2,7 +2,8 @@ import { isUuid, jsonError } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 
-// ადმინი ამტკიცებს კლინიკას. ამის შემდეგ კლინიკა და მისი ექიმები საიტზე ჩნდება
+// ადმინი ამტკიცებს კლინიკას. ამის შემდეგ კლინიკა საიტზე ჩნდება და ექიმებს
+// შეუძლიათ მისი არჩევა
 export async function POST(
   _request: Request,
   { params }: { params: Promise<{ clinicId: string }> },
@@ -31,18 +32,11 @@ export async function POST(
     return jsonError("კლინიკა ვერ მოიძებნა", 404);
   }
 
-  await prisma.$transaction([
-    prisma.clinic.update({
-      where: { id: clinicId },
-      data: { isApproved: true },
-    }),
-    // მხოლოდ კლინიკის მიერ დამატებული ექიმები. ექიმის საკუთარ მოთხოვნას
-    // (ანგარიშით) კლინიკა თვითონ ადასტურებს
-    prisma.doctor.updateMany({
-      where: { clinicId, userId: null },
-      data: { isApproved: true },
-    }),
-  ]);
+  // ექიმებს კლინიკა თვითონ ადასტურებს (ექიმი დამტკიცებულ კლინიკას ირჩევს)
+  await prisma.clinic.update({
+    where: { id: clinicId },
+    data: { isApproved: true },
+  });
 
-  return Response.json({ message: "კლინიკა და მისი ექიმები დამტკიცებულია" });
+  return Response.json({ message: "კლინიკა დამტკიცებულია" });
 }

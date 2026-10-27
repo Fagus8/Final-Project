@@ -1,18 +1,15 @@
 import { redirect } from "next/navigation";
 import DoctorSettingsForm from "@/components/doctors/DoctorSettingsForm";
 import Sidebar from "@/components/navigation/Sidebar";
-import { findDoctorInvitation } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { formatDay, formatTime } from "@/lib/time";
-import AcceptInvitationButton from "./_components/AcceptInvitationButton";
 import JoinClinicForm from "./_components/JoinClinicForm";
 import DoctorAppointments from "./_components/DoctorAppointments";
 import styles from "../Staff.module.scss";
 
 // ექიმის გვერდი „ჩემი განრიგი“. სამი მდგომარეობა აქვს:
-// 1) ექიმი ჯერ არცერთ კლინიკას არ უკავშირდება — მოწვეულს მოწვევის მიღება,
-//    დანარჩენს კლინიკის არჩევის ფორმა
+// 1) ექიმი ჯერ არცერთ კლინიკას არ უკავშირდება — კლინიკის არჩევის ფორმა
 // 2) მოთხოვნა გაგზავნილია, კლინიკას ჯერ არ დაუდასტურებია — ლოდინის შეტყობინება
 // 3) დადასტურებულია — სამუშაო საათები და ვიზიტების კალენდარი
 // (პროფილის ინფორმაცია ცალკე გვერდზეა — „ჩემი პროფილი“, /doctor-profile)
@@ -41,28 +38,7 @@ export default async function DoctorSchedulePage({ searchParams }: PageProps<"/d
 
   // 1) ექიმი ჯერ არცერთ კლინიკას არ უკავშირდება
   if (!doctor) {
-    // მოწვეულს კლინიკის არჩევა არ სჭირდება — მხოლოდ მოწვევის მიღება
-    const invitation = await findDoctorInvitation(session.user.email);
-    if (invitation) {
-      return (
-        <div className={styles.page}>
-          <Sidebar />
-          <main className={styles.main}>
-            <h1 className={styles.title}>ჩემი განრიგი</h1>
-            <section className={styles.card}>
-              <h2>მოწვევა კლინიკიდან</h2>
-              <p>
-                კლინიკამ <strong>{invitation.clinic.name}</strong> დაგამატა ექიმად. მიიღე მოწვევა
-                და კლინიკა დაადასტურებს მოთხოვნას.
-              </p>
-              <AcceptInvitationButton />
-            </section>
-          </main>
-        </div>
-      );
-    }
-
-    // მოწვევის გარეშე — ექიმი თავად ირჩევს დამტკიცებულ კლინიკას.
+    // ექიმი თავად ირჩევს დამტკიცებულ კლინიკას.
     // რეგისტრაციისას შეყვანილი სპეციალობა და გამოცდილება URL-ით მოდის
     const { specialty, experience } = await searchParams;
     const defaults = {
@@ -150,7 +126,6 @@ export default async function DoctorSchedulePage({ searchParams }: PageProps<"/d
               id: doctor.id,
               workStart: doctor.workStart,
               workEnd: doctor.workEnd,
-              email: doctor.email,
               room: doctor.room,
             }}
           />

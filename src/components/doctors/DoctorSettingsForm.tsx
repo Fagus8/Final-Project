@@ -10,12 +10,9 @@ type DoctorSettingsFormProps = {
     id: string;
     workStart: string;
     workEnd: string;
-    email: string | null;
     room: string | null;
-    // ანგარიშმიუბმელ ექიმს ელფოსტა სავალდებულოა
-    hasAccount?: boolean;
   };
-  // კლინიკას შეუძლია ელფოსტისა და კაბინეტის შეცვლაც
+  // კლინიკას შეუძლია კაბინეტის შეცვლაც
   isClinic?: boolean;
 };
 
@@ -25,7 +22,6 @@ export default function DoctorSettingsForm({ doctor, isClinic = false }: DoctorS
   const router = useRouter();
   const [workStart, setWorkStart] = useState(doctor.workStart);
   const [workEnd, setWorkEnd] = useState(doctor.workEnd);
-  const [email, setEmail] = useState(doctor.email ?? "");
   const [room, setRoom] = useState(doctor.room ?? "");
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -35,8 +31,8 @@ export default function DoctorSettingsForm({ doctor, isClinic = false }: DoctorS
     setIsSaving(true);
     setMessage("");
 
-    // ექიმი მხოლოდ საათებს აგზავნის; ელფოსტას და კაბინეტს სერვერი მხოლოდ კლინიკისგან იღებს
-    const body = isClinic ? { workStart, workEnd, email, room } : { workStart, workEnd };
+    // ექიმი მხოლოდ საათებს აგზავნის; კაბინეტს სერვერი მხოლოდ კლინიკისგან იღებს
+    const body = isClinic ? { workStart, workEnd, room } : { workStart, workEnd };
     const result = await sendRequest(`/api/doctors/${doctor.id}`, "PATCH", body);
 
     setIsSaving(false);
@@ -59,22 +55,10 @@ export default function DoctorSettingsForm({ doctor, isClinic = false }: DoctorS
       </label>
 
       {isClinic && (
-        <>
-          <label>
-            კაბინეტი
-            <input type="text" value={room} placeholder="მაგ: 204" onChange={(e) => setRoom(e.target.value)} />
-          </label>
-          <label>
-            ექიმის ელფოსტა
-            <input
-              type="email"
-              required={!doctor.hasAccount}
-              value={email}
-              placeholder="ანგარიშის დასაკავშირებლად"
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </label>
-        </>
+        <label>
+          კაბინეტი
+          <input type="text" value={room} placeholder="მაგ: 204" onChange={(e) => setRoom(e.target.value)} />
+        </label>
       )}
 
       <button type="submit" disabled={isSaving}>

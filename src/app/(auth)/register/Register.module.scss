@@ -189,51 +189,6 @@
   font-weight: 650;
 }
 
-.doctorList {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.doctorCard {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  min-width: 0;
-  margin: 0;
-  padding: 18px;
-  border: 1px solid $color-border;
-  border-radius: $radius-md;
-  background: $color-background;
-}
-
-.doctorLegend {
-  padding: 0 8px;
-  color: $color-primary-dark;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.doctorRemoveButton {
-  @include common.dangerButton;
-  width: 100%;
-  font-size: 14px;
-}
-
-.addDoctorButton {
-  @include common.buttonBase;
-  width: 100%;
-  border: 1.5px dashed rgba($color-primary, 0.5);
-  background: $color-white;
-  color: $color-primary;
-  font-size: 14px;
-
-  &:hover {
-    border-style: solid;
-    background: $color-background-active;
-  }
-}
-
 .switch {
   margin-top: 24px;
   padding-top: 20px;
@@ -254,9 +209,5 @@
 @media (max-width: 520px) {
   .form-wrapper {
     padding: 32px 20px 26px;
-  }
-
-  .doctorCard {
-    padding: 14px;
   }
 }

@@ -20,26 +20,10 @@ export const registerSchema = z
     // მხოლოდ ექიმის რეგისტრაციისთვის
     doctorSpecialty: z.string(),
     doctorExperience: z.number().int().min(0, "გამოცდილების წელი უნდა იყოს 0 ან მეტი"),
-    doctors: z.array(
-      z.object({
-        name: z.string(),
-        specialty: z.string(),
-        experienceYears: z
-          .number()
-          .int()
-          .min(0, "გამოცდილების წელი უნდა იყოს 0 ან მეტი"),
-        // ამ ელფოსტით დარეგისტრირებული ექიმი ამ ჩანაწერს მიებმება
-        email: z.string(),
-      }),
-    ),
   })
   .superRefine((values, context) => {
     // დამხმარე: ცარიელ ველზე შეცდომას ამატებს მითითებულ ადგილას (path)
-    const requireText = (
-      value: string,
-      path: (string | number)[],
-      message: string,
-    ) => {
+    const requireText = (value: string, path: string[], message: string) => {
       if (!value.trim()) {
         context.addIssue({ code: "custom", path, message });
       }
@@ -50,8 +34,7 @@ export const registerSchema = z
       requireText(values.phone, ["phone"], "ტელეფონის ნომერი სავალდებულოა");
     }
 
-    // ექიმი რეგისტრაციისას კლინიკას არ ირჩევს: მოწვეულის მოთხოვნა ავტომატურად
-    // მომწვევ კლინიკას ეგზავნება, დანარჩენი კლინიკას „ჩემ განრიგში“ ირჩევს
+    // ექიმი კლინიკას რეგისტრაციის შემდეგ „ჩემ განრიგში“ ირჩევს
     if (values.accountType === "DOCTOR") {
       requireText(values.doctorSpecialty, ["doctorSpecialty"], "სპეციალობა სავალდებულოა");
     }
@@ -66,44 +49,6 @@ export const registerSchema = z
     requireText(values.address, ["address"], "მისამართი სავალდებულოა");
     requireText(values.phone, ["phone"], "კლინიკის ტელეფონი სავალდებულოა");
     requireText(values.specialty, ["specialty"], "სპეციალიზაცია სავალდებულოა");
-
-    if (values.doctors.length === 0) {
-      context.addIssue({
-        code: "custom",
-        path: ["doctors"],
-        message: "დაამატე მინიმუმ ერთი ექიმი",
-      });
-    }
-
-    const doctorEmails = values.doctors.map((doctor) => doctor.email.trim().toLowerCase());
-
-    values.doctors.forEach((doctor, index) => {
-      requireText(
-        doctor.name,
-        ["doctors", index, "name"],
-        "ექიმის სახელი სავალდებულოა",
-      );
-      requireText(
-        doctor.specialty,
-        ["doctors", index, "specialty"],
-        "სპეციალიზაცია სავალდებულოა",
-      );
-
-      const email = doctorEmails[index];
-      if (!z.string().email().safeParse(email).success) {
-        context.addIssue({
-          code: "custom",
-          path: ["doctors", index, "email"],
-          message: "ექიმის ელ.ფოსტა სავალდებულოა",
-        });
-      } else if (doctorEmails.indexOf(email) !== index) {
-        context.addIssue({
-          code: "custom",
-          path: ["doctors", index, "email"],
-          message: "ეს ელ.ფოსტა სხვა ექიმზეა მითითებული",
-        });
-      }
-    });
   });
 
 // ფორმის მნიშვნელობების ტიპი პირდაპირ სქემიდან გამოიყვანება

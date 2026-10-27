@@ -18,8 +18,8 @@ export default async function ClinicOverview({ clinicId }: { clinicId: string })
 
   const [doctorCount, pendingDoctorCount, todayCount, upcomingCount] = await Promise.all([
     prisma.doctor.count({ where: { clinicId, isApproved: true } }),
-    // ექიმები, რომლებიც თვითონ დარეგისტრირდნენ და დადასტურებას ელოდებიან
-    prisma.doctor.count({ where: { clinicId, isApproved: false, userId: { not: null } } }),
+    // ექიმები, რომლებიც დადასტურებას ელოდებიან
+    prisma.doctor.count({ where: { clinicId, isApproved: false } }),
     prisma.appointment.count({
       where: {
         doctor: { clinicId },

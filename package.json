@@ -25,6 +25,7 @@
     "swagger-ui-react": "^5.33.2"
   },
   "devDependencies": {
+    "@faker-js/faker": "^10.6.0",
     "@types/node": "^20",
     "@types/pg": "^8.23.1",
     "@types/react": "^19",

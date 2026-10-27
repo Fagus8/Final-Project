@@ -5,7 +5,6 @@ import { getSession } from "@/lib/session";
 import BookingSteps from "./BookingSteps";
 import FeaturedDoctors from "./FeaturedDoctors";
 import Hero from "./Hero";
-import JoinBanner from "./JoinBanner";
 import styles from "./Home.module.scss";
 
 // მთავარი გვერდი: მონაცემებს ბაზიდან იღებს და ნაწილებს აწყობს
@@ -30,7 +29,12 @@ export default async function HomePage() {
     <div className={styles.layout}>
       <Sidebar />
       <main className={styles.page}>
-        <Hero canBook={canBook} clinicCount={clinicCount} doctorCount={doctorCount} />
+        <Hero
+          canBook={canBook}
+          isGuest={!session}
+          clinicCount={clinicCount}
+          doctorCount={doctorCount}
+        />
         {canBook && <BookingSteps />}
         <FeaturedDoctors
           doctors={doctors.map((doctor) => ({
@@ -42,8 +46,6 @@ export default async function HomePage() {
             avatarUrl: doctor.avatarUrl,
           }))}
         />
-        {/* მოწვევა — მხოლოდ სტუმრისთვის */}
-        {!session && <JoinBanner />}
       </main>
     </div>
   );

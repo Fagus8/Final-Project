@@ -6,7 +6,7 @@ import { sendRequest } from "@/lib/api-client";
 import styles from "../AdminClinics.module.scss";
 
 // ადმინის ღილაკი: კლინიკის დამტკიცება. დამტკიცების შემდეგ კლინიკა
-// და მისი ექიმები საიტზე ჩნდება
+// საიტზე ჩნდება და ექიმებს შეუძლიათ მისი არჩევა
 export default function ApproveClinicButton({ clinicId }: { clinicId: string }) {
   const router = useRouter();
   const [isApproving, setIsApproving] = useState(false);

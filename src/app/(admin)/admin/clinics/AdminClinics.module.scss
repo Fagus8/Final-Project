@@ -121,20 +121,6 @@
   @include shared.secondaryButton;
 }
 
-.addDoctorButton {
-  @include shared.buttonBase;
-  align-self: flex-start;
-  border: 1.5px dashed rgba($color-primary, 0.5);
-  background: $color-white;
-  color: $color-primary;
-  font-size: 14px;
-
-  &:hover {
-    border-style: solid;
-    background: $color-background-active;
-  }
-}
-
 .editForm {
   display: flex;
   flex-direction: column;

@@ -5,18 +5,14 @@ import { useState } from "react";
 import { sendRequest } from "@/lib/api-client";
 import styles from "../AdminClinics.module.scss";
 
-// ადმინის ფორმა: კლინიკის მონაცემების და მისი ექიმების რედაქტირება
+// ადმინის ფორმა: კლინიკის მონაცემების და მისი ექიმების რედაქტირება.
+// ახალ ექიმს ადმინი არ ამატებს — ექიმი თვითონ რეგისტრირდება და კლინიკას ირჩევს
 
 type DoctorDraft = {
-  // ბაზის id; ახლად დამატებულ ექიმს ჯერ არ აქვს
-  id?: string;
-  // React-ის key სიისთვის: ძველ ექიმს id-ის ტოლია, ახალს — შემთხვევითი
-  localKey: string;
+  id: string;
   name: string;
   specialty: string;
   experienceYears: number;
-  // მხოლოდ ახალ ექიმს — ანგარიშის დასაკავშირებლად
-  email?: string;
 };
 
 type ClinicData = {
@@ -27,7 +23,7 @@ type ClinicData = {
   phone: string;
   specialty: string;
   imageUrl: string | null;
-  doctors: { id: string; name: string; specialty: string; experienceYears: number }[];
+  doctors: DoctorDraft[];
 };
 
 // კლინიკის ველები ფორმაში ერთნაირად იხატება, ამიტომ სიიდან ვაგენერირებთ
@@ -42,11 +38,7 @@ const clinicFields = [
 
 // ბაზის მონაცემებიდან ფორმის საწყისი მდგომარეობა
 function makeDraft(clinic: ClinicData) {
-  return {
-    ...clinic,
-    imageUrl: clinic.imageUrl ?? "",
-    doctors: clinic.doctors.map((doctor): DoctorDraft => ({ ...doctor, localKey: doctor.id })),
-  };
+  return { ...clinic, imageUrl: clinic.imageUrl ?? "" };
 }
 
 export default function EditClinicForm({ clinic }: { clinic: ClinicData }) {
@@ -65,21 +57,10 @@ export default function EditClinicForm({ clinic }: { clinic: ClinicData }) {
     }));
   }
 
-  function removeDoctor(localKey: string) {
+  function removeDoctor(id: string) {
     setDraft((current) => ({
       ...current,
-      doctors: current.doctors.filter((doctor) => doctor.localKey !== localKey),
-    }));
-  }
-
-  // ახალ ექიმს დროებითი localKey ეძლევა, id-ს ბაზა შენახვისას მიანიჭებს
-  function addDoctor() {
-    setDraft((current) => ({
-      ...current,
-      doctors: [
-        ...current.doctors,
-        { localKey: crypto.randomUUID(), name: "", specialty: "", experienceYears: 0, email: "" },
-      ],
+      doctors: current.doctors.filter((doctor) => doctor.id !== id),
     }));
   }
 
@@ -91,7 +72,7 @@ export default function EditClinicForm({ clinic }: { clinic: ClinicData }) {
   }
 
   // შენახვა: მთელ კლინიკას ექიმებიანად ვაგზავნით. ექიმი id-ით განახლდება,
-  // id-ის გარეშე შეიქმნება, სიიდან ამოღებული კი წაიშლება
+  // სიიდან ამოღებული კი წაიშლება
   async function saveClinic(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSaving(true);
@@ -104,14 +85,7 @@ export default function EditClinicForm({ clinic }: { clinic: ClinicData }) {
       phone: draft.phone,
       specialty: draft.specialty,
       imageUrl: draft.imageUrl,
-      // localKey სერვერს არ სჭირდება. ახალ ექიმს id არ აქვს (undefined JSON-ში არ იგზავნება)
-      doctors: draft.doctors.map(({ id, name, specialty, experienceYears, email }) => ({
-        id,
-        name,
-        specialty,
-        experienceYears,
-        email: id ? undefined : email,
-      })),
+      doctors: draft.doctors,
     });
 
     setIsSaving(false);
@@ -151,15 +125,15 @@ export default function EditClinicForm({ clinic }: { clinic: ClinicData }) {
         </label>
       ))}
 
-      <h3>ექიმების რედაქტირება</h3>
+      {draft.doctors.length > 0 && <h3>ექიმების რედაქტირება</h3>}
       {draft.doctors.map((doctor, index) => (
-        <fieldset className={styles.doctorEditor} key={doctor.localKey}>
+        <fieldset className={styles.doctorEditor} key={doctor.id}>
           <legend>{doctor.name || `ექიმი ${index + 1}`}</legend>
           <button
             className={styles.removeDoctorButton}
             type="button"
             disabled={isSaving}
-            onClick={() => removeDoctor(doctor.localKey)}
+            onClick={() => removeDoctor(doctor.id)}
           >
             ექიმის წაშლა
           </button>
@@ -190,23 +164,8 @@ export default function EditClinicForm({ clinic }: { clinic: ClinicData }) {
               onChange={(event) => updateDoctor(index, { experienceYears: Number(event.target.value) })}
             />
           </label>
-          {/* არსებული ექიმის ელფოსტას კლინიკა „კლინიკის მართვაში“ ცვლის */}
-          {!doctor.id && (
-            <label className={styles.field}>
-              ექიმის ელფოსტა
-              <input
-                required
-                type="email"
-                value={doctor.email ?? ""}
-                onChange={(event) => updateDoctor(index, { email: event.target.value })}
-              />
-            </label>
-          )}
         </fieldset>
       ))}
-      <button className={styles.addDoctorButton} type="button" onClick={addDoctor}>
-        ექიმის დამატება
-      </button>
 
       {error && <p className={styles.error} role="alert">{error}</p>}
       <div className={styles.formActions}>

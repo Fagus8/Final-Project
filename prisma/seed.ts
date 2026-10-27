@@ -5,9 +5,9 @@ import "dotenv/config";
 import { auth } from "../src/lib/auth";
 import { prisma } from "../src/lib/prisma";
 import { formatDay, isSunday, toDate } from "../src/lib/time";
-
+import { faker } from "@faker-js/faker";
 const PASSWORD = "demo1234";
-const ADMIN_EMAIL = "admin@medical.ge";
+const ADMIN_EMAIL = "l.metreveli88@gmail.com";
 
 async function createUser(name: string, email: string, accountType: "PATIENT" | "CLINIC" | "DOCTOR") {
   const { user } = await auth.api.signUpEmail({
@@ -69,8 +69,7 @@ async function main() {
   const admin = await createUser("ადმინისტრატორი", ADMIN_EMAIL, "PATIENT");
   await prisma.user.update({ where: { id: admin.id }, data: { role: "admin" } });
 
-  // კლინიკები და ექიმები. ყველა ექიმს საკუთარი ანგარიში აქვს — საჯაროდ
-  // მხოლოდ ანგარიშიანი ექიმი ჩანს (src/lib/doctors.ts)
+  // კლინიკები და ექიმები. ყველა ექიმს საკუთარი ანგარიში აქვს (Doctor.userId სავალდებულოა)
   const doctorIds: string[] = [];
   for (const clinic of clinics) {
     const clinicUser = await createUser(clinic.name, clinic.email, "CLINIC");
@@ -94,7 +93,6 @@ async function main() {
           specialty: doctor.specialty,
           experienceYears: doctor.experienceYears,
           room: doctor.room,
-          email: doctor.email,
           userId: doctorUser.id,
           isApproved: true,
           clinicId: clinicUser.id,
@@ -120,11 +118,16 @@ async function main() {
   const [nino, giorgi, mariam, levan] = doctorIds;
   await prisma.appointment.createMany({
     data: [
-      {
-        doctorId: nino, patientId: ana, startsAt: workday(-14, "11:00"), status: "COMPLETED",
-        diagnosis: "მომატებული წნევა",
-        prescription: "წნევის წამალი დილით, წნევის გაზომვა ყოველდღე",
-      },
+     
+
+        {
+           doctorId: nino,
+          patientId: ana,
+          startsAt: workday(-14, "11:00"),
+          status: "COMPLETED",
+          diagnosis: "დიაგნოზი",
+          prescription: faker.lorem.words(100), 
+       },
       {
         doctorId: giorgi, patientId: davit, startsAt: workday(-7, "12:30"), status: "COMPLETED",
         diagnosis: "გაციება",

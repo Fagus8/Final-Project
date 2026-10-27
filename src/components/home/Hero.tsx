@@ -5,12 +5,15 @@ import styles from "./Home.module.scss";
 type HeroProps = {
   // false ექიმისა და კლინიკისთვის — მათ ჯავშნის ღილაკი არ უჩანთ
   canBook: boolean;
+  // სტუმარს ბლოკის ბოლოს ექიმებისა და კლინიკებისთვის მოწვევა უჩანს
+  isGuest: boolean;
   clinicCount: number;
   doctorCount: number;
 };
 
-// მთავარი ბლოკი: სათაური, ღილაკები, სტატისტიკა და დეკორატიული ბარათი
-export default function Hero({ canBook, clinicCount, doctorCount }: HeroProps) {
+// მთავარი ბლოკი: სათაური, ღილაკები, სტატისტიკა, დეკორატიული ბარათი
+// და (სტუმრისთვის) მოწვევა ექიმებისა და კლინიკებისთვის
+export default function Hero({ canBook, isGuest, clinicCount, doctorCount }: HeroProps) {
   return (
     <section className={styles.hero}>
       <div className={styles.heroText}>
@@ -83,6 +86,23 @@ export default function Hero({ canBook, clinicCount, doctorCount }: HeroProps) {
           </div>
         </div>
       </div>
+
+      {isGuest && (
+        <div className={styles.heroJoin}>
+          <span className={styles.joinIcons} aria-hidden="true">
+            <span><Icon name="stethoscope" size={21} /></span>
+            <span><Icon name="clinic" size={21} /></span>
+          </span>
+          <div className={styles.joinText}>
+            <strong>ექიმი ან კლინიკა ხარ?</strong>
+            <span>მართე განრიგი, კაბინეტები და ვიზიტები ონლაინ.</span>
+          </div>
+          <Link href="/register" className={styles.joinLink}>
+            შემოგვიერთდი
+            <Icon name="arrowRight" size={18} />
+          </Link>
+        </div>
+      )}
     </section>
   );
 }

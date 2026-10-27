@@ -31,24 +31,19 @@ const apiDocument = {
           message: { type: 'string' },
         },
       },
-      DoctorInput: {
+      DoctorUpdate: {
         type: 'object',
-        required: ['name', 'specialty', 'experienceYears'],
+        required: ['id', 'name', 'specialty', 'experienceYears'],
         properties: {
-          id: { type: 'string', format: 'uuid', description: 'არსებული ექიმის განახლებისას სავალდებულოა.' },
+          id: { type: 'string', format: 'uuid' },
           name: { type: 'string', minLength: 1 },
           specialty: { type: 'string', minLength: 1 },
           experienceYears: { type: 'integer', minimum: 0 },
-          email: {
-            type: 'string',
-            format: 'email',
-            description: 'ახალი ექიმისთვის სავალდებულოა: ამ ელფოსტით დარეგისტრირებული ექიმის ანგარიში ამ ჩანაწერს მიებმება.',
-          },
         },
       },
       ClinicInput: {
         type: 'object',
-        required: ['name', 'city', 'address', 'phone', 'specialty', 'imageUrl', 'doctors'],
+        required: ['name', 'city', 'address', 'phone', 'specialty', 'imageUrl'],
         properties: {
           name: { type: 'string', minLength: 1 },
           city: { type: 'string', minLength: 1 },
@@ -56,12 +51,23 @@ const apiDocument = {
           phone: { type: 'string', minLength: 1 },
           specialty: { type: 'string', minLength: 1 },
           imageUrl: { type: 'string', description: 'არასავალდებულო სურათის ბმული. თუ არ გაქვთ, დატოვეთ ცარიელი.' },
-          doctors: {
-            type: 'array',
-            minItems: 1,
-            items: { $ref: '#/components/schemas/DoctorInput' },
-          },
         },
+      },
+      ClinicUpdate: {
+        allOf: [
+          { $ref: '#/components/schemas/ClinicInput' },
+          {
+            type: 'object',
+            required: ['doctors'],
+            properties: {
+              doctors: {
+                type: 'array',
+                description: 'კლინიკის არსებული ექიმები. სიიდან ამოღებული ექიმი წაიშლება.',
+                items: { $ref: '#/components/schemas/DoctorUpdate' },
+              },
+            },
+          },
+        ],
       },
       Message: {
         type: 'object',
@@ -149,7 +155,7 @@ const apiDocument = {
     '/api/clinic-registration': {
       post: {
         tags: ['კლინიკები'],
-        summary: 'კლინიკისა და ექიმების მონაცემების დასამტკიცებლად გაგზავნა',
+        summary: 'კლინიკის მონაცემების დასამტკიცებლად გაგზავნა',
         description: 'ხელმისაწვდომია ავტორიზებული კლინიკის ანგარიშისთვის. ახალი განაცხადი ადმინისტრატორის დადასტურებას ელოდება.',
         security: [{ sessionCookie: [] }],
         requestBody: {
@@ -190,66 +196,6 @@ const apiDocument = {
         },
       },
     },
-    '/api/clinics/{clinicId}/doctors': {
-      post: {
-        tags: ['კლინიკები'],
-        summary: 'კლინიკა ამატებს ახალ (მოწვეულ) ექიმს',
-        description:
-          'ხელმისაწვდომია მხოლოდ ამავე კლინიკის ანგარიშისთვის. ექიმი საიტზე გამოჩნდება, როცა მითითებული ელფოსტით დარეგისტრირდება და კლინიკა მის მოთხოვნას დაადასტურებს.',
-        security: [{ sessionCookie: [] }],
-        parameters: [
-          {
-            name: 'clinicId',
-            in: 'path',
-            required: true,
-            schema: { type: 'string', format: 'uuid' },
-          },
-        ],
-        requestBody: {
-          required: true,
-          content: {
-            'application/json': {
-              schema: {
-                type: 'object',
-                required: ['name', 'specialty', 'experienceYears', 'email'],
-                properties: {
-                  name: { type: 'string', minLength: 1 },
-                  specialty: { type: 'string', minLength: 1 },
-                  experienceYears: { type: 'integer', minimum: 0 },
-                  email: { type: 'string', format: 'email' },
-                },
-              },
-            },
-          },
-        },
-        responses: {
-          '200': {
-            description: 'ექიმი დაემატა.',
-            content: { 'application/json': { schema: { $ref: '#/components/schemas/Message' } } },
-          },
-          '400': {
-            description: 'ექიმის მონაცემები არასწორია.',
-            content: { 'application/json': { schema: { $ref: '#/components/schemas/Message' } } },
-          },
-          '401': {
-            description: 'საჭიროა ანგარიშში შესვლა.',
-            content: { 'application/json': { schema: { $ref: '#/components/schemas/Message' } } },
-          },
-          '403': {
-            description: 'ექიმის დამატება მხოლოდ ამ კლინიკის ანგარიშს შეუძლია.',
-            content: { 'application/json': { schema: { $ref: '#/components/schemas/Message' } } },
-          },
-          '404': {
-            description: 'კლინიკა ვერ მოიძებნა.',
-            content: { 'application/json': { schema: { $ref: '#/components/schemas/Message' } } },
-          },
-          '409': {
-            description: 'ეს ელფოსტა სხვა ექიმს უკვე აქვს.',
-            content: { 'application/json': { schema: { $ref: '#/components/schemas/Message' } } },
-          },
-        },
-      },
-    },
     '/api/admin/clinics/{clinicId}': {
       patch: {
         tags: ['ადმინისტრირება'],
@@ -267,7 +213,7 @@ const apiDocument = {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: '#/components/schemas/ClinicInput' },
+              schema: { $ref: '#/components/schemas/ClinicUpdate' },
             },
           },
         },
@@ -302,7 +248,7 @@ const apiDocument = {
     '/api/admin/clinics/{clinicId}/approve': {
       post: {
         tags: ['ადმინისტრირება'],
-        summary: 'კლინიკისა და მისი ექიმების დამტკიცება',
+        summary: 'კლინიკის დამტკიცება',
         security: [{ sessionCookie: [] }],
         parameters: [
           {
@@ -314,7 +260,7 @@ const apiDocument = {
         ],
         responses: {
           '200': {
-            description: 'კლინიკა და მისი ექიმები დამტკიცდა.',
+            description: 'კლინიკა დამტკიცდა.',
             content: { 'application/json': { schema: { $ref: '#/components/schemas/Message' } } },
           },
           '401': {

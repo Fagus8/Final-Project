@@ -1,11 +1,12 @@
 import { z } from "zod";
-import { checkDoctorEmails, doctorEmailSchema, isUuid, jsonError, readJson } from "@/lib/api";
+import { isUuid, jsonError, readJson } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 
-// ადმინი ცვლის კლინიკის მონაცემებს და ექიმების სიას
+// ადმინი ცვლის კლინიკის მონაცემებს და ექიმების სიას.
+// ახალ ექიმს ადმინი არ ამატებს — ექიმი თვითონ რეგისტრირდება
 
-// მოსალოდნელი მონაცემები. id-იანი ექიმი განახლდება, id-ის გარეშე — შეიქმნება
+// მოსალოდნელი მონაცემები. სიაში დარჩენილი ექიმი განახლდება, ამოღებული — წაიშლება
 const clinicUpdateSchema = z.object({
   name: z.string().trim().min(1),
   city: z.string().trim().min(1),
@@ -15,12 +16,10 @@ const clinicUpdateSchema = z.object({
   imageUrl: z.string().trim(),
   doctors: z.array(
     z.object({
-      id: z.string().uuid().optional(),
+      id: z.string().uuid(),
       name: z.string().trim().min(1),
       specialty: z.string().trim().min(1),
       experienceYears: z.number().int().min(0),
-      // მხოლოდ ახალ ექიმს (არსებულის ელფოსტას კლინიკა ცვლის)
-      email: doctorEmailSchema.optional(),
     }),
   ),
 });
@@ -51,19 +50,11 @@ export async function PATCH(
 
   const { doctors, imageUrl, ...clinicData } = result.data;
 
-  // ახალ ექიმს ელფოსტა სავალდებულოა და სხვა ექიმს არ უნდა ჰქონდეს
-  const newDoctors = doctors.filter((doctor) => !doctor.id);
-  if (newDoctors.some((doctor) => !doctor.email)) {
-    return jsonError("ახალ ექიმს ელფოსტა სავალდებულოა", 400);
-  }
-  const emailError = await checkDoctorEmails(newDoctors.map((doctor) => doctor.email!));
-  if (emailError) return emailError;
-
   // ყველაფერი ერთ ტრანზაქციაშია: ან მთლიანად შეინახება, ან არაფერი
   const outcome = await prisma.$transaction(async (transaction) => {
     const clinic = await transaction.clinic.findUnique({
       where: { id: clinicId },
-      select: { isApproved: true, doctors: { select: { id: true } } },
+      select: { doctors: { select: { id: true } } },
     });
 
     if (!clinic) {
@@ -72,10 +63,7 @@ export async function PATCH(
 
     // გაგზავნილი id-ები ამ კლინიკის ექიმებს უნდა ეკუთვნოდეს და არ უნდა მეორდებოდეს.
     // თუ არა, ფორმა მოძველებულია (სხვამ უკვე შეცვალა)
-    const submittedIds: string[] = [];
-    for (const doctor of doctors) {
-      if (doctor.id) submittedIds.push(doctor.id);
-    }
+    const submittedIds = doctors.map((doctor) => doctor.id);
     const currentIds = clinic.doctors.map((doctor) => doctor.id);
     const hasDuplicates = new Set(submittedIds).size !== submittedIds.length;
     const hasForeignId = submittedIds.some((id) => !currentIds.includes(id));
@@ -94,15 +82,9 @@ export async function PATCH(
       where: { clinicId, id: { notIn: submittedIds } },
     });
 
-    // დანარჩენს ვაახლებთ, ახლებს ვქმნით (დამტკიცებულ კლინიკაში — მაშინვე დამტკიცებულს)
-    for (const { id, email, ...doctorData } of doctors) {
-      if (id) {
-        await transaction.doctor.update({ where: { id }, data: doctorData });
-      } else {
-        await transaction.doctor.create({
-          data: { ...doctorData, email, clinicId, isApproved: clinic.isApproved },
-        });
-      }
+    // დანარჩენს ვაახლებთ
+    for (const { id, ...doctorData } of doctors) {
+      await transaction.doctor.update({ where: { id }, data: doctorData });
     }
 
     return "updated";

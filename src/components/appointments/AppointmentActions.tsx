@@ -38,7 +38,7 @@ export default function AppointmentActions({
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
-    if (showForm && !dialog.open) dialog.showModal();
+     if (showForm && !dialog.open) dialog.showModal();
     if (!showForm && dialog.open) dialog.close();
   }, [showForm]);
 

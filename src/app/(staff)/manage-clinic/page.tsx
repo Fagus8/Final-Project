@@ -10,7 +10,6 @@ import { getSession } from "@/lib/session";
 import { statusLabels } from "@/lib/appointment-status";
 import { formatDateTime } from "@/lib/time";
 import styles from "../Staff.module.scss";
-import AddDoctorForm from "./_components/AddDoctorForm";
 import ApproveDoctorButtons from "./_components/ApproveDoctorButtons";
 import clinicStyles from "./ManageClinic.module.scss";
 
@@ -20,7 +19,7 @@ function countByStatus(appointments: { status: string }[], status: string) {
 }
 
 // კლინიკის გვერდი „კლინიკის მართვა“: ახალი ექიმების მოთხოვნები, სტატისტიკა,
-// ანგარიში ექიმების მიხედვით, ახალი ექიმის დამატება, ექიმების საათები და კაბინეტები,
+// ანგარიში ექიმების მიხედვით, ექიმების საათები და კაბინეტები,
 // მომავალი და გაუქმებული ვიზიტები, კლინიკის წაშლა
 export default async function ManageClinicPage() {
   const session = await getSession();
@@ -59,18 +58,9 @@ export default async function ManageClinicPage() {
     );
   }
 
-  // ექიმები, რომლებიც თვითონ დარეგისტრირდნენ და დადასტურებას ელოდებიან
-  const pendingDoctors = clinic.doctors.filter((doctor) => !doctor.isApproved && doctor.userId);
-  // დადასტურებისას ანგარიში მიებმება იმ ექიმს, რომელსაც კლინიკამ ეს ელფოსტა მიუთითა
-  // (მისი სპეციალობა და გამოცდილება რჩება — მოთხოვნაში მათ ექიმის მითითებულს ვადარებთ)
-  const invitedDoctors = new Map<string, { name: string; specialty: string; experienceYears: number }>();
-  clinic.doctors.forEach((doctor) => {
-    if (doctor.email && !doctor.userId) invitedDoctors.set(doctor.email, doctor);
-  });
-  // კლინიკის დადასტურებამდე მის ექიმებსაც isApproved=false აქვთ, ამიტომ მაშინ ყველას ვაჩვენებთ
-  const doctors = clinic.isApproved
-    ? clinic.doctors.filter((doctor) => doctor.isApproved)
-    : clinic.doctors;
+  // ექიმები, რომლებმაც ეს კლინიკა აირჩიეს და დადასტურებას ელოდებიან
+  const pendingDoctors = clinic.doctors.filter((doctor) => !doctor.isApproved);
+  const doctors = clinic.doctors.filter((doctor) => doctor.isApproved);
 
   // ყველა ვიზიტი ერთ სიაში, ექიმის სახელით
   const appointments = doctors
@@ -111,39 +101,18 @@ export default async function ManageClinicPage() {
           <>
             <h2>ახალი ექიმები ({pendingDoctors.length})</h2>
             <ul className={list.list}>
-              {pendingDoctors.map((doctor) => {
-                const invited = doctor.user ? invitedDoctors.get(doctor.user.email) : undefined;
-                const differs =
-                  invited &&
-                  (invited.specialty !== doctor.specialty ||
-                    invited.experienceYears !== doctor.experienceYears);
-
-                return (
-                  <li key={doctor.id} className={list.item}>
-                    <div className={list.info}>
-                      <h3>{doctor.name}</h3>
-                      <p>
-                        {invited ? "ექიმის მითითებული: " : ""}
-                        {doctor.specialty} · გამოცდილება: {doctor.experienceYears} წელი
-                      </p>
-                      <p>{doctor.user?.email}</p>
-                      {invited && (
-                        <p>
-                          დადასტურებისას ანგარიში მიებმება ექიმს: <strong>{invited.name}</strong>
-                        </p>
-                      )}
-                      {differs && (
-                        <p className={clinicStyles.warning}>
-                          შენი ჩანაწერი: {invited.specialty} · {invited.experienceYears} წელი.
-                          დადასტურებისას შენი ჩანაწერი დარჩება — საჭიროებისას შეცვალე ქვემოთ,
-                          „პროფილის რედაქტირებაში“.
-                        </p>
-                      )}
-                    </div>
-                    <ApproveDoctorButtons doctorId={doctor.id} />
-                  </li>
-                );
-              })}
+              {pendingDoctors.map((doctor) => (
+                <li key={doctor.id} className={list.item}>
+                  <div className={list.info}>
+                    <h3>{doctor.name}</h3>
+                    <p>
+                      {doctor.specialty} · გამოცდილება: {doctor.experienceYears} წელი
+                    </p>
+                    <p>{doctor.user.email}</p>
+                  </div>
+                  <ApproveDoctorButtons doctorId={doctor.id} />
+                </li>
+              ))}
             </ul>
           </>
         )}
@@ -180,15 +149,6 @@ export default async function ManageClinicPage() {
           </table>
         </section>
 
-        <section className={styles.card}>
-          <h2>ახალი ექიმის დამატება</h2>
-          <p>
-            ექიმი საიტზე გამოჩნდება, როცა ამ ელფოსტით დარეგისტრირდება და მის მოთხოვნას
-            დაადასტურებ.
-          </p>
-          <AddDoctorForm clinicId={clinic.id} />
-        </section>
-
         {/* გრაფიკები და კაბინეტები */}
         <section className={styles.card}>
           <h2>ექიმების გრაფიკი და კაბინეტები</h2>
@@ -198,23 +158,13 @@ export default async function ManageClinicPage() {
           {doctors.map((doctor) => (
             <div key={doctor.id} className={clinicStyles.doctorRow}>
               <h3>{doctor.name} · {doctor.specialty}</h3>
-              {/* მოწვეული ექიმი საიტზე არ ჩანს, სანამ ამ ელფოსტით არ დარეგისტრირდება */}
-              {!doctor.userId && (
-                <p className={clinicStyles.warning}>
-                  ელოდება ექიმის რეგისტრაციას — საიტზე გამოჩნდება, როცა ექიმი
-                  {doctor.email ? <> ელფოსტით <strong>{doctor.email}</strong></> : null} დარეგისტრირდება
-                  და მოთხოვნას დაადასტურებ.
-                </p>
-              )}
               <DoctorSettingsForm
                 isClinic
                 doctor={{
                   id: doctor.id,
                   workStart: doctor.workStart,
                   workEnd: doctor.workEnd,
-                  email: doctor.email,
                   room: doctor.room,
-                  hasAccount: doctor.userId !== null,
                 }}
               />
               <details className={clinicStyles.profileDetails}>

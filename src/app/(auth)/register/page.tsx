@@ -51,9 +51,9 @@ async function createAccount(values: RegistrationValues) {
 }
 
 // ინახავს როლის მიხედვით დამატებით მონაცემებს:
-// პაციენტი → ტელეფონი და სისხლის ჯგუფი, კლინიკა → კლინიკა და ექიმები,
-// ექიმი → თუ კლინიკამ მოიწვია, მოთხოვნა ავტომატურად მომწვევ კლინიკას ეგზავნება
-function saveRoleDetails(values: RegistrationValues) {
+// პაციენტი → ტელეფონი და სისხლის ჯგუფი, კლინიკა → კლინიკის მონაცემები.
+// ექიმს აქ არაფერი ეგზავნება — კლინიკას „ჩემ განრიგში“ აირჩევს
+async function saveRoleDetails(values: RegistrationValues) {
   if (values.accountType === "CLINIC") {
     return sendRequest("/api/clinic-registration", "POST", {
       name: values.clinicName,
@@ -62,7 +62,6 @@ function saveRoleDetails(values: RegistrationValues) {
       phone: values.phone,
       specialty: values.specialty,
       imageUrl: values.imageUrl,
-      doctors: values.doctors,
     });
   }
 
@@ -73,10 +72,7 @@ function saveRoleDetails(values: RegistrationValues) {
     });
   }
 
-  return sendRequest("/api/doctor-invitation", "POST", {
-    specialty: values.doctorSpecialty,
-    experienceYears: values.doctorExperience,
-  });
+  return { ok: true, message: "" };
 }
 
 // რეგისტრაციის გვერდი. ჯერ იქმნება ანგარიში (better-auth), შემდეგ
@@ -99,7 +95,6 @@ export default function RegisterPage() {
       imageUrl: "",
       doctorSpecialty: "",
       doctorExperience: 0,
-      doctors: [{ name: "", specialty: "", experienceYears: 0, email: "" }],
     },
     // Zod-ის შეცდომებს formik-ის ფორმატში გადავიყვანთ (ველის სახელი → ტექსტი)
     validate: (values) => {
@@ -138,7 +133,7 @@ export default function RegisterPage() {
         }
 
         // ნაბიჯი 3: ექიმი თავის განრიგზე გადადის, დანარჩენი — მთავარ გვერდზე.
-        // მოწვევის გარეშე ექიმი იქ კლინიკას აირჩევს — შეყვანილი მონაცემები ფორმაში წინასწარ ჩაიწერება
+        // ექიმი იქ კლინიკას აირჩევს — შეყვანილი მონაცემები ფორმაში წინასწარ ჩაიწერება
         if (values.accountType === "DOCTOR") {
           const params = new URLSearchParams({
             specialty: values.doctorSpecialty.trim(),
