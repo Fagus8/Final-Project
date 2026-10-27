@@ -6,7 +6,8 @@ import Sidebar from "@/components/navigation/Sidebar";
 import DoctorAvatar from "@/components/ui/DoctorAvatar";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
-import { statusLabels } from "@/lib/appointment-status";
+import { cancellationText, displayStatus, statusLabels } from "@/lib/appointment-status";
+import { loginUrl } from "@/lib/next-url";
 import { formatDateTime } from "@/lib/time";
 import styles from "../Patient.module.scss";
 
@@ -15,13 +16,15 @@ export default async function PatientVisitsPage() {
   const session = await getSession();
 
   if (!session) {
-    redirect("/login");
+    redirect(loginUrl("/patient-visits"));
   }
 
   if (session.user.accountType !== "PATIENT") {
     redirect("/dashboard");
   }
 
+  // ექიმის ჩანაწერი შეიძლება აღარ არსებობდეს (კლინიკა წაიშალა) —
+  // მაშინ ვიზიტში შენახულ სახელებს ვაჩვენებთ
   const appointments = await prisma.appointment.findMany({
     where: { patientId: session.user.id },
     include: { doctor: { include: { clinic: true } } },
@@ -53,21 +56,20 @@ export default async function PatientVisitsPage() {
               <li key={appointment.id} className={list.item}>
                 <div className={list.summary}>
                   <DoctorAvatar
-                    name={appointment.doctor.name}
-                    avatarUrl={appointment.doctor.avatarUrl}
+                    name={appointment.doctorName}
+                    avatarUrl={appointment.doctor?.avatarUrl ?? null}
                     className={list.avatar}
                   />
                   <div className={list.info}>
                     <h3>
                       {formatDateTime(appointment.startsAt)}
-                      <span className={`${list.status} ${list[appointment.status]}`}>
-                        {statusLabels[appointment.status]}
-                      </span>
+                      <span className={`${list.status} ${list.BOOKED}`}>{statusLabels.BOOKED}</span>
                     </h3>
-                    <p>{appointment.doctor.name} · {appointment.doctor.specialty}</p>
+                    <p>{appointment.doctorName} · {appointment.doctorSpecialty}</p>
                     <p>
-                      {appointment.doctor.clinic.name}, {appointment.doctor.clinic.address}
-                      {appointment.doctor.room && <> · კაბინეტი {appointment.doctor.room}</>}
+                      {appointment.clinicName}
+                      {appointment.doctor && <>, {appointment.doctor.clinic.address}</>}
+                      {appointment.doctor?.room && <> · კაბინეტი {appointment.doctor.room}</>}
                     </p>
                   </div>
                 </div>
@@ -82,42 +84,46 @@ export default async function PatientVisitsPage() {
           <p className={list.empty}>ისტორია ჯერ ცარიელია.</p>
         ) : (
           <ul className={list.list}>
-            {history.map((appointment) => (
-              <li key={appointment.id} className={list.item}>
-                <div className={list.summary}>
-                  <DoctorAvatar
-                    name={appointment.doctor.name}
-                    avatarUrl={appointment.doctor.avatarUrl}
-                    className={list.avatar}
-                  />
-                  <div className={list.info}>
-                    <h3>
-                      {formatDateTime(appointment.startsAt)}
-                      <span className={`${list.status} ${list[appointment.status]}`}>
-                        {statusLabels[appointment.status]}
-                      </span>
-                    </h3>
-                    <p>{appointment.doctor.name} · {appointment.doctor.specialty}</p>
-                    <p>{appointment.doctor.clinic.name}</p>
-                    {appointment.diagnosis && (
-                      <p className={list.note}>
-                        <strong>დიაგნოზი:</strong> {appointment.diagnosis}
-                        {appointment.prescription && (
-                          <>
-                            <br />
-                            <strong>დანიშნულება:</strong> {appointment.prescription}
-                          </>
-                        )}
-                      </p>
-                    )}
+            {history.map((appointment) => {
+              // გასული დაჯავშნილი ვიზიტი „დიაგნოზის მოლოდინშია“ — მისი გაუქმება აღარ შეიძლება
+              const status = displayStatus(appointment.status, appointment.startsAt, now);
+
+              return (
+                <li key={appointment.id} className={list.item}>
+                  <div className={list.summary}>
+                    <DoctorAvatar
+                      name={appointment.doctorName}
+                      avatarUrl={appointment.doctor?.avatarUrl ?? null}
+                      className={list.avatar}
+                    />
+                    <div className={list.info}>
+                      <h3>
+                        {formatDateTime(appointment.startsAt)}
+                        <span className={`${list.status} ${list[status]}`}>{statusLabels[status]}</span>
+                      </h3>
+                      <p>{appointment.doctorName} · {appointment.doctorSpecialty}</p>
+                      <p>{appointment.clinicName}</p>
+                      {appointment.status === "CANCELLED" && (
+                        <p className={list.cancelInfo}>
+                          {cancellationText(appointment.cancelledBy, appointment.cancelReason)}
+                        </p>
+                      )}
+                      {appointment.diagnosis && (
+                        <p className={list.note}>
+                          <strong>დიაგნოზი:</strong> {appointment.diagnosis}
+                          {appointment.prescription && (
+                            <>
+                              <br />
+                              <strong>დანიშნულება:</strong> {appointment.prescription}
+                            </>
+                          )}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <AppointmentActions
-                  appointmentId={appointment.id}
-                  canCancel={appointment.status === "BOOKED"}
-                />
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
       </main>

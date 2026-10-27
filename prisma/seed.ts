@@ -4,7 +4,7 @@
 import "dotenv/config";
 import { auth } from "../src/lib/auth";
 import { prisma } from "../src/lib/prisma";
-import { formatDay, isSunday, toDate } from "../src/lib/time";
+import { formatDay, toDate, weekday } from "../src/lib/time";
 import { faker } from "@faker-js/faker";
 const PASSWORD = "demo1234";
 const ADMIN_EMAIL = "l.metreveli88@gmail.com";
@@ -20,7 +20,7 @@ async function createUser(name: string, email: string, accountType: "PATIENT" | 
 function workday(offset: number, time: string) {
   const date = new Date(Date.now() + offset * 24 * 60 * 60 * 1000);
   let day = formatDay(date);
-  if (isSunday(day)) {
+  if (weekday(day) === 0) {
     day = formatDay(new Date(date.getTime() + (offset < 0 ? -1 : 1) * 24 * 60 * 60 * 1000));
   }
   return toDate(day, time);
@@ -71,6 +71,8 @@ async function main() {
 
   // კლინიკები და ექიმები. ყველა ექიმს საკუთარი ანგარიში აქვს (Doctor.userId სავალდებულოა)
   const doctorIds: string[] = [];
+  // ვიზიტში ექიმის და კლინიკის სახელიც ინახება
+  const visitNames = new Map<string, { doctorName: string; doctorSpecialty: string; clinicName: string }>();
   for (const clinic of clinics) {
     const clinicUser = await createUser(clinic.name, clinic.email, "CLINIC");
     await prisma.clinic.create({
@@ -101,6 +103,11 @@ async function main() {
         },
       });
       doctorIds.push(created.id);
+      visitNames.set(created.id, {
+        doctorName: doctor.name,
+        doctorSpecialty: doctor.specialty,
+        clinicName: clinic.name,
+      });
     }
   }
 
@@ -116,28 +123,30 @@ async function main() {
   // ვიზიტები: წარსული (დასრულებული, დიაგნოზით), გაუქმებული და მომავალი
   const [ana, davit, elene] = patientIds;
   const [nino, giorgi, mariam, levan] = doctorIds;
+  const visits = [
+    {
+      doctorId: nino,
+      patientId: ana,
+      startsAt: workday(-14, "11:00"),
+      status: "COMPLETED",
+      diagnosis: "დიაგნოზი",
+      prescription: faker.lorem.words(100),
+    },
+    {
+      doctorId: giorgi, patientId: davit, startsAt: workday(-7, "12:30"), status: "COMPLETED",
+      diagnosis: "გაციება",
+      prescription: "სიცხის დამწევი საჭიროების შემთხვევაში, ბევრი სითხე და დასვენება",
+    },
+    {
+      doctorId: mariam, patientId: elene, startsAt: workday(-3, "10:00"), status: "CANCELLED",
+      cancelledBy: "PATIENT",
+    },
+    { doctorId: nino, patientId: ana, startsAt: workday(2, "11:30"), status: "BOOKED" },
+    { doctorId: levan, patientId: davit, startsAt: workday(3, "14:00"), status: "BOOKED" },
+    { doctorId: giorgi, patientId: elene, startsAt: workday(5, "10:30"), status: "BOOKED" },
+  ];
   await prisma.appointment.createMany({
-    data: [
-     
-
-        {
-           doctorId: nino,
-          patientId: ana,
-          startsAt: workday(-14, "11:00"),
-          status: "COMPLETED",
-          diagnosis: "დიაგნოზი",
-          prescription: faker.lorem.words(100), 
-       },
-      {
-        doctorId: giorgi, patientId: davit, startsAt: workday(-7, "12:30"), status: "COMPLETED",
-        diagnosis: "გაციება",
-        prescription: "სიცხის დამწევი საჭიროების შემთხვევაში, ბევრი სითხე და დასვენება",
-      },
-      { doctorId: mariam, patientId: elene, startsAt: workday(-3, "10:00"), status: "CANCELLED" },
-      { doctorId: nino, patientId: ana, startsAt: workday(2, "11:30"), status: "BOOKED" },
-      { doctorId: levan, patientId: davit, startsAt: workday(3, "14:00"), status: "BOOKED" },
-      { doctorId: giorgi, patientId: elene, startsAt: workday(5, "10:30"), status: "BOOKED" },
-    ],
+    data: visits.map((visit) => ({ ...visit, ...visitNames.get(visit.doctorId)! })),
   });
 
   console.log("სადემონსტრაციო მონაცემები შეიქმნა. ყველა ანგარიშის პაროლი:", PASSWORD);

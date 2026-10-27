@@ -1,3 +1,4 @@
+import { activeDoctorWhere } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { todayRange } from "@/lib/time";
 import styles from "../../Account.module.scss";
@@ -19,7 +20,7 @@ export default async function ClinicOverview({ clinicId }: { clinicId: string })
   const [doctorCount, pendingDoctorCount, todayCount, upcomingCount] = await Promise.all([
     prisma.doctor.count({ where: { clinicId, isApproved: true } }),
     // ექიმები, რომლებიც დადასტურებას ელოდებიან
-    prisma.doctor.count({ where: { clinicId, isApproved: false } }),
+    prisma.doctor.count({ where: { clinicId, isApproved: false, ...activeDoctorWhere } }),
     prisma.appointment.count({
       where: {
         doctor: { clinicId },
@@ -52,10 +53,10 @@ export default async function ClinicOverview({ clinicId }: { clinicId: string })
       </section>
 
       <section className={styles.details} aria-label="კლინიკის სტატისტიკა">
-        <StatCard href="/manage-clinic" label="ექიმები" value={doctorCount} />
-        <StatCard href="/manage-clinic" label="ახალი ექიმების მოთხოვნები" value={pendingDoctorCount} />
-        <StatCard href="/manage-clinic" label="დღევანდელი ვიზიტები" value={todayCount} />
-        <StatCard href="/manage-clinic" label="მომავალი ვიზიტები" value={upcomingCount} />
+        <StatCard href="/manage-clinic?tab=doctors" label="ექიმები" value={doctorCount} />
+        <StatCard href="/manage-clinic?tab=doctors" label="ახალი ექიმების მოთხოვნები" value={pendingDoctorCount} />
+        <StatCard href="/manage-clinic?tab=visits" label="დღევანდელი ვიზიტები" value={todayCount} />
+        <StatCard href="/manage-clinic?tab=visits" label="მომავალი ვიზიტები" value={upcomingCount} />
       </section>
     </>
   );

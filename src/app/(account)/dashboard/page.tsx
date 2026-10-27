@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import Sidebar from "@/components/navigation/Sidebar";
+import { loginUrl } from "@/lib/next-url";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import ClinicOverview from "./_components/ClinicOverview";
@@ -29,7 +30,7 @@ export default async function DashboardPage() {
   const session = await getSession();
 
   if (!session) {
-    redirect("/login");
+    redirect(loginUrl("/dashboard"));
   }
 
   const isAdmin = session.user.role === "admin";

@@ -29,8 +29,12 @@ const doctor = {
   name: "ნინო ბერიძე",
   workStart: "10:00",
   workEnd: "18:00",
+  workDays: [1, 2, 3, 4, 5, 6],
+  daysOff: ["2026-10-16"],
   clinicId: "clinic-1",
   userId: "doctor-user-1",
+  specialty: "კარდიოლოგი",
+  clinic: { name: "კლინიკა" },
 };
 
 function book(body: unknown) {
@@ -71,7 +75,15 @@ describe("POST /api/appointments", () => {
 
     expect(response.status).toBe(200);
     expect(mocks.createAppointment).toHaveBeenCalledWith({
-      data: { doctorId: DOCTOR_ID, patientId: "patient-1", startsAt: toDate("2026-10-15", "10:30") },
+      data: {
+        doctorId: DOCTOR_ID,
+        patientId: "patient-1",
+        startsAt: toDate("2026-10-15", "10:30"),
+        // ექიმის და კლინიკის სახელი ისტორიისთვის ინახება
+        doctorName: "ნინო ბერიძე",
+        doctorSpecialty: "კარდიოლოგი",
+        clinicName: "კლინიკა",
+      },
     });
   });
 
@@ -90,6 +102,8 @@ describe("POST /api/appointments", () => {
     const response = await book({ doctorId: DOCTOR_ID, date: "2026-10-15", time: "10:30" });
 
     expect(response.status).toBe(409);
+    // პაციენტს ეუბნება, რომ თვითონ აქვს სხვა ვიზიტი (და არა რომ ექიმია დაკავებული)
+    expect((await response.json()).message).toContain("სხვა ექიმთან");
     expect(mocks.createAppointment).not.toHaveBeenCalled();
   });
 
@@ -103,6 +117,7 @@ describe("POST /api/appointments", () => {
 
   it.each([
     ["კვირა", "2026-10-18", "10:30"],
+    ["ექიმის დასვენების დღე", "2026-10-16", "10:30"],
     ["სამუშაო საათების გარეთ", "2026-10-15", "09:00"],
     ["სლოტის ბადის გარეთ", "2026-10-15", "10:15"],
     ["წარსული დრო", "2026-10-14", "11:00"],

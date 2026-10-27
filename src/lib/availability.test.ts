@@ -8,7 +8,13 @@ import { toDate } from "./time";
 const { findMany } = vi.hoisted(() => ({ findMany: vi.fn() }));
 vi.mock("./prisma", () => ({ prisma: { appointment: { findMany } } }));
 
-const doctor = { id: "doctor-1", workStart: "10:00", workEnd: "12:00" };
+const doctor = {
+  id: "doctor-1",
+  workStart: "10:00",
+  workEnd: "12:00",
+  workDays: [1, 2, 3, 4, 5, 6],
+  daysOff: ["2026-10-16"],
+};
 
 describe("getAvailableTimes", () => {
   beforeEach(() => {
@@ -49,5 +55,21 @@ describe("getAvailableTimes", () => {
   it("კვირას სლოტები არ არის", async () => {
     expect(await getAvailableTimes(doctor, "2026-10-18")).toEqual([]);
     expect(findMany).not.toHaveBeenCalled();
+  });
+
+  it("ექიმის დასვენების დღეს სლოტები არ არის", async () => {
+    expect(await getAvailableTimes(doctor, "2026-10-16")).toEqual([]);
+    expect(findMany).not.toHaveBeenCalled();
+  });
+
+  it("პაციენტის სხვა ვიზიტების დროებსაც ითვალისწინებს", async () => {
+    findMany.mockResolvedValue([]);
+    await getAvailableTimes(doctor, "2026-10-15", "patient-1");
+
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ OR: [{ doctorId: "doctor-1" }, { patientId: "patient-1" }] }),
+      }),
+    );
   });
 });

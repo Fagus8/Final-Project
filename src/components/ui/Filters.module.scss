@@ -1,0 +1,57 @@
+@use '../../styles/colors' as *;
+@use '../../styles/shared' as common;
+
+// ძებნისა და ფილტრების ზოლი საჯარო სიებზე (ექიმები, კლინიკები)
+.filters {
+  @include common.card;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  padding: 12px;
+
+  input,
+  select {
+    @include common.input;
+    width: auto;
+    min-height: 42px;
+  }
+
+  input {
+    flex: 1 1 220px;
+  }
+
+  select {
+    flex: 0 1 200px;
+    cursor: pointer;
+  }
+
+  button {
+    @include common.primaryButton;
+  }
+
+  a {
+    display: inline-flex;
+    min-height: $touch-target;
+    align-items: center;
+    padding: 0 6px;
+    color: $color-text-muted;
+    font-size: 0.875rem;
+    transition: color $transition;
+
+    &:hover,
+
+    &:focus-visible {
+      color: $color-danger;
+    }
+  }
+}
+
+.empty {
+  padding: 28px 20px;
+  border: 1px dashed #d5dde3;
+  border-radius: $radius-md;
+  color: $color-text-muted;
+  text-align: center;
+}

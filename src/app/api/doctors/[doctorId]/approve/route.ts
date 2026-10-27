@@ -1,4 +1,5 @@
 import { isUuid, jsonError } from "@/lib/api";
+import { activeDoctorWhere } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 
@@ -18,7 +19,7 @@ async function findPendingDoctor(doctorId: string) {
   }
 
   const doctor = await prisma.doctor.findFirst({
-    where: { id: doctorId, clinicId: session.user.id, isApproved: false },
+    where: { id: doctorId, clinicId: session.user.id, isApproved: false, ...activeDoctorWhere },
     select: { id: true },
   });
 
@@ -43,7 +44,8 @@ export async function POST(
   return Response.json({ message: "ექიმი დადასტურდა" });
 }
 
-// უარყოფა: მოთხოვნის ჩანაწერი იშლება, ექიმს სხვა კლინიკის არჩევა შეუძლია
+// უარყოფა: ჩანაწერი რჩება უარყოფის თარიღით — ექიმი „ჩემ განრიგში“ ნახავს,
+// რომ მოთხოვნა უარყვეს, და სხვა კლინიკას აირჩევს
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ doctorId: string }> },
@@ -52,7 +54,7 @@ export async function DELETE(
   const { doctor, error } = await findPendingDoctor(doctorId);
   if (error) return error;
 
-  await prisma.doctor.delete({ where: { id: doctor.id } });
+  await prisma.doctor.update({ where: { id: doctor.id }, data: { rejectedAt: new Date() } });
 
   return Response.json({ message: "მოთხოვნა უარყოფილია" });
 }

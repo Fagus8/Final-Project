@@ -18,26 +18,36 @@ export default function JoinClinicForm({ clinics, defaults }: JoinClinicFormProp
   const [experienceYears, setExperienceYears] = useState(defaults?.experienceYears ?? 0);
   const [clinicId, setClinicId] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState("");
+  const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
 
   // მოთხოვნა იქმნება როგორც დაუდასტურებელი ექიმი; კლინიკა მას „ახალი ექიმების“ სიაში ნახავს
   async function send(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSaving(true);
-    setMessage("");
+    setResult(null);
 
-    const result = await sendRequest("/api/doctor-registration", "POST", {
+    const saved = await sendRequest("/api/doctor-registration", "POST", {
       specialty,
       experienceYears,
       clinicId,
     });
 
     setIsSaving(false);
-    setMessage(result.message);
+    setResult(saved);
     // გვერდი თავიდან იტვირთება და „მოთხოვნა გაგზავნილია“ გამოჩნდება
-    if (result.ok) {
+    if (saved.ok) {
       router.refresh();
     }
+  }
+
+  // დამტკიცებული კლინიკა ჯერ არ არის — ფორმას აზრი არ აქვს
+  if (clinics.length === 0) {
+    return (
+      <p className={formStyles.hint}>
+        დამტკიცებული კლინიკა ჯერ არ არის. როგორც კი ადმინისტრატორი კლინიკას დაამტკიცებს, აქ
+        შეძლებ მის არჩევას.
+      </p>
+    );
   }
 
   return (
@@ -70,7 +80,11 @@ export default function JoinClinicForm({ clinics, defaults }: JoinClinicFormProp
       <button type="submit" disabled={isSaving}>
         {isSaving ? "იგზავნება..." : "მოთხოვნის გაგზავნა"}
       </button>
-      {message && <p className={formStyles.message}>{message}</p>}
+      {result && (
+        <p className={result.ok ? formStyles.success : formStyles.error} role={result.ok ? "status" : "alert"}>
+          {result.message}
+        </p>
+      )}
     </form>
   );
 }

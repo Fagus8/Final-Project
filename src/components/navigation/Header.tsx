@@ -3,6 +3,7 @@ import Icon from "@/components/ui/Icon";
 import { getSession } from "@/lib/session";
 import styles from "./Header.module.scss";
 import LogoutButton from "./LogoutButton";
+import MenuButton from "./MenuButton";
 
 // ანგარიშის ტიპი ქართულად (სახელის ქვეშ ჩანს)
 const accountTypeLabels: Record<string, string> = {
@@ -18,11 +19,13 @@ export default async function Header() {
 
   return (
     <header className={styles.header}>
+      {/* მობილურზე: მენიუს ღილაკი ლოგოს წინ */}
+      <MenuButton />
       <Link href="/" className={styles.brand} aria-label="medical.ge — მთავარ გვერდზე დაბრუნება">
         <span className={styles.logo}>
           <Icon name="logo" size={18} />
         </span>
-        <span>
+        <span className={styles.brandName}>
           medical<span className={styles.brandAccent}>.ge</span>
         </span>
       </Link>

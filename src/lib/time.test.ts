@@ -6,10 +6,13 @@ import {
   formatDay,
   formatTime,
   generateTimes,
-  isSunday,
+  formatLongDay,
+  formatWorkDays,
+  isWorkingDay,
   isValidDay,
   isValidTime,
   toDate,
+  weekday,
 } from "./time";
 
 describe("generateTimes", () => {
@@ -58,8 +61,24 @@ describe("ვალიდაცია", () => {
     expect(isValidDay("15.10.2026")).toBe(false);
   });
 
-  it("isSunday — კვირა დასვენების დღეა", () => {
-    expect(isSunday("2026-10-18")).toBe(true);
-    expect(isSunday("2026-10-19")).toBe(false);
+  it("weekday — 0 კვირაა", () => {
+    expect(weekday("2026-10-18")).toBe(0);
+    expect(weekday("2026-10-19")).toBe(1);
+  });
+
+  it("isWorkingDay — სამუშაო დღე და დასვენების დღეები", () => {
+    const schedule = { workDays: [1, 2, 3, 4, 5, 6], daysOff: ["2026-10-20"] };
+    expect(isWorkingDay(schedule, "2026-10-19")).toBe(true);
+    expect(isWorkingDay(schedule, "2026-10-18")).toBe(false);
+    expect(isWorkingDay(schedule, "2026-10-20")).toBe(false);
+  });
+
+  it("formatWorkDays", () => {
+    expect(formatWorkDays([1, 2, 3, 4, 5, 6])).toBe("ორშაბათი – შაბათი");
+    expect(formatWorkDays([1, 3, 5])).toBe("ორშაბათი, ოთხშაბათი, პარასკევი");
+  });
+
+  it("formatLongDay", () => {
+    expect(formatLongDay("2026-10-15")).toBe("15 ოქტომბერი 2026, ხუთშაბათი");
   });
 });

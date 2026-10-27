@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ka';
+import { formatLongDay } from '@/lib/time';
 import styles from "./Calendar.module.scss";
 
 type CalendarProps = {
@@ -11,8 +12,10 @@ type CalendarProps = {
   onSelect: (date: string) => void;
   // დღეები, რომლებზეც ვიზიტებია (წერტილით აღინიშნება)
   markedDates?: string[];
-  // პაციენტისთვის წარსული დღეები და კვირა გამორთულია
+  // პაციენტისთვის წარსული დღეები გამორთულია
   disablePast?: boolean;
+  // დამატებით გამორთული დღეები, მაგ: ექიმის არასამუშაო და დასვენების დღეები
+  isDayDisabled?: (date: string) => boolean;
 };
 
 export default function Calendar({
@@ -20,6 +23,7 @@ export default function Calendar({
   onSelect,
   markedDates = [],
   disablePast = false,
+  isDayDisabled,
 }: CalendarProps) {
   const [currentDate, setCurrentDate] = useState(() =>
     selectedDate ? dayjs(selectedDate) : dayjs(),
@@ -40,7 +44,8 @@ export default function Calendar({
   const emptyDays = Array(firstDayIndex).fill(null);
   const monthDays = Array.from({ length: daysInMonth }, (_, index) => index + 1);
 
-  // თვეების გადართვა
+  // თვეების გადართვა. წარსულში გადასვლას აზრი არ აქვს, როცა წარსული დღეები გამორთულია
+  const isCurrentMonth = currentDate.isSame(dayjs(), 'month');
   const handlePrevMonth = () => setCurrentDate(currentDate.subtract(1, 'month'));
   const handleNextMonth = () => setCurrentDate(currentDate.add(1, 'month'));
 
@@ -48,7 +53,13 @@ export default function Calendar({
     <div className={styles.calendarContainer}>
       {/* ჰედერი */}
       <div className={styles.header}>
-        <button type="button" className={styles.navBtn} onClick={handlePrevMonth} aria-label="წინა თვე">
+        <button
+          type="button"
+          className={styles.navBtn}
+          onClick={handlePrevMonth}
+          disabled={disablePast && isCurrentMonth}
+          aria-label="წინა თვე"
+        >
           ‹
         </button>
         <h2>{monthYearString}</h2>
@@ -83,7 +94,7 @@ export default function Calendar({
           const isSelected = selectedDate === dateString;
           const isMarked = markedDates.includes(dateString);
           const isDisabled =
-            disablePast && (dateObj.isBefore(dayjs(), 'day') || dateObj.day() === 0);
+            (disablePast && dateObj.isBefore(dayjs(), 'day')) || (isDayDisabled?.(dateString) ?? false);
 
           // დინამიკური კლასების გაერთიანება
           const dayClasses = [
@@ -101,6 +112,8 @@ export default function Calendar({
               key={day}
               className={dayClasses}
               disabled={isDisabled}
+              aria-pressed={isSelected}
+              aria-label={formatLongDay(dateString)}
               onClick={() => onSelect(dateString)}
             >
               {day}
@@ -109,9 +122,9 @@ export default function Calendar({
         })}
       </div>
 
-      {/* არჩეული თარიღის გამოჩენა */}
+      {/* არჩეული თარიღი ქართულად */}
       <div className={styles.footer}>
-        არჩეულია: <strong>{selectedDate || '—'}</strong>
+        არჩეულია: <strong>{selectedDate ? formatLongDay(selectedDate) : '—'}</strong>
       </div>
     </div>
   );

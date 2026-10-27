@@ -1,12 +1,14 @@
 import { z } from "zod";
 import { isUuid, jsonError, readJson } from "@/lib/api";
+import { activeDoctorWhere, removeDoctors } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 
 // ადმინი ცვლის კლინიკის მონაცემებს და ექიმების სიას.
 // ახალ ექიმს ადმინი არ ამატებს — ექიმი თვითონ რეგისტრირდება
 
-// მოსალოდნელი მონაცემები. სიაში დარჩენილი ექიმი განახლდება, ამოღებული — წაიშლება
+// მოსალოდნელი მონაცემები. სიაში დარჩენილი ექიმი განახლდება, ამოღებული —
+// კლინიკიდან მოიხსნება (ვიზიტების ისტორია რჩება)
 const clinicUpdateSchema = z.object({
   name: z.string().trim().min(1),
   city: z.string().trim().min(1),
@@ -54,7 +56,7 @@ export async function PATCH(
   const outcome = await prisma.$transaction(async (transaction) => {
     const clinic = await transaction.clinic.findUnique({
       where: { id: clinicId },
-      select: { doctors: { select: { id: true } } },
+      select: { doctors: { where: activeDoctorWhere, select: { id: true } } },
     });
 
     if (!clinic) {
@@ -77,10 +79,14 @@ export async function PATCH(
       data: { ...clinicData, imageUrl: imageUrl || null },
     });
 
-    // სიიდან ამოღებულ ექიმებს ვშლით
-    await transaction.doctor.deleteMany({
-      where: { clinicId, id: { notIn: submittedIds } },
-    });
+    // სიიდან ამოღებულ ექიმებს კლინიკიდან ვხსნით: მომავალი ვიზიტები უქმდება,
+    // წარსული ვიზიტები და დიაგნოზები რჩება
+    await removeDoctors(
+      transaction,
+      currentIds.filter((id) => !submittedIds.includes(id)),
+      "ADMIN",
+      "ექიმი კლინიკაში აღარ მუშაობს",
+    );
 
     // დანარჩენს ვაახლებთ
     for (const { id, ...doctorData } of doctors) {

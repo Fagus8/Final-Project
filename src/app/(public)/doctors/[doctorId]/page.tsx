@@ -6,6 +6,7 @@ import Icon from "@/components/ui/Icon";
 import { isUuid } from "@/lib/api";
 import { visibleDoctorWhere } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
+import { formatLongDay, formatDay, formatWorkDays } from "@/lib/time";
 import { getSession } from "@/lib/session";
 import styles from "./DoctorProfile.module.scss";
 
@@ -42,6 +43,10 @@ export default async function DoctorProfilePage(props: PageProps<"/doctors/[doct
   const session = await getSession();
   // „დაჯავშნა“ ღილაკი ჩანს სტუმრისთვის და პაციენტისთვის
   const canBook = !session || session.user.accountType === "PATIENT";
+
+  // უახლოესი (არაუმეტეს ხუთი) დასვენების დღე
+  const today = formatDay(new Date());
+  const upcomingDaysOff = doctor.daysOff.filter((day) => day >= today).slice(0, 5);
 
   return (
     <div className={styles.page}>
@@ -140,8 +145,20 @@ export default async function DoctorProfilePage(props: PageProps<"/doctors/[doct
                   <Icon name="appointments" size={18} />
                   სამუშაო დღეები
                 </dt>
-                <dd>ორშაბათი – შაბათი</dd>
+                <dd>{formatWorkDays(doctor.workDays)}</dd>
               </div>
+              {/* უახლოესი დასვენების დღეები, რომ პაციენტმა წინასწარ იცოდეს */}
+              {upcomingDaysOff.length > 0 && (
+                <div>
+                  <dt>
+                    <Icon name="appointments" size={18} />
+                    არ იღებს
+                  </dt>
+                  <dd>
+                    {upcomingDaysOff.map((day) => formatLongDay(day)).join("; ")}
+                  </dd>
+                </div>
+              )}
               <div>
                 <dt>
                   <Icon name="clock" size={18} />

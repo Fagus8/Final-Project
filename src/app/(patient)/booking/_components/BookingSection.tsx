@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { sendRequest } from "@/lib/api-client";
@@ -38,9 +39,15 @@ export default function BookingSection({ doctors, initialDoctorId }: BookingSect
     let ignore = false;
 
     fetch(`/api/doctors/${doctorId}/slots?date=${date}`)
-      .then((response) => response.json())
-      .then((result) => {
-        if (!ignore) setTimes(result.times ?? []);
+      .then(async (response) => {
+        const result = await response.json();
+        if (ignore) return;
+        // შეცდომა (მაგ: ექიმი აღარ იღებს) — „თავისუფალი დრო არ არის“ კი არა, მიზეზი ჩანს
+        if (!response.ok) {
+          setError(result.message ?? "დროების ჩატვირთვა ვერ მოხერხდა");
+          return;
+        }
+        setTimes(result.times ?? []);
       })
       .catch(() => {
         if (!ignore) setError("დროების ჩატვირთვა ვერ მოხერხდა");
@@ -99,7 +106,7 @@ export default function BookingSection({ doctors, initialDoctorId }: BookingSect
       return;
     }
 
-    setMessage(`${result.message}! ნახე „ჩემი ვიზიტები“ გვერდზე.`);
+    setMessage(result.message);
     router.refresh();
   }
 
@@ -134,7 +141,11 @@ export default function BookingSection({ doctors, initialDoctorId }: BookingSect
               onTimeSelect={setTime}
               onConfirm={bookAppointment}
             />
-            {message && <p className={styles.success} role="status">{message}</p>}
+            {message && (
+              <p className={styles.success} role="status">
+                {message}! <Link href="/patient-visits">ნახე „ჩემი ვიზიტები“ →</Link>
+              </p>
+            )}
             {error && <p className={styles.error} role="alert">{error}</p>}
           </>
         ) : (

@@ -3,7 +3,7 @@ import { jsonError, readJson } from "@/lib/api";
 import { visibleDoctorWhere } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
-import { generateTimes, isSunday, isValidDay, isValidTime, toDate } from "@/lib/time";
+import { generateTimes, isValidDay, isValidTime, isWorkingDay, toDate } from "@/lib/time";
 
 const bookingSchema = z.object({
   doctorId: z.string().uuid(),
@@ -32,6 +32,7 @@ export async function POST(request: Request) {
 
   const doctor = await prisma.doctor.findFirst({
     where: { id: doctorId, ...visibleDoctorWhere },
+    include: { clinic: { select: { name: true } } },
   });
 
   if (!doctor) {
@@ -40,48 +41,65 @@ export async function POST(request: Request) {
 
   const startsAt = toDate(date, time);
 
-  // დრო უნდა იყოს ექიმის სამუშაო საათებში და მომავალში
-  const isWorkingTime = !isSunday(date) && generateTimes(doctor.workStart, doctor.workEnd).includes(time);
+  // დრო უნდა იყოს ექიმის სამუშაო დღესა და საათებში და მომავალში
+  const isWorkingTime =
+    isWorkingDay(doctor, date) && generateTimes(doctor.workStart, doctor.workEnd).includes(time);
   if (!isWorkingTime || startsAt.getTime() <= Date.now()) {
     return jsonError("ეს დრო ხელმისაწვდომი არ არის", 400);
   }
 
   // Serializable ტრანზაქცია: თუ ორი პაციენტი ერთდროულად სცდის ერთი
   // და იგივე დროის დაჯავშნას, მეორე ტრანზაქცია ჩავარდება და ორმაგი ჯავშანი არ შეიქმნება.
-  let appointmentId: string | null = null;
+  // შედეგი: ახალი ვიზიტის id, ან ვინ არის ამ დროს დაკავებული
+  let outcome: { appointmentId: string } | { conflict: "doctor" | "patient" };
 
   try {
-    appointmentId = await prisma.$transaction(
+    outcome = await prisma.$transaction(
       async (transaction) => {
         // ექიმს ამ დროს სხვა პაციენტი ხომ არ ჰყავს?
         const doctorBusy = await transaction.appointment.findFirst({
           where: { doctorId, startsAt, status: { not: "CANCELLED" } },
         });
 
+        if (doctorBusy) {
+          return { conflict: "doctor" as const };
+        }
+
         // პაციენტს ამ დროს სხვა ექიმთან ხომ არ აქვს ვიზიტი?
         const patientBusy = await transaction.appointment.findFirst({
           where: { patientId: session.user.id, startsAt, status: { not: "CANCELLED" } },
         });
 
-        if (doctorBusy || patientBusy) {
-          return null;
+        if (patientBusy) {
+          return { conflict: "patient" as const };
         }
 
+        // ექიმის და კლინიკის სახელი ვიზიტშიც ინახება — ისტორიისთვის
         const appointment = await transaction.appointment.create({
-          data: { doctorId, patientId: session.user.id, startsAt },
+          data: {
+            doctorId,
+            patientId: session.user.id,
+            startsAt,
+            doctorName: doctor.name,
+            doctorSpecialty: doctor.specialty,
+            clinicName: doctor.clinic.name,
+          },
         });
 
-        return appointment.id;
+        return { appointmentId: appointment.id };
       },
       { isolationLevel: "Serializable" },
     );
   } catch {
-    appointmentId = null;
+    // ერთდროულმა ჯავშანმა ტრანზაქცია ჩააგდო — დრო სხვამ დაიკავა
+    outcome = { conflict: "doctor" };
   }
 
-  if (!appointmentId) {
-    return jsonError("ეს დრო უკვე დაკავებულია. აირჩიე სხვა დრო.", 409);
+  if ("conflict" in outcome) {
+    return outcome.conflict === "patient"
+      ? jsonError("ამ დროს უკვე გაქვს ვიზიტი სხვა ექიმთან. აირჩიე სხვა დრო.", 409)
+      : jsonError("ეს დრო უკვე დაკავებულია. აირჩიე სხვა დრო.", 409);
   }
 
-  return Response.json({ message: "ვიზიტი წარმატებით დაიჯავშნა", appointmentId });
+  return Response.json({ message: "ვიზიტი წარმატებით დაიჯავშნა", appointmentId: outcome.appointmentId });
 }

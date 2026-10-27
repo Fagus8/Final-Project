@@ -1,25 +1,80 @@
 @use "../../styles/colors" as *;
 @use "../../styles/shared" as common;
 
+// ===== გვერდითი მენიუ (mobile-first) =====
+// ბაზა (<769px): მარცხნიდან გამოსაწევი პანელი Header-ის ქვეშ, hamburger ღილაკით.
+// ≥769px: მუდმივი გვერდითი მენიუ შიგთავსის გვერდით.
 .sidebar {
+  position: fixed;
+  z-index: 30;
+  top: $header-height;
+  bottom: 0;
+  left: 0;
   display: flex;
+  width: min(300px, 86vw);
   flex-direction: column;
-  position: sticky;
-  top: 68px;
-  align-self: flex-start;
-  width: 248px;
-  flex: 0 0 248px;
-  height: calc(100vh - 68px);
   overflow-y: auto;
-  padding: 24px 14px;
+  overscroll-behavior: contain;
+  padding: 20px 14px calc(24px + env(safe-area-inset-bottom));
   border-right: 1px solid $color-border;
   background: $color-white;
+  box-shadow: $shadow-lg;
+  // დახურული: ეკრანის მიღმაა და visibility-ით კლავიატურის რიგიდანაც ამოღებული
+  transform: translateX(-100%);
+  visibility: hidden;
+  transition: transform 260ms $ease, visibility 0s linear 260ms;
+
+  &[data-open="true"] {
+    transform: none;
+    visibility: visible;
+    transition: transform 260ms $ease, visibility 0s;
+  }
+
+  @include common.up(lg) {
+    position: sticky;
+    z-index: auto;
+    top: $header-height-lg;
+    align-self: flex-start;
+    width: $sidebar-width-lg;
+    flex: 0 0 $sidebar-width-lg;
+    height: calc(100dvh - #{$header-height-lg});
+    padding: 24px 14px;
+    box-shadow: none;
+    transform: none;
+    visibility: visible;
+    transition: none;
+  }
+
+  @include common.up(xl) {
+    width: $sidebar-width-xl;
+    flex-basis: $sidebar-width-xl;
+  }
+}
+
+// გახსნილი მენიუს უკან ჩამუქებული ფონი (მხოლოდ მობილურზე)
+.backdrop {
+  position: fixed;
+  z-index: 25;
+  inset: $header-height 0 0;
+  background: rgba($color-heading, 0.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 260ms $ease;
+
+  &[data-open="true"] {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  @include common.up(lg) {
+    display: none;
+  }
 }
 
 .groupLabel {
   margin: 0 12px 8px;
   color: $color-primary;
-  font-size: 13px;
+  font-size: var(--text-xs);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -41,13 +96,14 @@
 .navItem {
   position: relative;
   display: flex;
-  min-height: 42px;
+  // შეხების მინიმალური ზომა
+  min-height: $touch-target;
   align-items: center;
   gap: 12px;
   padding: 9px 12px;
   border-radius: $radius-sm;
   color: $color-text;
-  font-size: 14.5px;
+  font-size: 0.9375rem;
   font-weight: 500;
   transition: background-color $transition, color $transition;
 
@@ -58,14 +114,20 @@
     transition: color $transition, transform $transition;
   }
 
-  &:hover {
+  // hover (მაუსი) და focus (კლავიატურა) — ერთი და იგივე ეფექტი
+  @include common.hover {
     background: $color-background;
     color: $color-heading;
+
+    .icon {
+      color: $color-primary;
+      transform: translateX(1px);
+    }
   }
 
-  &:hover .icon {
-    color: $color-primary;
-    transform: translateX(1px);
+  &:focus-visible {
+    background: $color-background;
+    color: $color-heading;
   }
 
   // მიმდინარე გვერდი
@@ -93,7 +155,7 @@
 
 // სტუმრის ბარათი მენიუს ბოლოში
 .guestCard {
-  margin-top: 56px;
+  margin-top: 32px;
   padding: 16px;
   border-radius: $radius-md;
   background:
@@ -103,8 +165,12 @@
   p {
     margin: 10px 0 14px;
     color: $color-text;
-    font-size: 13px;
+    font-size: 0.8125rem;
     line-height: 1.5;
+  }
+
+  @include common.up(lg) {
+    margin-top: 56px;
   }
 }
 
@@ -122,53 +188,22 @@
 .guestButton {
   @include common.primaryButton;
   width: 100%;
-  min-height: 38px;
+  min-height: 40px;
   padding: 8px 12px;
-  font-size: 13.5px;
+  font-size: 0.875rem;
 }
 
-@media (max-width: 900px) {
+// დაბალ ჰორიზონტალურ ეკრანზე მენიუ უფრო კომპაქტურია
+@include common.shortLandscape {
   .sidebar {
-    width: 210px;
-    flex-basis: 210px;
-    padding-inline: 10px;
+    padding-top: 12px;
   }
 
-  .navItem {
-    gap: 10px;
-    font-size: 14px;
-
-    &.active::before {
-      left: -10px;
-    }
-  }
-}
-
-// პატარა ეკრანზე მხოლოდ აიქონები ჩანს
-@media (max-width: 640px) {
-  .sidebar {
-    top: 112px;
-    width: 64px;
-    flex-basis: 64px;
-    height: calc(100vh - 112px);
-    padding: 16px 8px;
+  .groupLabel:not(:first-child) {
+    margin-top: 14px;
   }
 
-  .groupLabel,
   .guestCard {
-    display: none;
-  }
-
-  .navItem {
-    justify-content: center;
-    padding: 10px;
-
-    span:not(.icon) {
-      display: none;
-    }
-
-    &.active::before {
-      left: -8px;
-    }
+    margin-top: 16px;
   }
 }

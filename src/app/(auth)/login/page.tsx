@@ -5,9 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/ui/Icon";
 import { authClient } from "@/lib/auth-client";
+import { safeNext } from "@/lib/next-url";
 import styles from "./Login.module.scss";
 
-// შესვლის გვერდი: ელფოსტა და პაროლი, წარმატების შემდეგ — პირადი კაბინეტი
+// შესვლის გვერდი: ელფოსტა და პაროლი. წარმატების შემდეგ — გვერდი, საიდანაც
+// მომხმარებელი შესვლაზე გადმოვიდა (?next=), ან პირადი კაბინეტი
 export default function LoginPage() {
   const router = useRouter();
 
@@ -46,8 +48,11 @@ export default function LoginPage() {
         return;
       }
 
+      // ?next= URL-იდან. useSearchParams-ს აქ არ ვიყენებთ — გაგზავნისას URL-ის წაკითხვა საკმარისია
+      const next = safeNext(new URLSearchParams(window.location.search).get("next"));
+
       // refresh საჭიროა, რომ Header-მა და Sidebar-მა ახალი სესია დაინახონ
-      router.push("/dashboard");
+      router.push(next ?? "/dashboard");
       router.refresh();
     },
   });
@@ -104,7 +109,20 @@ export default function LoginPage() {
         </form>
 
         <p className={styles.switch}>
-          ანგარიში არ გაქვს? <Link href="/register">დარეგისტრირდი</Link>
+          ანგარიში არ გაქვს?{" "}
+          <Link
+            href="/register"
+            onClick={(event) => {
+              // რეგისტრაციის შემდეგაც იმავე გვერდზე დავბრუნდეთ (მაგ: ჯავშანი)
+              const next = safeNext(new URLSearchParams(window.location.search).get("next"));
+              if (next) {
+                event.preventDefault();
+                router.push(`/register?next=${encodeURIComponent(next)}`);
+              }
+            }}
+          >
+            დარეგისტრირდი
+          </Link>
         </p>
       </section>
     </main>

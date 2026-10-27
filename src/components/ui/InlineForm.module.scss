@@ -12,7 +12,7 @@
     flex-direction: column;
     gap: 6px;
     color: $color-text-muted;
-    font-size: 12.5px;
+    font-size: 0.7813rem;
     font-weight: 600;
   }
 
@@ -29,10 +29,108 @@
   }
 }
 
-.message {
+// შენახვის შედეგი: მწვანე — წარმატება, წითელი — შეცდომა
+.success,
+.error {
   flex-basis: 100%;
   margin: 0;
-  color: $color-primary-dark;
-  font-size: 13.5px;
+  padding: 8px 12px;
+  border-radius: $radius-sm;
+  font-size: 0.8438rem;
+  font-weight: 600;
   @include common.fadeUp(220ms);
+}
+
+.success {
+  background: $color-success-soft;
+  color: $color-success;
+}
+
+.error {
+  background: $color-danger-soft;
+  color: $color-danger;
+}
+
+// მონიშვნის ველების ჯგუფი (მაგ: კვირის დღეები)
+.checks {
+  display: flex;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: none;
+
+  legend {
+    margin-bottom: 6px;
+    color: $color-text-muted;
+    font-size: 0.7813rem;
+    font-weight: 600;
+  }
+
+  label {
+    flex-direction: row;
+    align-items: center;
+    padding: 6px 10px;
+    border: 1px solid $color-border;
+    border-radius: $radius-sm;
+    color: $color-text;
+    font-size: 0.8438rem;
+    cursor: pointer;
+
+    @include common.touch {
+      min-height: $touch-target;
+    }
+  }
+
+  input {
+    min-height: auto;
+    width: auto;
+    padding: 0;
+  }
+}
+
+// ჩიპები: არჩეული დასვენების დღეები, წასაშლელი ღილაკით
+.chips {
+  display: flex;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    @include common.pill;
+    gap: 6px;
+    background: $color-background-active;
+    color: $color-primary-dark;
+  }
+
+  button {
+    all: unset;
+    color: $color-danger;
+    font-weight: 700;
+    cursor: pointer;
+
+    // „×“ თითით ადვილად დასაჭერი
+    @include common.touch {
+      display: inline-grid;
+      min-width: 32px;
+      min-height: 32px;
+      place-items: center;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $color-primary;
+      outline-offset: 2px;
+    }
+  }
+}
+
+.hint {
+  flex-basis: 100%;
+  margin: 0;
+  color: $color-text-muted;
+  font-size: 0.8125rem;
 }

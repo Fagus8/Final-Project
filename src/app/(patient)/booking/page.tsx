@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Sidebar from "@/components/navigation/Sidebar";
 import type { Prisma } from "@/generated/prisma/client";
 import { visibleDoctorWhere } from "@/lib/doctors";
+import { loginUrl } from "@/lib/next-url";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import BookingSection from "./_components/BookingSection";
@@ -16,6 +17,7 @@ type BookingPageProps = {
     clinicId?: string;
     doctorId?: string;
     language?: string;
+    q?: string;
   }>;
 };
 
@@ -23,9 +25,14 @@ type BookingPageProps = {
 // მონაცემებს სერვერზე ვკრებთ, არჩევა და ჯავშანი კი BookingSection-შია
 export default async function BookingPage({ searchParams }: BookingPageProps) {
   const session = await getSession();
+  const filters = await searchParams;
 
+  // შესვლის შემდეგ იმავე ექიმთან და ფილტრებთან დავბრუნდებით
   if (!session) {
-    redirect("/login");
+    const query = new URLSearchParams(
+      Object.entries(filters).filter((entry): entry is [string, string] => typeof entry[1] === "string"),
+    ).toString();
+    redirect(loginUrl(query ? `/booking?${query}` : "/booking"));
   }
 
   // დაჯავშნის გვერდი მხოლოდ პაციენტისთვისაა (კლინიკა და ექიმი აქ ვერ შემოვლენ)
@@ -33,7 +40,7 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
     redirect("/dashboard");
   }
 
-  const { specialty = "", clinicId = "", doctorId, language = "" } = await searchParams;
+  const { specialty = "", clinicId = "", doctorId, language = "", q = "" } = filters;
 
   // ფილტრების სიებისთვის: არსებული სპეციალობები და ენები, გამეორების გარეშე (Set)
   const allDoctors = await prisma.doctor.findMany({
@@ -54,6 +61,11 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
 
   if (specialty) {
     where.specialty = specialty;
+  }
+
+  // ექიმის სახელით ძებნა (დიდი/პატარა ასოს მიუხედავად)
+  if (q.trim()) {
+    where.name = { contains: q.trim(), mode: "insensitive" };
   }
 
   if (language) {
@@ -79,14 +91,22 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
 
         {/* ჩვეულებრივი GET ფორმა: გაგზავნისას ფილტრები URL-ში ჩაიწერება */}
         <form className={styles.filters} action="/booking">
-          <select name="specialty" defaultValue={specialty}>
+          <input
+            type="search"
+            name="q"
+            defaultValue={q}
+            placeholder="ექიმის სახელი"
+            aria-label="ექიმის სახელი"
+          />
+
+          <select name="specialty" defaultValue={specialty} aria-label="სპეციალობა">
             <option value="">ყველა სპეციალობა</option>
             {specialties.map((item) => (
               <option key={item} value={item}>{item}</option>
             ))}
           </select>
 
-          <select name="clinicId" defaultValue={clinicId}>
+          <select name="clinicId" defaultValue={clinicId} aria-label="კლინიკა">
             <option value="">ყველა კლინიკა</option>
             {clinics.map((clinic) => (
               <option key={clinic.id} value={clinic.id}>{clinic.name}</option>
@@ -94,7 +114,7 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
           </select>
 
           {languages.length > 0 && (
-            <select name="language" defaultValue={language}>
+            <select name="language" defaultValue={language} aria-label="ენა">
               <option value="">ნებისმიერი ენა</option>
               {languages.map((item) => (
                 <option key={item} value={item}>{item}</option>
@@ -117,6 +137,8 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
             avatarUrl: doctor.avatarUrl,
             consultationFee: doctor.consultationFee,
             languages: doctor.languages,
+            workDays: doctor.workDays,
+            daysOff: doctor.daysOff,
           }))}
           // ?doctorId=... (ექიმის პროფილიდან მოსვლისას) ექიმს წინასწარ ირჩევს
           initialDoctorId={doctors.some((doctor) => doctor.id === doctorId) ? doctorId : undefined}

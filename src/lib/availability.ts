@@ -1,15 +1,18 @@
 import { prisma } from "./prisma";
-import { formatTime, generateTimes, isSunday, toDate } from "./time";
+import { formatTime, generateTimes, isWorkingDay, toDate } from "./time";
 
 type DoctorHours = {
   id: string;
   workStart: string;
   workEnd: string;
+  workDays: number[];
+  daysOff: string[];
 };
 
-// აბრუნებს ექიმის თავისუფალ დროებს კონკრეტულ დღეს
-export async function getAvailableTimes(doctor: DoctorHours, date: string) {
-  if (isSunday(date)) {
+// აბრუნებს ექიმის თავისუფალ დროებს კონკრეტულ დღეს.
+// patientId — თუ პაციენტი შესულია, მისი სხვა ვიზიტების დროებიც ითიშება
+export async function getAvailableTimes(doctor: DoctorHours, date: string, patientId?: string) {
+  if (!isWorkingDay(doctor, date)) {
     return [];
   }
 
@@ -19,7 +22,7 @@ export async function getAvailableTimes(doctor: DoctorHours, date: string) {
   // გაუქმებული ვიზიტები დროს არ იკავებს
   const taken = await prisma.appointment.findMany({
     where: {
-      doctorId: doctor.id,
+      OR: patientId ? [{ doctorId: doctor.id }, { patientId }] : [{ doctorId: doctor.id }],
       status: { not: "CANCELLED" },
       startsAt: { gte: dayStart, lte: dayEnd },
     },

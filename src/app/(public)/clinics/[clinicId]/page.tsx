@@ -6,6 +6,7 @@ import Icon from "@/components/ui/Icon";
 import { isUuid } from "@/lib/api";
 import { visibleDoctorWhere } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
+import { formatWorkDays } from "@/lib/time";
 import { getSession } from "@/lib/session";
 import ClinicImage from "../_components/ClinicImage";
 import styles from "./ClinicDetails.module.scss";
@@ -55,7 +56,7 @@ export default async function ClinicDetailsPage(props: PageProps<"/clinics/[clin
 
         <section className={styles.hero}>
           {clinic.imageUrl ? (
-            <ClinicImage className={styles.heroImage} src={clinic.imageUrl} alt={clinic.name} />
+            <ClinicImage className={styles.heroImage} src={clinic.imageUrl} alt={clinic.name} eager />
           ) : (
             <div className={styles.heroPlaceholder} aria-hidden="true">
               <Icon name="clinic" size={56} />
@@ -78,7 +79,10 @@ export default async function ClinicDetailsPage(props: PageProps<"/clinics/[clin
               </li>
               <li>
                 <Icon name="clock" size={18} />
-                ორშაბათი – შაბათი
+                {/* კლინიკა იმ დღეებში იღებს, როცა ერთი ექიმი მაინც მუშაობს */}
+                {clinic.doctors.length > 0
+                  ? formatWorkDays([...new Set(clinic.doctors.flatMap((doctor) => doctor.workDays))])
+                  : "სამუშაო დღეები ექიმების მიხედვით"}
               </li>
             </ul>
 

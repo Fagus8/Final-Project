@@ -9,18 +9,20 @@
   @include common.pageContent;
   display: flex;
   flex-direction: column;
-  gap: 48px;
+  // სექციებს შორის: 28px მობილურზე → 48px ლეპტოპზე
+  gap: var(--space-xl);
 }
 
 // ===== მთავარი ბლოკი =====
 .hero {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  // ბაზა: ერთ სვეტად; 701px შიგთავსიდან ტექსტი და ბარათი გვერდიგვერდ
+  grid-template-columns: 1fr;
   align-items: center;
-  gap: 40px;
+  gap: clamp(24px, 4vw, 40px);
   overflow: hidden;
-  padding: 48px;
+  padding: clamp(20px, 5vw, 48px);
   border: 1px solid $color-border;
   border-radius: $radius-lg;
   background:
@@ -43,7 +45,7 @@
   > p {
     max-width: 440px;
     color: $color-text;
-    font-size: 16.5px;
+    font-size: 1.0313rem;
   }
 }
 
@@ -56,7 +58,7 @@
   padding: 6px 12px;
   background: $color-background-active;
   color: $color-primary-dark;
-  font-size: 12.5px;
+  font-size: 0.7813rem;
 }
 
 // მოციმციმე წერტილი
@@ -89,6 +91,7 @@
   }
 }
 
+// ბაზა: ღილაკები მთელ სიგანეზე, ერთმანეთის ქვეშ
 .heroActions {
   display: flex;
   flex-wrap: wrap;
@@ -112,7 +115,9 @@
 
 .stats {
   display: flex;
-  gap: 32px;
+  // ვიწრო ეკრანზე ახალ ხაზზე გადადის (320px-ზე სამი ერთ ხაზში არ ეტევა)
+  flex-wrap: wrap;
+  gap: 16px 32px;
   margin: 36px 0 0;
 
   div {
@@ -122,24 +127,25 @@
 
   dt {
     color: $color-text-muted;
-    font-size: 13px;
+    font-size: 0.8125rem;
   }
 
   dd {
     margin: 0;
     color: $color-heading;
-    font-size: 26px;
+    font-size: clamp(1.375rem, 1.2rem + 0.8vw, 1.625rem);
     font-weight: 700;
     letter-spacing: -0.02em;
   }
 }
 
 // ===== დეკორატიული ბარათი =====
+// დეკორატიული ბარათი: მობილურზე დამალულია, რომ მთავარი ღილაკი ეკრანზე მაღლა იყოს
 .heroVisual {
   position: relative;
-  display: grid;
+  display: none;
   place-items: center;
-  min-height: 300px;
+  min-height: 240px;
 }
 
 .mockCard {
@@ -153,19 +159,19 @@
   // transition: transform 400ms $ease;
   // animation: float 6s ease-in-out infinite;
 
-  &:hover {
-    transform: rotate(0deg) scale(1.02);
+  @include common.hover {
+    transform: scale(1.02);
   }
 
   strong {
     display: block;
     color: $color-heading;
-    font-size: 14.5px;
+    font-size: 0.9063rem;
   }
 
   span {
     color: $color-text-muted;
-    font-size: 12.5px;
+    font-size: 0.7813rem;
   }
 
   @keyframes float {
@@ -214,7 +220,7 @@
   border-radius: 50%;
   background: $color-background-active;
   color: $color-primary-dark !important;
-  font-size: 16px !important;
+  font-size: 1rem !important;
   font-weight: 700;
 }
 
@@ -249,7 +255,7 @@
   margin-bottom: 20px;
 
   h2 {
-    font-size: 22px;
+    font-size: var(--text-xl);
     font-weight: 700;
     letter-spacing: -0.02em;
   }
@@ -278,7 +284,8 @@
 
 .steps {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  // რამდენიც ეტევა (მინ. 240px): 1 სვეტი მობილურზე → 3 ლეპტოპზე
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   gap: 16px;
   margin: 0;
   padding: 0;
@@ -293,13 +300,13 @@
 
   h3 {
     margin: 18px 0 6px;
-    font-size: 16.5px;
+    font-size: 1.0313rem;
     font-weight: 650;
   }
 
   p {
     color: $color-text-muted;
-    font-size: 14px;
+    font-size: 0.875rem;
   }
 }
 
@@ -324,14 +331,15 @@
   top: 22px;
   right: 24px;
   color: #d5dde3;
-  font-size: 28px;
+  font-size: 1.75rem;
   font-weight: 700;
   letter-spacing: -0.04em;
 }
 
 .doctors {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  // რამდენიც ეტევა (მინ. 240px): 1 სვეტი მობილურზე → 3 ლეპტოპზე
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   gap: 16px;
   margin: 0;
   padding: 0;
@@ -349,14 +357,14 @@
   text-decoration: none;
 
   h3 {
-    font-size: 15.5px;
+    font-size: 0.9688rem;
     font-weight: 650;
   }
 
   p {
     margin: 2px 0 8px;
     color: $color-primary-dark;
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 500;
   }
 }
@@ -370,7 +378,7 @@
   border-radius: 50%;
   background: linear-gradient(135deg, $color-background-active, #d3eee8);
   color: $color-primary-dark;
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 700;
   object-fit: cover;
 }
@@ -380,12 +388,13 @@
   align-items: center;
   gap: 6px;
   color: $color-text-muted;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 // ===== მოწვევა (hero-ს ბოლოს, მხოლოდ სტუმრისთვის) =====
 .heroJoin {
   display: flex;
+  flex-wrap: wrap;
   grid-column: 1 / -1;
   align-items: center;
   gap: 20px;
@@ -421,33 +430,38 @@
 
 .joinText {
   display: flex;
-  flex: 1;
+  // ვიწრო ბლოკში ტექსტი არ იჭყლიტება — ღილაკი ახალ ხაზზე გადადის
+  flex: 1 1 220px;
   flex-direction: column;
   gap: 4px;
   min-width: 0;
 
   strong {
     color: $color-heading;
-    font-size: 17px;
+    font-size: 1.0625rem;
     font-weight: 650;
   }
 
   span {
     color: $color-text-muted;
-    font-size: 14.5px;
+    font-size: 0.9063rem;
   }
 }
 
+// ბაზა: ღილაკი მთელ სიგანეზე, ფონით (თითით ადვილი); 441px-დან — ტექსტური ბმული
 .joinLink {
   display: inline-flex;
+  width: 100%;
   flex-shrink: 0;
+  justify-content: center;
   align-items: center;
   gap: 8px;
   min-height: 44px;
   padding: 10px 18px;
   border-radius: $radius-sm;
+  background: $color-background-active;
   color: $color-primary-dark;
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   transition: background 0.2s ease;
 
@@ -455,7 +469,9 @@
     transition: transform 0.2s ease;
   }
 
-  &:hover {
+  &:hover,
+
+  &:focus-visible {
     background: $color-background-active;
 
     svg {
@@ -464,43 +480,44 @@
   }
 }
 
-@media (max-width: 1000px) {
-  .hero {
-    grid-template-columns: 1fr;
-    padding: 36px 28px;
-  }
-
-  .heroVisual {
-    min-height: 260px;
-  }
-
-  .steps,
-  .doctors {
-    grid-template-columns: 1fr;
-  }
+.heroActions a {
+  flex: 1 1 100%;
 }
 
-@media (max-width: 600px) {
-  .page {
-    gap: 36px;
+// 441px შიგთავსიდან: დეკორატიული ბარათი ჩანს, ღილაკები ტექსტის სიგანისაა
+@include common.contentAbove(441px) {
+  .heroVisual {
+    display: grid;
   }
 
-  .hero {
-    padding: 28px 20px;
-  }
-
-  .stats {
-    gap: 20px;
-  }
-
-  // ვიწრო ეკრანზე ღილაკი ტექსტის ქვეშ გადადის
-  .heroJoin {
-    flex-wrap: wrap;
+  .heroActions a {
+    flex: 0 1 auto;
   }
 
   .joinLink {
-    width: 100%;
-    justify-content: center;
-    background: $color-background-active;
+    width: auto;
+    background: transparent;
+  }
+}
+
+// 701px შიგთავსიდან: ტექსტი და ბარათი გვერდიგვერდ
+@include common.contentAbove(701px) {
+  .hero {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  }
+
+  .heroVisual {
+    min-height: 300px;
+  }
+}
+
+// ტელეფონი ჰორიზონტალურად: დაბალ ეკრანზე დეკორატიული ბარათი იმალება
+@include common.shortLandscape {
+  .heroVisual {
+    display: none;
+  }
+
+  .hero {
+    grid-template-columns: 1fr;
   }
 }

@@ -18,7 +18,7 @@
   position: relative;
   overflow: hidden;
   margin-bottom: 20px;
-  padding: 32px;
+  padding: 24px 20px;
   border: 1px solid $color-border;
   border-radius: $radius-lg;
   background:
@@ -30,13 +30,13 @@
 .eyebrow {
   margin: 0 0 6px;
   color: $color-text-muted;
-  font-size: 13.5px;
+  font-size: 0.8438rem;
   font-weight: 500;
 }
 
 .welcomeTitle {
   margin: 0;
-  font-size: 26px;
+  font-size: var(--text-2xl);
   font-weight: 700;
   letter-spacing: -0.02em;
 }
@@ -70,14 +70,14 @@
 
 .detailLabel {
   color: $color-text-muted;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 500;
 }
 
 .detailValue {
   overflow-wrap: anywhere;
   color: $color-heading;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 600;
 }
 
@@ -86,7 +86,7 @@
   align-self: flex-start;
   background: $color-background-active;
   color: $color-primary-dark;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 // ადმინის სტატისტიკის ბარათები — დაკლიკებადი
@@ -96,18 +96,61 @@
   cursor: pointer;
 
   .detailValue {
-    font-size: 28px;
+    font-size: clamp(1.5rem, 1.25rem + 1vw, 1.75rem);
     font-weight: 700;
     letter-spacing: -0.02em;
   }
 }
 
-@media (max-width: 600px) {
-  .welcomeCard {
-    padding: 24px 20px;
+// გაფრთხილება: ცვლილებები, რომლებიც მომხმარებელმა უნდა ნახოს
+.alertCard {
+  margin-bottom: 20px;
+  padding: 18px 22px;
+  border: 1px solid rgba($color-warning, 0.3);
+  border-radius: $radius-md;
+  background: $color-warning-soft;
+  color: $color-text;
+  line-height: 1.55;
+
+  h2 {
+    margin: 0 0 8px;
+    color: $color-warning;
+    font-size: 1rem;
+    font-weight: 650;
   }
 
-  .welcomeTitle {
-    font-size: 22px;
+  ul {
+    margin: 0 0 10px;
+    padding-left: 18px;
+  }
+
+  a {
+    color: $color-primary-dark;
+    font-weight: 600;
+
+    &:hover,
+
+    &:focus-visible {
+      text-decoration: underline;
+    }
+  }
+}
+
+// რედაქტირების ფორმის ბლოკი (პროფილი, პაროლი)
+.formCard {
+  @include common.card;
+  margin-bottom: 20px;
+  padding: 22px 24px;
+
+  h2 {
+    margin: 0 0 14px;
+    font-size: 1.0625rem;
+    font-weight: 650;
+  }
+}
+
+@include common.contentAbove(441px) {
+  .welcomeCard {
+    padding: 32px;
   }
 }

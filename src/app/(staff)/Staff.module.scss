@@ -10,7 +10,7 @@
 
   > h2 {
     margin: 8px 0 14px;
-    font-size: 17px;
+    font-size: 1.0625rem;
     font-weight: 650;
   }
 }
@@ -27,14 +27,14 @@
 
   h2 {
     margin: 0 0 4px;
-    font-size: 18px;
+    font-size: 1.125rem;
     font-weight: 650;
   }
 
   h3 {
     margin: 18px 0 10px;
     color: $color-text-muted;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -47,20 +47,21 @@
 }
 
 .schedule {
+  // ბაზა: კალენდარი ვიზიტების ზემოთ; ფართოზე — გვერდიგვერდ
   display: grid;
-  grid-template-columns: 380px minmax(0, 1fr);
+  grid-template-columns: 1fr;
   align-items: start;
   gap: 24px;
 }
 
 .dayList h2 {
   margin: 0 0 14px;
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 650;
 }
 
-@media (max-width: 1000px) {
+@include common.contentAbove(721px) {
   .schedule {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
   }
 }

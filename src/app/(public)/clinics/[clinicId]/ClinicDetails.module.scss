@@ -13,12 +13,14 @@
   display: inline-block;
   margin-bottom: 18px;
   color: $color-text-muted;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
   text-decoration: none;
   transition: color $transition;
 
-  &:hover {
+  &:hover,
+
+  &:focus-visible {
     color: $color-primary-dark;
   }
 }
@@ -27,11 +29,12 @@
 .hero {
   @include common.card;
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  // ბაზა: სურათი ტექსტის ზემოთ; ფართოზე — გვერდიგვერდ
+  grid-template-columns: 1fr;
   overflow: hidden;
 
-  @media (max-width: 900px) {
-    grid-template-columns: 1fr;
+  @include common.contentAbove(641px) {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
   }
 }
 
@@ -55,18 +58,18 @@
 }
 
 .heroBody {
-  padding: 28px 32px;
+  padding: 22px 20px;
 
   h1 {
     margin: 12px 0 18px;
     color: $color-heading;
-    font-size: 28px;
+    font-size: clamp(1.5rem, 1.2rem + 1.4vw, 1.75rem);
     font-weight: 700;
     letter-spacing: -0.02em;
   }
 
-  @media (max-width: 700px) {
-    padding: 22px 20px;
+  @include common.contentAbove(461px) {
+    padding: 28px 32px;
   }
 }
 
@@ -88,7 +91,7 @@
     align-items: center;
     gap: 10px;
     color: $color-text;
-    font-size: 15px;
+    font-size: 0.9375rem;
 
     svg {
       flex-shrink: 0;
@@ -100,7 +103,9 @@
     color: inherit;
     text-decoration: none;
 
-    &:hover {
+    &:hover,
+
+    &:focus-visible {
       color: $color-primary-dark;
       text-decoration: underline;
     }
@@ -124,7 +129,7 @@
 // ===== სტატისტიკა =====
 .stats {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 16px;
   margin: 20px 0 0;
   padding: 0;
@@ -140,17 +145,17 @@
 
   strong {
     color: $color-heading;
-    font-size: 22px;
+    font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.375rem);
     font-weight: 700;
   }
 
   span {
     color: $color-text-muted;
-    font-size: 13.5px;
+    font-size: 0.8438rem;
   }
 
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
+  @include common.contentAbove(421px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -161,7 +166,7 @@
   h2 {
     margin: 0 0 16px;
     color: $color-heading;
-    font-size: 19px;
+    font-size: 1.1875rem;
     font-weight: 700;
   }
 }
@@ -180,7 +185,7 @@
     border: 1px solid $color-border;
     background: $color-white;
     color: $color-text;
-    font-size: 13.5px;
+    font-size: 0.8438rem;
   }
 }
 
@@ -216,20 +221,20 @@
   h3 {
     margin: 0 0 2px;
     color: $color-heading;
-    font-size: 15.5px;
+    font-size: 0.9688rem;
     font-weight: 650;
   }
 
   p {
     margin: 0 0 4px;
     color: $color-primary-dark;
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 600;
   }
 
   span {
     color: $color-text-muted;
-    font-size: 13px;
+    font-size: 0.8125rem;
   }
 
   > svg {
@@ -253,7 +258,7 @@
   border-radius: 50%;
   background: linear-gradient(135deg, $color-background-active, #d3eee8);
   color: $color-primary-dark;
-  font-size: 19px;
+  font-size: 1.1875rem;
   font-weight: 700;
   object-fit: cover;
 }

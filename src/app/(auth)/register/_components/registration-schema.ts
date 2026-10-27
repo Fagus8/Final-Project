@@ -8,6 +8,8 @@ export const registerSchema = z
     fullName: z.string(),
     email: z.string().email("არავალიდური ელ.ფოსტის ფორმატი"),
     password: z.string().min(6, "პაროლი უნდა იყოს მინიმუმ 6 სიმბოლო"),
+    // პაროლის გამეორება — შეცდომით აკრეფისგან დაცვა
+    passwordRepeat: z.string(),
     phone: z.string(),
     // მხოლოდ პაციენტისთვის; "" — ჯერ არ ვიცი
     bloodType: z.string(),
@@ -17,9 +19,10 @@ export const registerSchema = z
     address: z.string(),
     specialty: z.string(),
     imageUrl: z.string(),
-    // მხოლოდ ექიმის რეგისტრაციისთვის
+    // მხოლოდ ექიმის რეგისტრაციისთვის. კლინიკა არასავალდებულოა — მოგვიანებითაც აირჩევს
     doctorSpecialty: z.string(),
     doctorExperience: z.number().int().min(0, "გამოცდილების წელი უნდა იყოს 0 ან მეტი"),
+    doctorClinicId: z.string(),
   })
   .superRefine((values, context) => {
     // დამხმარე: ცარიელ ველზე შეცდომას ამატებს მითითებულ ადგილას (path)
@@ -29,12 +32,19 @@ export const registerSchema = z
       }
     };
 
+    if (values.passwordRepeat !== values.password) {
+      context.addIssue({ code: "custom", path: ["passwordRepeat"], message: "პაროლები არ ემთხვევა" });
+    }
+
     if (values.accountType === "PATIENT" || values.accountType === "DOCTOR") {
       requireText(values.fullName, ["fullName"], "სახელი და გვარი სავალდებულოა");
+    }
+
+    // ტელეფონი პაციენტს ეკითხება (ექიმთან კავშირისთვის); ექიმი კლინიკის ტელეფონით ჩანს
+    if (values.accountType === "PATIENT") {
       requireText(values.phone, ["phone"], "ტელეფონის ნომერი სავალდებულოა");
     }
 
-    // ექიმი კლინიკას რეგისტრაციის შემდეგ „ჩემ განრიგში“ ირჩევს
     if (values.accountType === "DOCTOR") {
       requireText(values.doctorSpecialty, ["doctorSpecialty"], "სპეციალობა სავალდებულოა");
     }

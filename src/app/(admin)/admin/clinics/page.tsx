@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import DeleteClinicButton from "@/components/clinics/DeleteClinicButton";
 import Sidebar from "@/components/navigation/Sidebar";
+import { activeDoctorWhere } from "@/lib/doctors";
+import { loginUrl } from "@/lib/next-url";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import ApproveClinicButton from "./_components/ApproveClinicButton";
@@ -12,7 +14,7 @@ export default async function AdminClinicsPage() {
   const session = await getSession();
 
   if (!session) {
-    redirect("/login");
+    redirect(loginUrl("/admin/clinics"));
   }
 
   // გვერდი მხოლოდ ადმინისთვისაა
@@ -20,9 +22,9 @@ export default async function AdminClinicsPage() {
     redirect("/");
   }
 
-  // ყველა კლინიკა (დაუმტკიცებელიც) თავისი ექიმებით
+  // ყველა კლინიკა (დაუმტკიცებელიც) თავისი აქტიური ექიმებით
   const clinics = await prisma.clinic.findMany({
-    include: { doctors: true },
+    include: { doctors: { where: activeDoctorWhere, orderBy: { name: "asc" } } },
     orderBy: { name: "asc" },
   });
 

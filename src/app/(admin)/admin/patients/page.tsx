@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import Sidebar from "@/components/navigation/Sidebar";
+import { loginUrl } from "@/lib/next-url";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import styles from "./Patients.module.scss";
@@ -9,22 +10,12 @@ export default async function PatientsPage() {
   const session = await getSession();
 
   if (!session) {
-    redirect("/login");
+    redirect(loginUrl("/admin/patients"));
   }
 
-  // სხვა როლის მომხმარებელი სიას ვერ ხედავს
+  // გვერდი მხოლოდ ადმინისთვისაა — დანარჩენ გვერდებზეც ასე ვიქცევით
   if (session.user.role !== "admin") {
-    return (
-      <div className={styles.page}>
-        <Sidebar />
-        <main className={styles.main}>
-          <h1>პაციენტის პროფილი</h1>
-          <section className={styles.profileCard}>
-            <p>ამ გვერდის ნახვა მხოლოდ ადმინისტრატორს შეუძლია.</p>
-          </section>
-        </main>
-      </div>
-    );
+    redirect("/dashboard");
   }
 
   // მხოლოდ საჭირო ველები — პაროლის ჰეში და სხვა მონაცემები გვერდზე არ მოდის
@@ -42,7 +33,7 @@ export default async function PatientsPage() {
     <div className={styles.page}>
       <Sidebar />
       <main className={styles.main}>
-        <h1>პაციენტის პროფილი</h1>
+        <h1>პაციენტები ({patients.length})</h1>
         <section className={styles.profileCard}>
           {patients.length === 0 ? (
             <p>პაციენტების ინფორმაცია ჯერ დამატებული არ არის.</p>

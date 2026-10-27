@@ -1,10 +1,12 @@
 import { isUuid, jsonError } from "@/lib/api";
+import { removeDoctors } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 
 // კლინიკის წაშლა — ადმინს ან თავად კლინიკას შეუძლია.
 // კლინიკა თავის ანგარიშზეა მიბმული, ამიტომ ვშლით ანგარიშს და მასთან ერთად
-// (cascade) იშლება კლინიკა, მისი ექიმები და ვიზიტები.
+// (cascade) იშლება კლინიკა და მისი ექიმების ჩანაწერები. ვიზიტები კი რჩება:
+// მომავალი უქმდება მიზეზით, წარსული (დიაგნოზით) პაციენტის ისტორიაში ინახება
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ clinicId: string }> },
@@ -29,14 +31,22 @@ export async function DELETE(
 
   const clinic = await prisma.clinic.findUnique({
     where: { id: clinicId },
-    select: { id: true },
+    select: { doctors: { select: { id: true } } },
   });
 
   if (!clinic) {
     return jsonError("კლინიკა ვერ მოიძებნა", 404);
   }
 
-  await prisma.user.delete({ where: { id: clinicId } });
+  await prisma.$transaction(async (transaction) => {
+    await removeDoctors(
+      transaction,
+      clinic.doctors.map((doctor) => doctor.id),
+      isOwner ? "CLINIC" : "ADMIN",
+      "კლინიკა სისტემიდან წაიშალა",
+    );
+    await transaction.user.delete({ where: { id: clinicId } });
+  });
 
   return Response.json({ message: "კლინიკა წაიშალა" });
 }

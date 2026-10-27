@@ -1,8 +1,9 @@
 // ფერთა პალიტრა — მშვიდი სამედიცინო ფირუზისფერი (teal) + ნეიტრალური ნაცრისფრები.
+// ტექსტის ფერები WCAG AA-ს აკმაყოფილებს (კონტრასტი ≥ 4.5:1 თეთრ და ღია ფონზე).
 // ძველი ცვლადების სახელები შენარჩუნებულია, რომ ყველა ფაილმა ავტომატურად აიღოს ახალი ფერები.
 
 // ძირითადი
-$color-primary: #0e8a7a;
+$color-primary: #0b7a6c; // 5.2:1 თეთრზე (თეთრი ტექსტიც ამ ფონზე)
 $color-primary-dark: #0a6b5f;
 $color-background-active: #e7f5f2; // ღია ფირუზისფერი (არჩეული / hover ფონი)
 $color-accent-light: #a8e6da;
@@ -11,7 +12,7 @@ $color-accent-light: #a8e6da;
 $color-heading: #0f2230;
 $color-text: #3a4a58;
 $color-text-hover: #1f3a4d; // მეორადი მუქი
-$color-text-muted: #7b8a98;
+$color-text-muted: #5d6b78; // 5.5:1 თეთრზე, 5.1:1 ნაცრისფერ ფონზე
 
 // ფონი და ჩარჩო
 $color-white: #ffffff;
@@ -19,11 +20,11 @@ $color-background: #f5f7f8;
 $color-border: #e5eaee;
 
 // სტატუსები
-$color-success: #12805c;
+$color-success: #0e7352;
 $color-success-soft: #e4f5ed;
-$color-danger: #c8463e;
+$color-danger: #b03e36;
 $color-danger-soft: #fcecea;
-$color-warning: #a8681a;
+$color-warning: #8f5a14;
 $color-warning-soft: #fdf3e2;
 
 // ჩრდილები, მომრგვალება, ანიმაცია
@@ -35,3 +36,30 @@ $radius-md: 14px;
 $radius-lg: 20px;
 $ease: cubic-bezier(0.2, 0.7, 0.3, 1);
 $transition: 180ms $ease;
+
+// ===== Breakpoint-ები (mobile-first: სტილი იწერება პატარა ეკრანისთვის,
+// დიდისთვის კი ემატება min-width-ით — იხ. _shared.scss-ის mixin up()) =====
+// xs  320–375  პატარა მობილური (ბაზა, breakpoint არ სჭირდება)
+// sm  376–480  მობილური
+// md  481–768  დიდი მობილური / პატარა ტაბლეტი
+// lg  769–1024 ტაბლეტი — აქედან sidebar მუდმივად ჩანს, hamburger ქრება
+// xl  1025–1440 ლეპტოპი
+// xxl 1441+    დიდი ეკრანი
+$breakpoints: (
+  sm: 376px,
+  md: 481px,
+  lg: 769px,
+  xl: 1025px,
+  xxl: 1441px,
+);
+
+// ===== ზომები =====
+$header-height: 60px;
+$header-height-lg: 68px;
+$sidebar-width-lg: 220px;
+$sidebar-width-xl: 248px;
+// შიგთავსის მაქსიმალური სიგანე — დიდ ეკრანზე ტექსტი არ იწელება
+$content-max: 1200px;
+$content-max-xxl: 1320px;
+// შეხების მინიმალური ზომა (WCAG 2.5.5)
+$touch-target: 44px;

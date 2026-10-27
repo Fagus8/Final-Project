@@ -9,4 +9,7 @@ export type DoctorOption = {
   avatarUrl: string | null;
   consultationFee: number | null;
   languages: string[];
+  // სამუშაო დღეები (0 — კვირა) და დასვენების დღეები — კალენდარში ითიშება
+  workDays: number[];
+  daysOff: string[];
 };

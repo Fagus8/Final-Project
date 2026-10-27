@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import AppointmentActions from "@/components/appointments/AppointmentActions";
 import list from "@/components/ui/List.module.scss";
@@ -5,38 +6,66 @@ import DeleteClinicButton from "@/components/clinics/DeleteClinicButton";
 import DoctorProfileForm from "@/components/doctors/DoctorProfileForm";
 import DoctorSettingsForm from "@/components/doctors/DoctorSettingsForm";
 import Sidebar from "@/components/navigation/Sidebar";
+import type { Prisma } from "@/generated/prisma/client";
+import { cancellationText, displayStatus, statusLabels } from "@/lib/appointment-status";
+import { activeDoctorWhere } from "@/lib/doctors";
+import { loginUrl } from "@/lib/next-url";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
-import { statusLabels } from "@/lib/appointment-status";
 import { formatDateTime } from "@/lib/time";
 import styles from "../Staff.module.scss";
 import ApproveDoctorButtons from "./_components/ApproveDoctorButtons";
+import RemoveDoctorButton from "./_components/RemoveDoctorButton";
 import clinicStyles from "./ManageClinic.module.scss";
+
+// ტაბები URL-ში ინახება (?tab=visits), რომ გვერდის განახლებისას იგივე ტაბი დარჩეს
+const tabs = [
+  { key: "doctors", label: "ექიმები" },
+  { key: "visits", label: "ვიზიტები" },
+  { key: "settings", label: "პარამეტრები" },
+] as const;
+
+type Tab = (typeof tabs)[number]["key"];
+
+// ვიზიტების ფილტრის პერიოდები
+const periods = [
+  { key: "upcoming", label: "მომავალი" },
+  { key: "past", label: "წარსული" },
+  { key: "all", label: "ყველა" },
+] as const;
 
 // რამდენი ვიზიტია მოცემული სტატუსით
 function countByStatus(appointments: { status: string }[], status: string) {
   return appointments.filter((appointment) => appointment.status === status).length;
 }
 
-// კლინიკის გვერდი „კლინიკის მართვა“: ახალი ექიმების მოთხოვნები, სტატისტიკა,
-// ანგარიში ექიმების მიხედვით, ექიმების საათები და კაბინეტები,
-// მომავალი და გაუქმებული ვიზიტები, კლინიკის წაშლა
-export default async function ManageClinicPage() {
+// URL-ის პარამეტრი ტექსტად (მასივი ან undefined → "")
+function param(value: string | string[] | undefined) {
+  return typeof value === "string" ? value : "";
+}
+
+// კლინიკის გვერდი „კლინიკის მართვა“, სამ ტაბად:
+// ექიმები — ახალი მოთხოვნები, გრაფიკები, კაბინეტები, პროფილები, მოხსნა;
+// ვიზიტები — სტატისტიკა და ვიზიტების სია ფილტრით;
+// პარამეტრები — კლინიკის მონაცემები და წაშლა
+export default async function ManageClinicPage({ searchParams }: PageProps<"/manage-clinic">) {
   const session = await getSession();
+  const query = await searchParams;
 
   if (!session) {
-    redirect("/login");
+    redirect(loginUrl("/manage-clinic"));
   }
 
   if (session.user.accountType !== "CLINIC") {
     redirect("/dashboard");
   }
 
-  // კლინიკის id = ანგარიშის id; ექიმებთან, მათ ვიზიტებთან და ანგარიშის ელფოსტასთან ერთად
+  // კლინიკის id = ანგარიშის id; აქტიური ექიმები, მათი ვიზიტები და ანგარიშის ელფოსტა
   const clinic = await prisma.clinic.findUnique({
     where: { id: session.user.id },
     include: {
       doctors: {
+        where: activeDoctorWhere,
         include: {
           appointments: { include: { patient: true } },
           user: { select: { email: true } },
@@ -58,27 +87,94 @@ export default async function ManageClinicPage() {
     );
   }
 
+  const tab: Tab = tabs.some((item) => item.key === query.tab) ? (query.tab as Tab) : "doctors";
+
   // ექიმები, რომლებმაც ეს კლინიკა აირჩიეს და დადასტურებას ელოდებიან
   const pendingDoctors = clinic.doctors.filter((doctor) => !doctor.isApproved);
   const doctors = clinic.doctors.filter((doctor) => doctor.isApproved);
-
-  // ყველა ვიზიტი ერთ სიაში, ექიმის სახელით
-  const appointments = doctors
-    .flatMap((doctor) => doctor.appointments.map((appointment) => ({ ...appointment, doctor })))
-    .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
-
   const now = new Date();
-  const upcoming = appointments.filter((a) => a.status === "BOOKED" && a.startsAt >= now);
-  // გაუქმებული ვიზიტები — ბოლოს გაუქმებული ზემოთ
-  const cancelled = appointments.filter((a) => a.status === "CANCELLED").reverse();
 
-  // კაბინეტის კონფლიქტი: ორ ექიმს ერთი კაბინეტი აქვს და საათები ემთხვევა
+  return (
+    <div className={styles.page}>
+      <Sidebar />
+      <main className={styles.main}>
+        <h1 className={styles.title}>კლინიკის მართვა — {clinic.name}</h1>
+
+        {!clinic.isApproved && (
+          <p className={clinicStyles.warning}>
+            კლინიკა ჯერ არ არის დამტკიცებული ადმინისტრატორის მიერ — მანამდე ის საიტზე არ ჩანს
+            და ექიმები მას ვერ აირჩევენ.
+          </p>
+        )}
+
+        <nav className={clinicStyles.tabs} aria-label="კლინიკის მართვის განყოფილებები">
+          {tabs.map((item) => (
+            <Link
+              key={item.key}
+              href={`/manage-clinic?tab=${item.key}`}
+              className={tab === item.key ? clinicStyles.activeTab : ""}
+              aria-current={tab === item.key ? "page" : undefined}
+            >
+              {item.label}
+              {item.key === "doctors" && pendingDoctors.length > 0 && (
+                <span className={clinicStyles.badge} aria-label={`${pendingDoctors.length} ახალი მოთხოვნა`}>
+                  {pendingDoctors.length}
+                </span>
+              )}
+            </Link>
+          ))}
+        </nav>
+
+        {tab === "doctors" && <DoctorsTab pendingDoctors={pendingDoctors} doctors={doctors} now={now} />}
+        {tab === "visits" && <VisitsTab doctors={doctors} query={query} now={now} />}
+        {tab === "settings" && (
+          <>
+            <section className={styles.card}>
+              <h2>კლინიკის მონაცემები</h2>
+              <p>{clinic.city}, {clinic.address}</p>
+              <p>{clinic.phone} · {clinic.specialty}</p>
+              <p>სტატუსი: {clinic.isApproved ? "დამტკიცებული" : "ელოდება დამტკიცებას"}</p>
+              <p>მონაცემების შესაცვლელად დაუკავშირდი ადმინისტრატორს.</p>
+            </section>
+
+            <section className={`${styles.card} ${clinicStyles.dangerZone}`}>
+              <h2>კლინიკის წაშლა</h2>
+              <p>
+                კლინიკის ანგარიში სამუდამოდ წაიშლება. ექიმები კლინიკას მოშორდებიან, მომავალი
+                ვიზიტები გაუქმდება, პაციენტების ისტორია (დიაგნოზები) კი შენარჩუნდება.
+              </p>
+              <DeleteClinicButton clinicId={clinic.id} clinicName={clinic.name} isOwnClinic />
+            </section>
+          </>
+        )}
+      </main>
+    </div>
+  );
+}
+
+// კლინიკის ექიმი ვიზიტებით და ელფოსტით (როგორც ზემოთ ვტვირთავთ)
+type ClinicDoctor = Prisma.DoctorGetPayload<{
+  include: { appointments: { include: { patient: true } }; user: { select: { email: true } } };
+}>;
+
+// ტაბი „ექიმები“
+function DoctorsTab({
+  pendingDoctors,
+  doctors,
+  now,
+}: {
+  pendingDoctors: ClinicDoctor[];
+  doctors: ClinicDoctor[];
+  now: Date;
+}) {
+  // კაბინეტის კონფლიქტი: ორ ექიმს ერთი კაბინეტი აქვს, საერთო სამუშაო დღე და საათები ემთხვევა
   const roomWarnings: string[] = [];
   doctors.forEach((first, index) => {
     doctors.slice(index + 1).forEach((second) => {
       if (
         first.room &&
         first.room === second.room &&
+        first.workDays.some((day) => second.workDays.includes(day)) &&
         first.workStart < second.workEnd &&
         second.workStart < first.workEnd
       ) {
@@ -88,85 +184,53 @@ export default async function ManageClinicPage() {
   });
 
   return (
-    <div className={styles.page}>
-      <Sidebar />
-      <main className={styles.main}>
-        <h1 className={styles.title}>კლინიკის მართვა — {clinic.name}</h1>
+    <>
+      {pendingDoctors.length > 0 && (
+        <>
+          <h2>ახალი ექიმების მოთხოვნები ({pendingDoctors.length})</h2>
+          <ul className={list.list}>
+            {pendingDoctors.map((doctor) => (
+              <li key={doctor.id} className={list.item}>
+                <div className={list.info}>
+                  <h3>{doctor.name}</h3>
+                  <p>
+                    {doctor.specialty} · გამოცდილება: {doctor.experienceYears} წელი
+                  </p>
+                  <p>{doctor.user.email}</p>
+                </div>
+                <ApproveDoctorButtons doctorId={doctor.id} doctorName={doctor.name} />
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
 
-        {!clinic.isApproved && (
-          <p className={styles.card}>კლინიკა ჯერ არ არის დამტკიცებული ადმინისტრატორის მიერ.</p>
+      <section className={styles.card}>
+        <h2>ექიმების გრაფიკი და კაბინეტები</h2>
+        {doctors.length === 0 && (
+          <p className={list.empty}>
+            კლინიკას ჯერ ექიმები არ ჰყავს. ექიმები თვითონ რეგისტრირდებიან და ირჩევენ კლინიკას —
+            მათი მოთხოვნები აქ გამოჩნდება.
+          </p>
         )}
-
-        {pendingDoctors.length > 0 && (
-          <>
-            <h2>ახალი ექიმები ({pendingDoctors.length})</h2>
-            <ul className={list.list}>
-              {pendingDoctors.map((doctor) => (
-                <li key={doctor.id} className={list.item}>
-                  <div className={list.info}>
-                    <h3>{doctor.name}</h3>
-                    <p>
-                      {doctor.specialty} · გამოცდილება: {doctor.experienceYears} წელი
-                    </p>
-                    <p>{doctor.user.email}</p>
-                  </div>
-                  <ApproveDoctorButtons doctorId={doctor.id} />
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-
-        {/* სტატისტიკა */}
-        <section className={clinicStyles.stats}>
-          <div><span>სულ ვიზიტები</span><strong>{appointments.length}</strong></div>
-          <div><span>დაჯავშნილი</span><strong>{countByStatus(appointments, "BOOKED")}</strong></div>
-          <div><span>დასრულებული</span><strong>{countByStatus(appointments, "COMPLETED")}</strong></div>
-          <div><span>გაუქმებული</span><strong>{countByStatus(appointments, "CANCELLED")}</strong></div>
-        </section>
-
-        <section className={styles.card}>
-          <h2>ანგარიში ექიმების მიხედვით</h2>
-          <table className={clinicStyles.table}>
-            <thead>
-              <tr>
-                <th>ექიმი</th>
-                <th>სულ</th>
-                <th>დასრულებული</th>
-                <th>გაუქმებული</th>
-              </tr>
-            </thead>
-            <tbody>
-              {doctors.map((doctor) => (
-                <tr key={doctor.id}>
-                  <td>{doctor.name}</td>
-                  <td>{doctor.appointments.length}</td>
-                  <td>{countByStatus(doctor.appointments, "COMPLETED")}</td>
-                  <td>{countByStatus(doctor.appointments, "CANCELLED")}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
-
-        {/* გრაფიკები და კაბინეტები */}
-        <section className={styles.card}>
-          <h2>ექიმების გრაფიკი და კაბინეტები</h2>
-          {roomWarnings.map((warning) => (
-            <p key={warning} className={clinicStyles.warning}>⚠ {warning}</p>
-          ))}
-          {doctors.map((doctor) => (
-            <div key={doctor.id} className={clinicStyles.doctorRow}>
-              <h3>{doctor.name} · {doctor.specialty}</h3>
-              <DoctorSettingsForm
-                isClinic
-                doctor={{
-                  id: doctor.id,
-                  workStart: doctor.workStart,
-                  workEnd: doctor.workEnd,
-                  room: doctor.room,
-                }}
-              />
+        {roomWarnings.map((warning) => (
+          <p key={warning} className={clinicStyles.warning}>⚠ {warning}</p>
+        ))}
+        {doctors.map((doctor) => (
+          <div key={doctor.id} className={clinicStyles.doctorRow}>
+            <h3>{doctor.name} · {doctor.specialty}</h3>
+            <DoctorSettingsForm
+              isClinic
+              doctor={{
+                id: doctor.id,
+                workStart: doctor.workStart,
+                workEnd: doctor.workEnd,
+                workDays: doctor.workDays,
+                daysOff: doctor.daysOff,
+                room: doctor.room,
+              }}
+            />
+            <div className={clinicStyles.rowActions}>
               <details className={clinicStyles.profileDetails}>
                 <summary>პროფილის რედაქტირება (სპეციალობა, გამოცდილება, ფოტო, ფასი...)</summary>
                 <DoctorProfileForm
@@ -185,54 +249,144 @@ export default async function ManageClinicPage() {
                   }}
                 />
               </details>
+              <RemoveDoctorButton
+                doctorId={doctor.id}
+                doctorName={doctor.name}
+                upcomingCount={
+                  doctor.appointments.filter((a) => a.status === "BOOKED" && a.startsAt > now).length
+                }
+              />
             </div>
-          ))}
+          </div>
+        ))}
+      </section>
+    </>
+  );
+}
+
+// ტაბი „ვიზიტები“: სტატისტიკა, ანგარიში ექიმების მიხედვით და ვიზიტების სია ფილტრით
+function VisitsTab({
+  doctors,
+  query,
+  now,
+}: {
+  doctors: ClinicDoctor[];
+  query: Record<string, string | string[] | undefined>;
+  now: Date;
+}) {
+  const doctorId = param(query.doctorId);
+  const status = param(query.status);
+  const period = periods.some((item) => item.key === query.period) ? param(query.period) : "upcoming";
+
+  // ყველა ვიზიტი ერთ სიაში, ექიმის სახელით
+  const appointments = doctors
+    .flatMap((doctor) => doctor.appointments.map((appointment) => ({ ...appointment, doctor })))
+    .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
+
+  // ფილტრი: ექიმი, სტატუსი, პერიოდი. წარსული — ბოლო პირველი
+  let filtered = appointments.filter(
+    (a) =>
+      (!doctorId || a.doctorId === doctorId) &&
+      (!status || a.status === status) &&
+      (period === "all" || (period === "upcoming" ? a.startsAt >= now : a.startsAt < now)),
+  );
+  if (period === "past") {
+    filtered = filtered.reverse();
+  }
+
+  return (
+    <>
+      <section className={clinicStyles.stats}>
+        <div><span>სულ ვიზიტები</span><strong>{appointments.length}</strong></div>
+        <div><span>დაჯავშნილი</span><strong>{countByStatus(appointments, "BOOKED")}</strong></div>
+        <div><span>დასრულებული</span><strong>{countByStatus(appointments, "COMPLETED")}</strong></div>
+        <div><span>გაუქმებული</span><strong>{countByStatus(appointments, "CANCELLED")}</strong></div>
+      </section>
+
+      {doctors.length > 0 && (
+        <section className={styles.card}>
+          <h2>ანგარიში ექიმების მიხედვით</h2>
+          <div className={clinicStyles.tableWrap}>
+            <table className={clinicStyles.table}>
+              <thead>
+                <tr>
+                  <th>ექიმი</th>
+                  <th>სულ</th>
+                  <th>დასრულებული</th>
+                  <th>გაუქმებული</th>
+                </tr>
+              </thead>
+              <tbody>
+                {doctors.map((doctor) => (
+                  <tr key={doctor.id}>
+                    <td>{doctor.name}</td>
+                    <td>{doctor.appointments.length}</td>
+                    <td>{countByStatus(doctor.appointments, "COMPLETED")}</td>
+                    <td>{countByStatus(doctor.appointments, "CANCELLED")}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
+      )}
 
-        <h2>მომავალი ვიზიტები</h2>
-        {upcoming.length === 0 ? (
-          <p className={list.empty}>მომავალი ვიზიტები არ არის.</p>
-        ) : (
-          <ul className={list.list}>
-            {upcoming.map((appointment) => (
-              <li key={appointment.id} className={list.item}>
-                <div className={list.info}>
-                  <h3>{formatDateTime(appointment.startsAt)}</h3>
-                  <p>{appointment.doctor.name} → {appointment.patient.name}</p>
-                </div>
-                <AppointmentActions appointmentId={appointment.id} canCancel />
-              </li>
-            ))}
-          </ul>
-        )}
+      {/* ჩვეულებრივი GET ფორმა: ფილტრები URL-ში ჩაიწერება */}
+      <form className={clinicStyles.filters} action="/manage-clinic">
+        <input type="hidden" name="tab" value="visits" />
+        <select name="period" defaultValue={period} aria-label="პერიოდი">
+          {periods.map((item) => (
+            <option key={item.key} value={item.key}>{item.label}</option>
+          ))}
+        </select>
+        <select name="doctorId" defaultValue={doctorId} aria-label="ექიმი">
+          <option value="">ყველა ექიმი</option>
+          {doctors.map((doctor) => (
+            <option key={doctor.id} value={doctor.id}>{doctor.name}</option>
+          ))}
+        </select>
+        <select name="status" defaultValue={status} aria-label="სტატუსი">
+          <option value="">ყველა სტატუსი</option>
+          <option value="BOOKED">{statusLabels.BOOKED}</option>
+          <option value="COMPLETED">{statusLabels.COMPLETED}</option>
+          <option value="CANCELLED">{statusLabels.CANCELLED}</option>
+        </select>
+        <button type="submit">ჩვენება</button>
+        <Link href="/manage-clinic?tab=visits">გასუფთავება</Link>
+      </form>
 
-        <h2>გაუქმებული ვიზიტები</h2>
-        {cancelled.length === 0 ? (
-          <p className={list.empty}>გაუქმებული ვიზიტები არ არის.</p>
-        ) : (
-          <ul className={list.list}>
-            {cancelled.map((appointment) => (
+      {filtered.length === 0 ? (
+        <p className={list.empty}>ამ ფილტრით ვიზიტები არ არის.</p>
+      ) : (
+        <ul className={list.list}>
+          {filtered.map((appointment) => {
+            const shown = displayStatus(appointment.status, appointment.startsAt, now);
+
+            return (
               <li key={appointment.id} className={list.item}>
                 <div className={list.info}>
                   <h3>
                     {formatDateTime(appointment.startsAt)}
-                    <span className={`${list.status} ${list.CANCELLED}`}>
-                      {statusLabels.CANCELLED}
-                    </span>
+                    <span className={`${list.status} ${list[shown]}`}>{statusLabels[shown]}</span>
                   </h3>
-                  <p>{appointment.doctor.name} → {appointment.patient.name} ({appointment.patient.email})</p>
+                  <p>
+                    {appointment.doctor.name} → {appointment.patient.name} ({appointment.patient.email})
+                  </p>
+                  {appointment.status === "CANCELLED" && (
+                    <p className={list.cancelInfo}>
+                      {cancellationText(appointment.cancelledBy, appointment.cancelReason)}
+                    </p>
+                  )}
                 </div>
+                {/* კლინიკას შეუძლია გააუქმოს დაჯავშნილი (მათ შორის გასული — პაციენტი არ გამოცხადდა) */}
+                {appointment.status === "BOOKED" && (
+                  <AppointmentActions appointmentId={appointment.id} canCancel />
+                )}
               </li>
-            ))}
-          </ul>
-        )}
-
-        <section className={`${styles.card} ${clinicStyles.dangerZone}`}>
-          <h2>კლინიკის წაშლა</h2>
-          <p>კლინიკა სისტემიდან სამუდამოდ წაიშლება ექიმებთან და ვიზიტებთან ერთად.</p>
-          <DeleteClinicButton clinicId={clinic.id} clinicName={clinic.name} isOwnClinic />
-        </section>
-      </main>
-    </div>
+            );
+          })}
+        </ul>
+      )}
+    </>
   );
 }

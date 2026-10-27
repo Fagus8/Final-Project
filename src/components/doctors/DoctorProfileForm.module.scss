@@ -11,7 +11,7 @@
     flex-direction: column;
     gap: 6px;
     color: $color-text-muted;
-    font-size: 12.5px;
+    font-size: 0.7813rem;
     font-weight: 600;
   }
 
@@ -46,7 +46,7 @@
   border-radius: 50%;
   background: linear-gradient(135deg, $color-background-active, #d3eee8);
   color: $color-primary-dark;
-  font-size: 34px;
+  font-size: 2.125rem;
   font-weight: 700;
   object-fit: cover;
 }
@@ -60,7 +60,7 @@
   small {
     flex-basis: 100%;
     color: $color-text-muted;
-    font-size: 12.5px;
+    font-size: 0.7813rem;
   }
 }
 
@@ -68,23 +68,24 @@
   @include common.secondaryButton;
   flex-direction: row;
   min-height: 38px;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .removeButton {
   @include common.dangerButton;
   min-height: 38px;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 // ===== ველები =====
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  // ბაზა: ერთ სვეტად; ფართოზე — სამ სვეტად
+  grid-template-columns: 1fr;
   gap: 12px;
 
-  @media (max-width: 700px) {
-    grid-template-columns: 1fr;
+  @include common.contentAbove(481px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -100,7 +101,7 @@
     margin-bottom: 8px;
     padding: 0;
     color: $color-text-muted;
-    font-size: 12.5px;
+    font-size: 0.7813rem;
     font-weight: 600;
   }
 
@@ -113,7 +114,7 @@
     border-radius: 999px;
     background: $color-white;
     color: $color-text;
-    font-size: 13.5px;
+    font-size: 0.8438rem;
     font-weight: 500;
     cursor: pointer;
     transition: border-color $transition, background-color $transition;
@@ -142,9 +143,23 @@
   }
 }
 
-.message {
+// შენახვის შედეგი: მწვანე — წარმატება, წითელი — შეცდომა
+.success,
+.error {
   margin: 0;
-  color: $color-primary-dark;
-  font-size: 13.5px;
+  padding: 8px 12px;
+  border-radius: $radius-sm;
+  font-size: 0.8438rem;
+  font-weight: 600;
   @include common.fadeUp(220ms);
+}
+
+.success {
+  background: $color-success-soft;
+  color: $color-success;
+}
+
+.error {
+  background: $color-danger-soft;
+  color: $color-danger;
 }

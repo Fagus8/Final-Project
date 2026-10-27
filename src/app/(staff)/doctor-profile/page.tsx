@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import ChangePasswordForm from "@/components/account/ChangePasswordForm";
 import DoctorProfileForm from "@/components/doctors/DoctorProfileForm";
+import DoctorStatusNotice from "@/components/doctors/DoctorStatusNotice";
 import Sidebar from "@/components/navigation/Sidebar";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { loginUrl } from "@/lib/next-url";
 import styles from "../Staff.module.scss";
 
 // ექიმის გვერდი „ჩემი პროფილი“: ანგარიშის მონაცემები და საჯარო პროფილის რედაქტირება
@@ -11,7 +14,7 @@ export default async function DoctorProfileEditPage() {
   const session = await getSession();
 
   if (!session) {
-    redirect("/login");
+    redirect(loginUrl("/doctor-profile"));
   }
 
   if (session.user.accountType !== "DOCTOR") {
@@ -23,7 +26,7 @@ export default async function DoctorProfileEditPage() {
     include: { clinic: true },
   });
 
-  // პროფილი კლინიკის დადასტურების შემდეგ ივსება — მანამდე „ჩემ განრიგზე“ ვაგზავნით
+  // პროფილი კლინიკის დადასტურების შემდეგ ივსება — მანამდე მდგომარეობას ვაჩვენებთ
   if (!doctor || !doctor.isApproved) {
     return (
       <div className={styles.page}>
@@ -31,17 +34,7 @@ export default async function DoctorProfileEditPage() {
         <main className={styles.main}>
           <h1 className={styles.title}>ჩემი პროფილი</h1>
           <p className={styles.card}>
-            {doctor ? (
-              <>
-                შენი მოთხოვნა გაგზავნილია კლინიკაში <strong>{doctor.clinic.name}</strong>.
-                დადასტურების შემდეგ აქ შეძლებ პროფილის შევსებას.
-              </>
-            ) : (
-              <>
-                შენი ანგარიში ჯერ არცერთ კლინიკას არ უკავშირდება.{" "}
-                <Link href="/doctor-schedule">აირჩიე კლინიკა →</Link>
-              </>
-            )}
+            <DoctorStatusNotice doctor={doctor} />
           </p>
         </main>
       </div>
@@ -85,6 +78,11 @@ export default async function DoctorProfileEditPage() {
               consultationFee: doctor.consultationFee,
             }}
           />
+        </section>
+
+        <section className={styles.card}>
+          <h2>პაროლის შეცვლა</h2>
+          <ChangePasswordForm />
         </section>
       </main>
     </div>

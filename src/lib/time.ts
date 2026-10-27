@@ -64,9 +64,54 @@ export function isValidDay(date: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(date) && !Number.isNaN(toDate(date, "00:00").getTime());
 }
 
-// კვირა დასვენების დღეა
-export function isSunday(date: string) {
-  return toDate(date, "12:00").getUTCDay() === 0;
+// კვირის დღე: 0 — კვირა, 1 — ორშაბათი ... 6 — შაბათი
+export function weekday(date: string) {
+  return toDate(date, "12:00").getUTCDay();
+}
+
+type WorkSchedule = {
+  workDays: number[];
+  daysOff: string[];
+};
+
+// მუშაობს თუ არა ექიმი ამ დღეს: სამუშაო დღეა და დასვენების სიაში არ არის
+export function isWorkingDay(schedule: WorkSchedule, date: string) {
+  return schedule.workDays.includes(weekday(date)) && !schedule.daysOff.includes(date);
+}
+
+// კვირის დღეების სახელები, ინდექსი = weekday()
+export const WEEKDAY_NAMES = ["კვირა", "ორშაბათი", "სამშაბათი", "ოთხშაბათი", "ხუთშაბათი", "პარასკევი", "შაბათი"];
+// ფორმებში ორშაბათიდან ვიწყებთ
+export const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
+
+// [1,2,3,4,5,6] -> "ორშაბათი – შაბათი", [1,3,5] -> "ორშაბათი, ოთხშაბათი, პარასკევი"
+export function formatWorkDays(workDays: number[]) {
+  const days = WEEK_ORDER.filter((day) => workDays.includes(day));
+
+  if (days.length === 0) {
+    return "სამუშაო დღეები არ არის მითითებული";
+  }
+
+  // ზედიზედ დღეები (მინიმუმ სამი) შუალედით იწერება
+  const positions = days.map((day) => WEEK_ORDER.indexOf(day));
+  const isRange = positions.every((position, index) => index === 0 || position === positions[index - 1] + 1);
+
+  if (isRange && days.length >= 3) {
+    return `${WEEKDAY_NAMES[days[0]]} – ${WEEKDAY_NAMES[days[days.length - 1]]}`;
+  }
+
+  return days.map((day) => WEEKDAY_NAMES[day]).join(", ");
+}
+
+const MONTH_NAMES = [
+  "იანვარი", "თებერვალი", "მარტი", "აპრილი", "მაისი", "ივნისი",
+  "ივლისი", "აგვისტო", "სექტემბერი", "ოქტომბერი", "ნოემბერი", "დეკემბერი",
+];
+
+// "2026-10-15" -> "15 ოქტომბერი 2026, ხუთშაბათი"
+export function formatLongDay(date: string) {
+  const [year, month, day] = date.split("-").map(Number);
+  return `${day} ${MONTH_NAMES[month - 1]} ${year}, ${WEEKDAY_NAMES[weekday(date)]}`;
 }
 
 // დღევანდელი დღის დასაწყისი და ხვალინდელის დასაწყისი, თბილისის დროით.

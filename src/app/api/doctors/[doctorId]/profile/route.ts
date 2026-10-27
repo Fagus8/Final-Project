@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isUuid, jsonError, readJson } from "@/lib/api";
+import { activeDoctorWhere } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 
@@ -58,13 +59,15 @@ export async function PATCH(
     return jsonError(result.error.issues[0]?.message ?? "შეამოწმე შევსებული ველები", 400);
   }
 
-  const doctor = await prisma.doctor.findUnique({ where: { id: doctorId } });
+  // უარყოფილი და მოხსნილი ექიმი აღარ რედაქტირდება
+  const doctor = await prisma.doctor.findFirst({ where: { id: doctorId, ...activeDoctorWhere } });
   if (!doctor) {
     return jsonError("ექიმი ვერ მოიძებნა", 404);
   }
 
   const isClinic = doctor.clinicId === session.user.id;
-  const isDoctor = doctor.userId === session.user.id;
+  // ექიმი პროფილს კლინიკის დადასტურების შემდეგ ავსებს
+  const isDoctor = doctor.userId === session.user.id && doctor.isApproved;
 
   if (!isClinic && !isDoctor) {
     return jsonError("ამ ექიმის რედაქტირება არ შეგიძლია", 403);

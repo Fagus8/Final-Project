@@ -13,12 +13,14 @@
   display: inline-block;
   margin-bottom: 18px;
   color: $color-text-muted;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
   text-decoration: none;
   transition: color $transition;
 
-  &:hover {
+  &:hover,
+
+  &:focus-visible {
     color: $color-primary-dark;
   }
 }
@@ -30,10 +32,10 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 24px;
-  padding: 28px 32px;
+  padding: 22px 20px;
 
-  @media (max-width: 700px) {
-    padding: 22px 20px;
+  @include common.contentAbove(461px) {
+    padding: 28px 32px;
   }
 }
 
@@ -46,7 +48,7 @@
   border-radius: 50%;
   background: linear-gradient(135deg, $color-background-active, #d3eee8);
   color: $color-primary-dark;
-  font-size: 38px;
+  font-size: 2.375rem;
   font-weight: 700;
   object-fit: cover;
 }
@@ -62,7 +64,7 @@
   h1 {
     margin: 0;
     color: $color-heading;
-    font-size: 26px;
+    font-size: var(--text-2xl);
     font-weight: 700;
     letter-spacing: -0.02em;
   }
@@ -79,27 +81,31 @@
   align-items: center;
   gap: 6px;
   color: $color-text-muted;
-  font-size: 14px;
+  font-size: 0.875rem;
   text-decoration: none;
 
-  &:hover {
+  &:hover,
+
+  &:focus-visible {
     color: $color-primary-dark;
     text-decoration: underline;
   }
 }
 
+// ბაზა: ღილაკი მთელ სიგანეზე (თითით ადვილი); ფართოზე — ტექსტის სიგანის
 .bookLink {
   @include common.primaryButton;
+  width: 100%;
 
-  @media (max-width: 700px) {
-    width: 100%;
+  @include common.contentAbove(461px) {
+    width: auto;
   }
 }
 
 // ===== სტატისტიკა =====
 .stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: 1fr;
   gap: 16px;
   margin: 20px 0 0;
   padding: 0;
@@ -115,29 +121,29 @@
 
   strong {
     color: $color-heading;
-    font-size: 22px;
+    font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.375rem);
     font-weight: 700;
   }
 
   span {
     color: $color-text-muted;
-    font-size: 13.5px;
+    font-size: 0.8438rem;
   }
 
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
+  @include common.contentAbove(421px) {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   }
 }
 
 // ===== ინფორმაციის ბლოკები =====
 .columns {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 16px;
   margin-top: 20px;
 
-  @media (max-width: 900px) {
-    grid-template-columns: 1fr;
+  @include common.contentAbove(641px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -148,7 +154,7 @@
   h2 {
     margin: 0 0 14px;
     color: $color-heading;
-    font-size: 17px;
+    font-size: 1.0625rem;
     font-weight: 700;
   }
 }
@@ -170,7 +176,7 @@
     align-items: center;
     gap: 8px;
     color: $color-text-muted;
-    font-size: 14px;
+    font-size: 0.875rem;
 
     svg {
       color: $color-primary;
@@ -180,7 +186,7 @@
   dd {
     margin: 0;
     color: $color-heading;
-    font-size: 14.5px;
+    font-size: 0.9063rem;
     font-weight: 600;
     text-align: right;
   }
@@ -189,7 +195,9 @@
     color: inherit;
     text-decoration: none;
 
-    &:hover {
+    &:hover,
+
+    &:focus-visible {
       color: $color-primary-dark;
       text-decoration: underline;
     }
@@ -200,9 +208,11 @@
   margin-top: 20px;
 
   p {
+    // კომფორტული ხაზის სიგრძე — ფართო ეკრანზე ტექსტი არ იწელება
+    max-width: var(--measure);
     margin: 0;
     color: $color-text;
-    font-size: 15px;
+    font-size: var(--text-base);
     line-height: 1.7;
     // ახალი ხაზები ტექსტში შენარჩუნდება
     white-space: pre-line;
@@ -226,7 +236,7 @@
     border-radius: $radius-sm;
     background: $color-white;
     color: $color-heading;
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 500;
 
     svg {
@@ -242,7 +252,7 @@
   h2 {
     margin: 0 0 16px;
     color: $color-heading;
-    font-size: 19px;
+    font-size: 1.1875rem;
     font-weight: 700;
   }
 }
@@ -270,14 +280,14 @@
   h3 {
     margin: 0 0 2px;
     color: $color-heading;
-    font-size: 15px;
+    font-size: 0.9375rem;
     font-weight: 650;
   }
 
   p {
     margin: 0;
     color: $color-text-muted;
-    font-size: 13.5px;
+    font-size: 0.8438rem;
   }
 }
 
@@ -290,7 +300,7 @@
   border-radius: 50%;
   background: linear-gradient(135deg, $color-background-active, #d3eee8);
   color: $color-primary-dark;
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 700;
   object-fit: cover;
 }

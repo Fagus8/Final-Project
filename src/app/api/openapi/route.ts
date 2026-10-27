@@ -62,7 +62,7 @@ const apiDocument = {
             properties: {
               doctors: {
                 type: 'array',
-                description: 'კლინიკის არსებული ექიმები. სიიდან ამოღებული ექიმი წაიშლება.',
+                description: 'კლინიკის არსებული ექიმები. სიიდან ამოღებული ექიმი კლინიკიდან მოიხსნება: მომავალი ვიზიტები უქმდება, ისტორია რჩება.',
                 items: { $ref: '#/components/schemas/DoctorUpdate' },
               },
             },

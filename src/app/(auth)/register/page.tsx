@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Icon, { type IconName } from "@/components/ui/Icon";
 import { authClient } from "@/lib/auth-client";
 import { sendRequest } from "@/lib/api-client";
+import { safeNext } from "@/lib/next-url";
 import styles from "./Register.module.scss";
 import ClinicFields from "./_components/ClinicFields";
 import DoctorFields from "./_components/DoctorFields";
@@ -25,18 +26,16 @@ const accountTypes: { value: RegistrationValues["accountType"]; label: string; i
 async function createAccount(values: RegistrationValues) {
   const email = values.email.trim();
 
-  // თუ კლინიკის ანგარიში უკვე შეიქმნა, მაგრამ კლინიკის მონაცემები ვერ შეინახა,
-  // იმავე ანგარიშით ხელახლა გაგზავნა შეიძლება (ანგარიშს თავიდან აღარ ვქმნით)
-  if (values.accountType === "CLINIC") {
-    const { data: session } = await authClient.getSession();
+  // თუ ანგარიში უკვე შეიქმნა, მაგრამ დამატებითი მონაცემები ვერ შეინახა (მაგ: ინტერნეტი
+  // გაითიშა), იმავე ანგარიშით ხელახლა გაგზავნა შეიძლება — ანგარიშს თავიდან აღარ ვქმნით
+  const { data: session } = await authClient.getSession();
 
-    if (session) {
-      const isSameClinic =
-        session.user.email.toLowerCase() === email.toLowerCase() &&
-        session.user.accountType === "CLINIC";
+  if (session) {
+    const isSameAccount =
+      session.user.email.toLowerCase() === email.toLowerCase() &&
+      session.user.accountType === values.accountType;
 
-      return isSameClinic ? null : "კლინიკის რეგისტრაციის გასაგრძელებლად შესაბამის ანგარიშში შედი.";
-    }
+    return isSameAccount ? null : "რეგისტრაციის გასაგრძელებლად შესაბამის ანგარიშში შედი.";
   }
 
   const { error } = await authClient.signUp.email({
@@ -51,8 +50,8 @@ async function createAccount(values: RegistrationValues) {
 }
 
 // ინახავს როლის მიხედვით დამატებით მონაცემებს:
-// პაციენტი → ტელეფონი და სისხლის ჯგუფი, კლინიკა → კლინიკის მონაცემები.
-// ექიმს აქ არაფერი ეგზავნება — კლინიკას „ჩემ განრიგში“ აირჩევს
+// პაციენტი → ტელეფონი და სისხლის ჯგუფი, კლინიკა → კლინიკის მონაცემები,
+// ექიმი → მოთხოვნა არჩეულ კლინიკას (თუ აირჩია)
 async function saveRoleDetails(values: RegistrationValues) {
   if (values.accountType === "CLINIC") {
     return sendRequest("/api/clinic-registration", "POST", {
@@ -72,7 +71,35 @@ async function saveRoleDetails(values: RegistrationValues) {
     });
   }
 
+  if (values.doctorClinicId) {
+    return sendRequest("/api/doctor-registration", "POST", {
+      specialty: values.doctorSpecialty,
+      experienceYears: values.doctorExperience,
+      clinicId: values.doctorClinicId,
+    });
+  }
+
   return { ok: true, message: "" };
+}
+
+// სად გადავიდეს მომხმარებელი რეგისტრაციის შემდეგ
+function destination(values: RegistrationValues) {
+  if (values.accountType === "DOCTOR") {
+    // კლინიკა თუ ჯერ არ აურჩევია, „ჩემ განრიგში“ ფორმა შეყვანილი მონაცემებით ივსება
+    if (values.doctorClinicId) {
+      return "/doctor-schedule";
+    }
+    const params = new URLSearchParams({
+      specialty: values.doctorSpecialty.trim(),
+      experience: String(values.doctorExperience),
+    });
+    return `/doctor-schedule?${params}`;
+  }
+
+  // პაციენტი ბრუნდება იქ, საიდანაც რეგისტრაციაზე მოვიდა (მაგ: ჯავშანი).
+  // კლინიკა კაბინეტში ნახავს, რომ დამტკიცებას ელოდება
+  const next = safeNext(new URLSearchParams(window.location.search).get("next"));
+  return (values.accountType === "PATIENT" && next) || "/dashboard";
 }
 
 // რეგისტრაციის გვერდი. ჯერ იქმნება ანგარიში (better-auth), შემდეგ
@@ -85,6 +112,7 @@ export default function RegisterPage() {
       fullName: "",
       email: "",
       password: "",
+      passwordRepeat: "",
       phone: "",
       bloodType: "",
       accountType: "PATIENT",
@@ -95,6 +123,7 @@ export default function RegisterPage() {
       imageUrl: "",
       doctorSpecialty: "",
       doctorExperience: 0,
+      doctorClinicId: "",
     },
     // Zod-ის შეცდომებს formik-ის ფორმატში გადავიყვანთ (ველის სახელი → ტექსტი)
     validate: (values) => {
@@ -132,18 +161,9 @@ export default function RegisterPage() {
           return;
         }
 
-        // ნაბიჯი 3: ექიმი თავის განრიგზე გადადის, დანარჩენი — მთავარ გვერდზე.
-        // ექიმი იქ კლინიკას აირჩევს — შეყვანილი მონაცემები ფორმაში წინასწარ ჩაიწერება
-        if (values.accountType === "DOCTOR") {
-          const params = new URLSearchParams({
-            specialty: values.doctorSpecialty.trim(),
-            experience: String(values.doctorExperience),
-          });
-          router.push(`/doctor-schedule?${params}`);
-          router.refresh();
-        } else {
-          router.push("/");
-        }
+        // ნაბიჯი 3: გადასვლა. refresh საჭიროა, რომ Header-მა და Sidebar-მა ახალი სესია დაინახონ
+        router.push(destination(values));
+        router.refresh();
       } catch {
         setStatus("სერვერთან დაკავშირება ვერ მოხერხდა. სცადე ხელახლა.");
       }

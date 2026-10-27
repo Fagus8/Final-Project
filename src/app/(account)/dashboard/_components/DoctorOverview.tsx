@@ -1,4 +1,4 @@
-import Link from "next/link";
+import DoctorStatusNotice from "@/components/doctors/DoctorStatusNotice";
 import { prisma } from "@/lib/prisma";
 import { formatDateTime, formatDay, formatTime, todayRange } from "@/lib/time";
 import styles from "../../Account.module.scss";
@@ -11,21 +11,11 @@ export default async function DoctorOverview({ userId }: { userId: string }) {
     include: { clinic: true },
   });
 
-  // ექიმი ჯერ არცერთ კლინიკას არ უკავშირდება
-  if (!doctor) {
+  // ექიმი ჯერ არ არის დადასტურებული: კლინიკა არ აურჩევია, ელოდება, უარყვეს ან მოხსნეს
+  if (!doctor || !doctor.isApproved) {
     return (
       <p className={styles.detailCard}>
-        შენი ანგარიში ჯერ არცერთ კლინიკას არ უკავშირდება.{" "}
-        <Link href="/doctor-schedule">აირჩიე კლინიკა →</Link>
-      </p>
-    );
-  }
-
-  if (!doctor.isApproved) {
-    return (
-      <p className={styles.detailCard}>
-        შენი მოთხოვნა გაგზავნილია კლინიკაში <strong>{doctor.clinic.name}</strong> და
-        დადასტურებას ელოდება.
+        <DoctorStatusNotice doctor={doctor} />
       </p>
     );
   }

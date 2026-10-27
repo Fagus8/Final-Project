@@ -3,9 +3,9 @@
 
 .page {
   display: grid;
-  min-height: calc(100vh - 68px);
+  min-height: calc(100dvh - #{$header-height});
   place-items: center;
-  padding: 40px 16px;
+  padding: var(--space-xl) var(--space-page-x);
   background:
     radial-gradient(circle at 15% 10%, rgba($color-accent-light, 0.35), transparent 35%),
     radial-gradient(circle at 90% 90%, rgba($color-primary, 0.06), transparent 40%),
@@ -16,7 +16,8 @@
   @include common.card;
   @include common.fadeUp;
   width: min(100%, 420px);
-  padding: 40px 36px 32px;
+  // 22px მობილურზე → 36px დიდ ეკრანზე
+  padding: clamp(28px, 6vw, 40px) clamp(20px, 5vw, 36px) clamp(24px, 5vw, 32px);
   border-radius: $radius-lg;
   box-shadow: $shadow-lg;
   text-align: center;
@@ -35,7 +36,7 @@
 
 .title {
   margin: 20px 0 6px;
-  font-size: 23px;
+  font-size: var(--text-2xl);
   font-weight: 700;
   letter-spacing: -0.02em;
 }
@@ -43,7 +44,7 @@
 .subtitle {
   margin-bottom: 28px;
   color: $color-text-muted;
-  font-size: 14.5px;
+  font-size: 0.9063rem;
 }
 
 .form {
@@ -60,7 +61,7 @@
 
   label {
     color: $color-heading;
-    font-size: 13.5px;
+    font-size: 0.8438rem;
     font-weight: 600;
   }
 
@@ -73,7 +74,7 @@
 .error {
   margin: 0;
   color: $color-danger;
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.45;
 }
 
@@ -89,20 +90,24 @@
   padding-top: 20px;
   border-top: 1px solid $color-border;
   color: $color-text-muted;
-  font-size: 14px;
+  font-size: 0.875rem;
 
   a {
     color: $color-primary;
     font-weight: 600;
 
-    &:hover {
+    &:hover,
+
+    &:focus-visible {
       text-decoration: underline;
     }
   }
 }
 
-@media (max-width: 480px) {
-  .card {
-    padding: 32px 22px 26px;
+// ტელეფონი ჰორიზონტალურად: ფორმა ზემოდან იწყება და ნაკლები დაშორება აქვს
+@include common.shortLandscape {
+  .page {
+    place-items: start center;
+    padding-block: 16px;
   }
 }

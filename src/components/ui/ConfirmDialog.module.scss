@@ -1,0 +1,78 @@
+@use '../../styles/colors' as *;
+@use '../../styles/shared' as common;
+
+// დადასტურების მოდალური ფანჯარა (იგივე იერი, რაც დიაგნოზის ფანჯარას)
+.dialog {
+  width: min(480px, calc(100vw - 32px));
+  // დაბალ ეკრანზეც (landscape) ფანჯარა ჩანს და შიგნით სქროლდება
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  // global.scss-ის `* { margin: 0 }` dialog-ის ცენტრირებას აუქმებს — ვაბრუნებთ
+  margin: auto;
+  padding: 0;
+  border: none;
+  border-radius: $radius-lg;
+  background: $color-white;
+  color: $color-text;
+  box-shadow: $shadow-lg;
+
+  &[open] {
+    @include common.fadeUp(220ms);
+  }
+
+  &::backdrop {
+    background: rgba($color-heading, 0.45);
+    backdrop-filter: blur(2px);
+  }
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  // 18px მობილურზე → 24px 561px-დან
+  padding: 18px;
+
+  h2 {
+    color: $color-heading;
+    font-size: 1.1875rem;
+  }
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: $color-heading;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  textarea {
+    @include common.input;
+    line-height: 1.55;
+    resize: vertical;
+  }
+
+  @media (min-width: 561px) {
+    padding: 24px;
+  }
+}
+
+.message {
+  color: $color-text;
+  line-height: 1.55;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.secondaryButton {
+  @include common.secondaryButton;
+  min-height: 38px;
+  padding: 8px 14px;
+  font-size: 0.875rem;
+}

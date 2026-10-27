@@ -18,12 +18,12 @@
 
   span {
     color: $color-text-muted;
-    font-size: 13px;
+    font-size: 0.8125rem;
   }
 
   strong {
     color: $color-heading;
-    font-size: 28px;
+    font-size: clamp(1.5rem, 1.25rem + 1vw, 1.75rem);
     font-weight: 700;
     letter-spacing: -0.02em;
   }
@@ -45,7 +45,7 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14.5px;
+  font-size: 0.9063rem;
 
   th,
   td {
@@ -56,7 +56,7 @@
 
   th {
     color: $color-text-muted;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -69,7 +69,9 @@
   tbody tr {
     transition: background-color $transition;
 
-    &:hover {
+    &:hover,
+
+    &:focus-visible {
       background: $color-background;
     }
 
@@ -77,6 +79,104 @@
       border-bottom: 0;
     }
   }
+}
+
+// ტაბები: ექიმები / ვიზიტები / პარამეტრები
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 20px;
+  padding: 4px;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  background: $color-white;
+  width: fit-content;
+  max-width: 100%;
+
+  a {
+    display: inline-flex;
+    min-height: $touch-target;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: $radius-sm;
+    color: $color-text;
+    font-size: 0.9063rem;
+    font-weight: 600;
+    transition: background-color $transition, color $transition;
+
+    &:hover,
+
+    &:focus-visible {
+      background: $color-background;
+    }
+  }
+
+  .activeTab {
+    background: $color-background-active;
+    color: $color-primary-dark;
+  }
+}
+
+// ტაბზე დაუმუშავებელი მოთხოვნების რაოდენობა
+.badge {
+  @include common.pill;
+  padding: 1px 8px;
+  background: $color-warning-soft;
+  color: $color-warning;
+  font-size: 0.75rem;
+}
+
+// ვიზიტების ფილტრი
+.filters {
+  @include common.card;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 12px;
+
+  select {
+    @include common.input;
+    width: auto;
+    min-height: 42px;
+    flex: 0 1 200px;
+    cursor: pointer;
+  }
+
+  button {
+    @include common.primaryButton;
+  }
+
+  a {
+    display: inline-flex;
+    min-height: $touch-target;
+    align-items: center;
+    padding: 0 6px;
+    color: $color-text-muted;
+    font-size: 0.875rem;
+
+    &:hover,
+
+    &:focus-visible {
+      color: $color-danger;
+    }
+  }
+}
+
+// ფართო ცხრილი ვიწრო ეკრანზე ჰორიზონტალურად სქროლდება
+.tableWrap {
+  overflow-x: auto;
+}
+
+.rowActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
 }
 
 .doctorRow {
@@ -91,7 +191,7 @@
   h3 {
     margin: 0 0 12px !important;
     color: $color-heading !important;
-    font-size: 15px !important;
+    font-size: 0.9375rem !important;
     letter-spacing: normal !important;
     text-transform: none !important;
   }
@@ -104,7 +204,7 @@
   summary {
     width: fit-content;
     color: $color-primary-dark;
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
   }
@@ -138,5 +238,5 @@
   border-radius: $radius-sm;
   background: $color-warning-soft;
   color: $color-warning !important;
-  font-size: 14px;
+  font-size: 0.875rem;
 }

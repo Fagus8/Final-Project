@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { sendRequest } from "@/lib/api-client";
+import { formatLongDay, WEEK_ORDER, WEEKDAY_NAMES } from "@/lib/time";
 import styles from "@/components/ui/InlineForm.module.scss";
 
 type DoctorSettingsFormProps = {
@@ -10,34 +11,53 @@ type DoctorSettingsFormProps = {
     id: string;
     workStart: string;
     workEnd: string;
+    workDays: number[];
+    daysOff: string[];
     room: string | null;
   };
   // კლინიკას შეუძლია კაბინეტის შეცვლაც
   isClinic?: boolean;
 };
 
-// ექიმის სამუშაო საათების ფორმა („ჩემი განრიგი“ და „კლინიკის მართვა“).
-// ამ საათებიდან იქმნება 30-წუთიანი სლოტები ჯავშნისთვის
+// ექიმის გრაფიკის ფორმა („ჩემი განრიგი“ და „კლინიკის მართვა“): საათები,
+// სამუშაო დღეები და დასვენების დღეები. აქედან იქმნება 30-წუთიანი სლოტები ჯავშნისთვის
 export default function DoctorSettingsForm({ doctor, isClinic = false }: DoctorSettingsFormProps) {
   const router = useRouter();
+  const id = useId();
   const [workStart, setWorkStart] = useState(doctor.workStart);
   const [workEnd, setWorkEnd] = useState(doctor.workEnd);
+  const [workDays, setWorkDays] = useState(doctor.workDays);
+  const [daysOff, setDaysOff] = useState(doctor.daysOff);
+  const [newDayOff, setNewDayOff] = useState("");
   const [room, setRoom] = useState(doctor.room ?? "");
   const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState("");
+  const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
+
+  function toggleDay(day: number) {
+    setWorkDays((current) =>
+      current.includes(day) ? current.filter((item) => item !== day) : [...current, day],
+    );
+  }
+
+  function addDayOff() {
+    if (newDayOff && !daysOff.includes(newDayOff)) {
+      setDaysOff((current) => [...current, newDayOff].sort());
+    }
+    setNewDayOff("");
+  }
 
   async function save(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSaving(true);
-    setMessage("");
+    setResult(null);
 
-    // ექიმი მხოლოდ საათებს აგზავნის; კაბინეტს სერვერი მხოლოდ კლინიკისგან იღებს
-    const body = isClinic ? { workStart, workEnd, room } : { workStart, workEnd };
-    const result = await sendRequest(`/api/doctors/${doctor.id}`, "PATCH", body);
+    // კაბინეტს სერვერი მხოლოდ კლინიკისგან იღებს
+    const body = { workStart, workEnd, workDays, daysOff, ...(isClinic && { room }) };
+    const saved = await sendRequest(`/api/doctors/${doctor.id}`, "PATCH", body);
 
     setIsSaving(false);
-    setMessage(result.message);
-    if (result.ok) {
+    setResult(saved);
+    if (saved.ok) {
       router.refresh();
     }
   }
@@ -61,10 +81,56 @@ export default function DoctorSettingsForm({ doctor, isClinic = false }: DoctorS
         </label>
       )}
 
-      <button type="submit" disabled={isSaving}>
-        {isSaving ? "ინახება..." : "შენახვა"}
+      <fieldset className={styles.checks}>
+        <legend>სამუშაო დღეები</legend>
+        {WEEK_ORDER.map((day) => (
+          <label key={day}>
+            <input type="checkbox" checked={workDays.includes(day)} onChange={() => toggleDay(day)} />
+            {WEEKDAY_NAMES[day]}
+          </label>
+        ))}
+      </fieldset>
+
+      <label htmlFor={`${id}-day-off`}>
+        დასვენების / შვებულების დღე
+        <input
+          id={`${id}-day-off`}
+          type="date"
+          value={newDayOff}
+          onChange={(e) => setNewDayOff(e.target.value)}
+        />
+      </label>
+      <button type="button" onClick={addDayOff} disabled={!newDayOff}>
+        დამატება
       </button>
-      {message && <p className={styles.message}>{message}</p>}
+
+      {daysOff.length > 0 ? (
+        <ul className={styles.chips} aria-label="დასვენების დღეები">
+          {daysOff.map((day) => (
+            <li key={day}>
+              {formatLongDay(day)}
+              <button
+                type="button"
+                aria-label={`${formatLongDay(day)} — წაშლა`}
+                onClick={() => setDaysOff((current) => current.filter((item) => item !== day))}
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className={styles.hint}>დასვენების დღე არ არის დამატებული. ამ დღეებში ჯავშანი არ მიიღება.</p>
+      )}
+
+      <button type="submit" disabled={isSaving}>
+        {isSaving ? "ინახება..." : "გრაფიკის შენახვა"}
+      </button>
+      {result && (
+        <p className={result.ok ? styles.success : styles.error} role={result.ok ? "status" : "alert"}>
+          {result.message}
+        </p>
+      )}
     </form>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { sendRequest } from "@/lib/api-client";
 import styles from "@/components/ui/List.module.scss";
 import actionStyles from "./AppointmentActions.module.scss";
@@ -16,7 +17,10 @@ type AppointmentActionsProps = {
   prescription?: string | null;
 };
 
-// ვიზიტის ღილაკები: გაუქმება (პაციენტი, ექიმი, კლინიკა) და
+// რომელი ფანჯარაა ღია: გაუქმების დადასტურება, დიაგნოზის ფორმა ან არცერთი
+type OpenDialog = "cancel" | "diagnosis" | null;
+
+// ვიზიტის ღილაკები: გაუქმება მიზეზით (პაციენტი, კლინიკა) და
 // დიაგნოზის ჩაწერა/შეცვლა (ექიმი). გამოიყენება რამდენიმე გვერდზე
 export default function AppointmentActions({
   appointmentId,
@@ -28,7 +32,7 @@ export default function AppointmentActions({
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
-  const [showForm, setShowForm] = useState(false);
+  const [openDialog, setOpenDialog] = useState<OpenDialog>(null);
   // ფორმა არსებული დიაგნოზით ივსება, რომ ექიმმა შეცვლა შეძლოს
   const [diagnosisText, setDiagnosisText] = useState(diagnosis ?? "");
   const [prescriptionText, setPrescriptionText] = useState(prescription ?? "");
@@ -38,16 +42,26 @@ export default function AppointmentActions({
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
-     if (showForm && !dialog.open) dialog.showModal();
+    const showForm = openDialog === "diagnosis";
+    if (showForm && !dialog.open) dialog.showModal();
     if (!showForm && dialog.open) dialog.close();
-  }, [showForm]);
+  }, [openDialog]);
 
   function openForm() {
     // ყოველ გახსნაზე ფორმა შენახული მნიშვნელობებით ივსება
     setDiagnosisText(diagnosis ?? "");
     setPrescriptionText(prescription ?? "");
     setError("");
-    setShowForm(true);
+    setOpenDialog("diagnosis");
+  }
+
+  function openCancel() {
+    setError("");
+    setOpenDialog("cancel");
+  }
+
+  function close() {
+    if (!isSaving) setOpenDialog(null);
   }
 
   // ყველა მოქმედება ერთ API-ზე იგზავნება
@@ -63,25 +77,15 @@ export default function AppointmentActions({
       return;
     }
 
-    // წარმატებისას ფორმას ვხურავთ და გვერდს ვაახლებთ (ახალი სტატუსი გამოჩნდება)
-    setShowForm(false);
+    // წარმატებისას ფანჯარას ვხურავთ და გვერდს ვაახლებთ (ახალი სტატუსი გამოჩნდება)
+    setOpenDialog(null);
     router.refresh();
   }
 
   return (
     <div className={styles.actions}>
       {canCancel && (
-        <button
-          type="button"
-          className={styles.cancelButton}
-          disabled={isSaving}
-          onClick={() => {
-            // შემთხვევითი დაჭერისგან დაცვა
-            if (confirm("ნამდვილად გსურს ვიზიტის გაუქმება?")) {
-              sendAction({ action: "cancel" });
-            }
-          }}
-        >
+        <button type="button" className={styles.cancelButton} disabled={isSaving} onClick={openCancel}>
           გაუქმება
         </button>
       )}
@@ -92,16 +96,30 @@ export default function AppointmentActions({
         </button>
       )}
 
+      {canCancel && (
+        <ConfirmDialog
+          open={openDialog === "cancel"}
+          title="ვიზიტის გაუქმება"
+          message="ნამდვილად გსურს ვიზიტის გაუქმება? მეორე მხარე გაუქმებას და მიზეზს თავის გვერდზე ნახავს."
+          confirmLabel="დიახ, გაუქმება"
+          reasonLabel="მიზეზი (არასავალდებულო)"
+          isBusy={isSaving}
+          error={openDialog === "cancel" ? error : ""}
+          onConfirm={(reason) => sendAction({ action: "cancel", reason })}
+          onClose={close}
+        />
+      )}
+
       {/* დიაგნოზის ფორმა: შენახვისას ვიზიტი „დასრულებული“ ხდება */}
       {canComplete && (
         <dialog
           ref={dialogRef}
           className={actionStyles.dialog}
           aria-labelledby={`diagnosis-title-${appointmentId}`}
-          onClose={() => setShowForm(false)}
+          onClose={close}
           // ფონზე (ფანჯრის გარეთ) დაჭერა ფანჯარას ხურავს
           onClick={(event) => {
-            if (event.target === event.currentTarget && !isSaving) setShowForm(false);
+            if (event.target === event.currentTarget) close();
           }}
         >
           <form
@@ -123,7 +141,7 @@ export default function AppointmentActions({
                 type="button"
                 className={actionStyles.closeButton}
                 aria-label="დახურვა"
-                onClick={() => setShowForm(false)}
+                onClick={close}
               >
                 ×
               </button>
@@ -145,9 +163,9 @@ export default function AppointmentActions({
                 onChange={(event) => setPrescriptionText(event.target.value)}
               />
             </label>
-            {error && <p className={styles.error} role="alert">{error}</p>}
+            {openDialog === "diagnosis" && error && <p className={styles.error} role="alert">{error}</p>}
             <div className={actionStyles.dialogButtons}>
-              <button type="button" className={styles.cancelButton} onClick={() => setShowForm(false)}>
+              <button type="button" className={styles.cancelButton} onClick={close}>
                 დახურვა
               </button>
               <button type="submit" className={styles.primaryButton} disabled={isSaving}>
@@ -157,8 +175,6 @@ export default function AppointmentActions({
           </form>
         </dialog>
       )}
-
-      {error && !showForm && <p className={styles.error} role="alert">{error}</p>}
     </div>
   );
 }

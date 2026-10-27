@@ -20,7 +20,9 @@
   padding: 18px 20px;
   transition: border-color $transition, box-shadow $transition;
 
-  &:hover {
+  &:hover,
+
+  &:focus-visible {
     border-color: #d5dde3;
     box-shadow: $shadow-md;
   }
@@ -42,7 +44,7 @@
   border-radius: 50%;
   background: linear-gradient(135deg, $color-background-active, #d3eee8);
   color: $color-primary-dark;
-  font-size: 20px;
+  font-size: 1.25rem;
   font-weight: 700;
   object-fit: cover;
 }
@@ -56,7 +58,7 @@
     align-items: center;
     gap: 8px;
     margin: 0 0 6px;
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 650;
   }
 
@@ -95,22 +97,52 @@
   color: $color-danger;
 }
 
+// გასული დაჯავშნილი ვიზიტი, დიაგნოზი ჯერ არ ჩაწერილა
+.PAST {
+  background: $color-warning-soft;
+  color: $color-warning;
+}
+
+// ვინ და რატომ გააუქმა
+.cancelInfo {
+  color: $color-danger !important;
+  font-size: 0.8438rem;
+}
+
+// ჩამოსაშლელი დამატებითი ინფორმაცია (მაგ: წინა დიაგნოზები)
+.more {
+  margin-top: 8px;
+  font-size: 0.875rem;
+
+  summary {
+    color: $color-primary-dark;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  ul {
+    margin: 8px 0 0;
+    padding-left: 18px;
+  }
+}
+
 .note {
+  max-width: var(--measure);
   margin-top: 10px !important;
   padding: 12px 14px;
   border-left: 3px solid $color-primary;
   border-radius: 0 $radius-sm $radius-sm 0;
   background: $color-background;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
+// ბაზა: ღილაკები მთელ სიგანეზე, ინფორმაციის ქვეშ; ფართოზე — მარჯვნივ
 .actions {
   display: flex;
-  flex: 0 1 320px;
+  flex: 0 1 100%;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: stretch;
   gap: 8px;
-  // ახალ ხაზზე გადასვლისასაც მარჯვნივ რჩება
   margin-left: auto;
 }
 
@@ -118,14 +150,14 @@
   @include common.primaryButton;
   min-height: 38px;
   padding: 8px 14px;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .cancelButton {
   @include common.dangerButton;
   min-height: 38px;
   padding: 8px 14px;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .formButtons {
@@ -136,7 +168,7 @@
 .error {
   margin: 0;
   color: $color-danger;
-  font-size: 13.5px;
+  font-size: 0.8438rem;
 }
 
 .empty {
@@ -151,15 +183,18 @@
     color: $color-primary;
     font-weight: 600;
 
-    &:hover {
+    &:hover,
+
+    &:focus-visible {
       text-decoration: underline;
     }
   }
 }
 
-@media (max-width: 600px) {
+@include common.contentAbove(441px) {
   .actions {
-    align-items: stretch;
-    flex-basis: 100%;
+    flex-basis: 320px;
+    // ახალ ხაზზე გადასვლისასაც მარჯვნივ რჩება
+    align-items: flex-end;
   }
 }

@@ -25,14 +25,14 @@
 
   h2 {
     margin: 16px 20px 6px;
-    font-size: 17px;
+    font-size: 1.0625rem;
     font-weight: 650;
   }
 
   p {
     margin: 4px 20px;
     color: $color-text;
-    font-size: 14px;
+    font-size: 0.875rem;
 
     &:last-child {
       @include common.pill;
@@ -64,4 +64,13 @@
   .clinicCard:hover & {
     transform: scale(1.03);
   }
+}
+
+// სურათის ნაცვლად — იგივე სიმაღლის ბლოკი ხატულით
+.clinicPlaceholder {
+  display: grid;
+  height: 170px;
+  place-items: center;
+  background: linear-gradient(135deg, $color-background-active, #d3eee8);
+  color: $color-primary-dark;
 }

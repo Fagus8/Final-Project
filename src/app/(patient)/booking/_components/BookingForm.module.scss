@@ -14,7 +14,7 @@
 
 .title {
   margin: 0;
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 650;
 }
 
@@ -24,7 +24,7 @@
   border-radius: $radius-sm;
   background: $color-background;
   color: $color-text;
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.5;
 
   strong {
@@ -34,14 +34,14 @@
 
 .label {
   color: $color-heading;
-  font-size: 13.5px;
+  font-size: 0.8438rem;
   font-weight: 600;
 }
 
 .datePreview {
   margin: 0;
   color: $color-primary-dark;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
 }
 
@@ -67,15 +67,20 @@
   border-radius: $radius-sm;
   background: $color-white;
   color: $color-heading;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   transition: border-color $transition, background-color $transition, color $transition,
     transform 120ms ease;
 
-  &:hover {
+  &:hover,
+  &:focus-visible {
     border-color: $color-primary;
     color: $color-primary-dark;
+  }
+
+  @include common.touch {
+    min-height: $touch-target;
   }
 
   &:active {
@@ -98,7 +103,7 @@
   border-radius: $radius-sm;
   background: $color-background;
   color: $color-text-muted;
-  font-size: 14px;
+  font-size: 0.875rem;
   text-align: center;
 }
 

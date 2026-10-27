@@ -39,13 +39,15 @@
     border-bottom: 0;
   }
 
-  &:hover {
+  &:hover,
+
+  &:focus-visible {
     background: $color-background;
   }
 
   dt {
     color: $color-text-muted;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
   }
 

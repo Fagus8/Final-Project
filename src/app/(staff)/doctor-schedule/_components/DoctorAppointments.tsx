@@ -5,6 +5,7 @@ import Calendar from "@/components/ui/Calendar";
 import AppointmentActions from "@/components/appointments/AppointmentActions";
 import list from "@/components/ui/List.module.scss";
 import { statusLabels } from "@/lib/appointment-status";
+import { formatLongDay } from "@/lib/time";
 import styles from "../../Staff.module.scss";
 
 export type ScheduleItem = {
@@ -14,10 +15,14 @@ export type ScheduleItem = {
   status: string;
   patientName: string;
   patientEmail: string;
+  patientPhone: string | null;
   diagnosis: string | null;
   prescription: string | null;
-  // რამდენჯერ ყოფილა ეს პაციენტი ამ ექიმთან ადრე
+  // „გააუქმა პაციენტმა: ...“ — მხოლოდ გაუქმებულ ვიზიტს აქვს
+  cancelText: string | null;
+  // რამდენჯერ ყოფილა ეს პაციენტი ამ ექიმთან ადრე და ბოლო დიაგნოზები
   previousVisits: number;
+  previousDiagnoses: { date: string; diagnosis: string }[];
   // დიაგნოზი მხოლოდ მაშინ იწერება, როცა ვიზიტის დრო დადგა
   hasStarted: boolean;
 };
@@ -34,45 +39,68 @@ export default function DoctorAppointments({ items, today }: { items: ScheduleIt
       <Calendar selectedDate={selectedDate} onSelect={setSelectedDate} markedDates={markedDates} />
 
       <section className={styles.dayList}>
-        <h2>ვიზიტები: {selectedDate}</h2>
+        <h2>ვიზიტები: {formatLongDay(selectedDate)}</h2>
         {dayItems.length === 0 ? (
           <p className={list.empty}>ამ დღეს ვიზიტები არ არის.</p>
         ) : (
           <ul className={list.list}>
-            {dayItems.map((item) => (
-              <li key={item.id} className={list.item}>
-                <div className={list.info}>
-                  <h3>
-                    {item.time}
-                    <span className={`${list.status} ${list[item.status]}`}>
-                      {statusLabels[item.status]}
-                    </span>
-                  </h3>
-                  <p>{item.patientName} · {item.patientEmail}</p>
-                  <p>წინა ვიზიტები: {item.previousVisits}</p>
-                  {item.diagnosis && (
-                    <p className={list.note}>
-                      <strong>დიაგნოზი:</strong> {item.diagnosis}
-                      {item.prescription && (
+            {dayItems.map((item) => {
+              // გასული დაჯავშნილი ვიზიტი დიაგნოზს ელოდება
+              const status = item.status === "BOOKED" && item.hasStarted ? "PAST" : item.status;
+
+              return (
+                <li key={item.id} className={list.item}>
+                  <div className={list.info}>
+                    <h3>
+                      {item.time}
+                      <span className={`${list.status} ${list[status]}`}>{statusLabels[status]}</span>
+                    </h3>
+                    <p>
+                      {item.patientName} · {item.patientEmail}
+                      {item.patientPhone && (
                         <>
-                          <br />
-                          <strong>დანიშნულება:</strong> {item.prescription}
+                          {" "}· <a href={`tel:${item.patientPhone.replace(/\s/g, "")}`}>{item.patientPhone}</a>
                         </>
                       )}
                     </p>
+                    <p>წინა ვიზიტები: {item.previousVisits}</p>
+                    {item.cancelText && <p className={list.cancelInfo}>{item.cancelText}</p>}
+                    {item.previousDiagnoses.length > 0 && (
+                      <details className={list.more}>
+                        <summary>წინა დიაგნოზები</summary>
+                        <ul>
+                          {item.previousDiagnoses.map((previous) => (
+                            <li key={previous.date}>
+                              {previous.date} — {previous.diagnosis}
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    )}
+                    {item.diagnosis && (
+                      <p className={list.note}>
+                        <strong>დიაგნოზი:</strong> {item.diagnosis}
+                        {item.prescription && (
+                          <>
+                            <br />
+                            <strong>დანიშნულება:</strong> {item.prescription}
+                          </>
+                        )}
+                      </p>
+                    )}
+                  </div>
+                  {/* ექიმი მხოლოდ დიაგნოზს წერს; ვიზიტს აუქმებს პაციენტი ან კლინიკა */}
+                  {item.status !== "CANCELLED" && item.hasStarted && (
+                    <AppointmentActions
+                      appointmentId={item.id}
+                      canComplete
+                      diagnosis={item.diagnosis}
+                      prescription={item.prescription}
+                    />
                   )}
-                </div>
-                {item.status !== "CANCELLED" && (
-                  <AppointmentActions
-                    appointmentId={item.id}
-                    canCancel={item.status === "BOOKED"}
-                    canComplete={item.hasStarted}
-                    diagnosis={item.diagnosis}
-                    prescription={item.prescription}
-                  />
-                )}
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

@@ -27,15 +27,6 @@ export async function POST(request: Request) {
     return jsonError("შეამოწმე შევსებული ველები", 400);
   }
 
-  // ერთ ანგარიშს მხოლოდ ერთი ექიმის ჩანაწერი აქვს
-  const existing = await prisma.doctor.findUnique({
-    where: { userId: session.user.id },
-  });
-
-  if (existing) {
-    return Response.json({ message: "ანგარიში უკვე დაკავშირებულია ექიმთან" });
-  }
-
   const clinic = await prisma.clinic.findFirst({
     where: { id: result.data.clinicId, isApproved: true },
   });
@@ -45,16 +36,39 @@ export async function POST(request: Request) {
   }
 
   // მოთხოვნა = დაუდასტურებელი ექიმი; კლინიკა მას „კლინიკის მართვაში“ დაადასტურებს
-  await prisma.doctor.create({
-    data: {
-      name: session.user.name,
-      userId: session.user.id,
-      specialty: result.data.specialty,
-      experienceYears: result.data.experienceYears,
-      clinicId: clinic.id,
-      isApproved: false,
-    },
+  const doctorData = {
+    name: session.user.name,
+    specialty: result.data.specialty,
+    experienceYears: result.data.experienceYears,
+    clinicId: clinic.id,
+    isApproved: false,
+  };
+
+  // ერთ ანგარიშს მხოლოდ ერთი ექიმის ჩანაწერი აქვს
+  const existing = await prisma.doctor.findUnique({
+    where: { userId: session.user.id },
   });
+
+  if (!existing) {
+    await prisma.doctor.create({ data: { ...doctorData, userId: session.user.id } });
+    return Response.json({ message: "მოთხოვნა გაიგზავნა კლინიკასთან" });
+  }
+
+  // აქტიური მოთხოვნა ან კლინიკა უკვე აქვს
+  if (!existing.rejectedAt && !existing.removedAt) {
+    return jsonError("მოთხოვნა უკვე გაგზავნილია. ჯერ დაელოდე კლინიკის პასუხს.", 409);
+  }
+
+  // უარყოფილი ან მოხსნილი ექიმი ახალ კლინიკას ირჩევს. ძველ ვიზიტებს ამ
+  // ჩანაწერს ვწყვეტთ, რომ ახალ კლინიკაში არ გადაყვეს — პაციენტების ისტორიაში
+  // ისინი რჩება (ექიმის და კლინიკის სახელი ვიზიტშივე ინახება)
+  await prisma.$transaction([
+    prisma.appointment.updateMany({ where: { doctorId: existing.id }, data: { doctorId: null } }),
+    prisma.doctor.update({
+      where: { id: existing.id },
+      data: { ...doctorData, rejectedAt: null, removedAt: null, room: null, daysOff: [] },
+    }),
+  ]);
 
   return Response.json({ message: "მოთხოვნა გაიგზავნა კლინიკასთან" });
 }

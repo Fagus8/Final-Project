@@ -22,6 +22,9 @@ export default function NavLink({ href, label, icon }: NavLinkProps) {
       href={href}
       className={`${styles.navItem} ${isActive ? styles.active : ""}`}
       aria-current={isActive ? "page" : undefined}
+      // ვიწრო ეკრანზე მხოლოდ ხატულა ჩანს — სახელი მაშინაც უნდა იკითხებოდეს
+      aria-label={label}
+      title={label}
     >
       <span className={styles.icon}>
         <Icon name={icon} />

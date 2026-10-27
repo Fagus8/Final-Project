@@ -28,16 +28,20 @@
   max-width: 1100px;
 }
 
+// ბაზა: ინფორმაცია და ღილაკები ერთმანეთის ქვეშ; ფართოზე — გვერდიგვერდ
 .clinic {
   @include shared.card;
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
   justify-content: space-between;
   gap: 24px;
-  padding: 24px;
+  padding: 18px;
   transition: box-shadow $transition;
 
-  &:hover {
+  &:hover,
+
+  &:focus-visible {
     box-shadow: $shadow-md;
   }
 }
@@ -47,14 +51,14 @@
 
   h2 {
     margin: 0 0 8px;
-    font-size: 18px;
+    font-size: 1.125rem;
     font-weight: 650;
   }
 
   h3 {
     margin: 20px 0 8px;
     color: $color-text-muted;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -64,7 +68,7 @@
   li {
     margin: 4px 0;
     color: $color-text;
-    font-size: 14.5px;
+    font-size: 0.9063rem;
   }
 
   ul {
@@ -91,7 +95,7 @@
 
 .actions {
   display: flex;
-  flex: 0 0 320px;
+  width: 100%;
   flex-direction: column;
   gap: 10px;
 }
@@ -106,7 +110,9 @@
   background: $color-success;
   color: $color-white;
 
-  &:hover:not(:disabled) {
+  &:hover:not(:disabled),
+
+  &:focus-visible {
     background: #0e6b4c;
     box-shadow: 0 6px 16px rgba($color-success, 0.25);
   }
@@ -133,7 +139,7 @@
 
   h3 {
     margin: 4px 0;
-    font-size: 15px;
+    font-size: 0.9375rem;
     font-weight: 650;
   }
 }
@@ -143,7 +149,7 @@
   flex-direction: column;
   gap: 5px;
   color: $color-heading;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
 
   input {
@@ -169,7 +175,7 @@
   legend {
     padding: 0 6px;
     color: $color-primary-dark;
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 600;
   }
 }
@@ -179,7 +185,7 @@
   align-self: flex-end;
   min-height: 32px;
   padding: 5px 10px;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 .formActions {
@@ -189,17 +195,30 @@
 
 .error {
   color: $color-danger;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
-@media (max-width: 760px) {
+@include shared.contentAbove(541px) {
   .clinic {
-    flex-direction: column;
-    padding: 18px;
+    flex-direction: row;
+    padding: 24px;
   }
 
   .actions {
-    flex-basis: auto;
-    width: 100%;
+    width: auto;
+    flex: 0 0 320px;
   }
+}
+
+// რედაქტირებისას: რომელი ექიმი მოიხსნება შენახვისას
+.removalNote {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: $color-warning-soft;
+  color: $color-warning;
+  font-size: 0.875rem;
 }

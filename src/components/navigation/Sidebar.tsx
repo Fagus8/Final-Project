@@ -2,11 +2,13 @@ import Link from "next/link";
 import Icon, { type IconName } from "@/components/ui/Icon";
 import { getSession } from "@/lib/session";
 import NavLink from "./NavLink";
+import SidebarDrawer from "./SidebarDrawer";
 import styles from "./Sidebar.module.scss";
 
 type MenuItem = { href: string; label: string; icon: IconName };
 
-// გვერდითი მენიუ. ბმულები იცვლება იმის მიხედვით, ვინ არის შესული
+// გვერდითი მენიუ. ბმულები იცვლება იმის მიხედვით, ვინ არის შესული.
+// მობილურზე გამოსაწევი პანელია (SidebarDrawer), რომელსაც Header-ის hamburger ხსნის
 export default async function Sidebar() {
   const session = await getSession();
   const isAdmin = session?.user.role === "admin";
@@ -59,7 +61,7 @@ export default async function Sidebar() {
   }
 
   return (
-    <aside className={styles.sidebar}>
+    <SidebarDrawer className={styles.sidebar} backdropClassName={styles.backdrop}>
       <nav className={styles.navMenu} aria-label="მთავარი მენიუ">
         <p className={styles.groupLabel}>მენიუ</p>
         <ul className={styles.menu}>
@@ -97,6 +99,6 @@ export default async function Sidebar() {
           </Link>
         </div>
       )}
-    </aside>
+    </SidebarDrawer>
   );
 }

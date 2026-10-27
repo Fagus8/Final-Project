@@ -3,9 +3,12 @@ import { isUuid, jsonError, readJson } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 
-// ორი მოქმედება: გაუქმება და დასრულება (დიაგნოზით)
+// ორი მოქმედება: გაუქმება (არასავალდებულო მიზეზით) და დასრულება (დიაგნოზით)
 const actionSchema = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("cancel") }),
+  z.object({
+    action: z.literal("cancel"),
+    reason: z.string().trim().max(300, "მიზეზი მაქსიმუმ 300 სიმბოლოა").optional(),
+  }),
   z.object({
     action: z.literal("complete"),
     diagnosis: z.string().trim().min(1),
@@ -30,7 +33,7 @@ export async function PATCH(
 
   const result = actionSchema.safeParse(await readJson(request));
   if (!result.success) {
-    return jsonError("შეამოწმე შევსებული ველები", 400);
+    return jsonError(result.error.issues[0]?.message ?? "შეამოწმე შევსებული ველები", 400);
   }
 
   const appointment = await prisma.appointment.findUnique({
@@ -42,28 +45,42 @@ export async function PATCH(
     return jsonError("ვიზიტი ვერ მოიძებნა", 404);
   }
 
-  // ვინ არის მომხმარებელი ამ ვიზიტთან მიმართებით
+  // ვინ არის მომხმარებელი ამ ვიზიტთან მიმართებით.
+  // ექიმის ჩანაწერი შეიძლება აღარ არსებობდეს (კლინიკა წაიშალა) — მაშინ doctor null-ია
   const user = session.user;
   const isPatient = appointment.patientId === user.id;
-  const isClinic = appointment.doctor.clinicId === user.id;
-  const isDoctor = appointment.doctor.userId === user.id;
+  const isClinic = appointment.doctor !== null && appointment.doctor.clinicId === user.id;
+  // კლინიკიდან მოხსნილი ექიმი ძველ ვიზიტებს ვეღარ ცვლის
+  const isDoctor =
+    appointment.doctor !== null && appointment.doctor.userId === user.id && appointment.doctor.isApproved;
   const isAdmin = user.role === "admin";
 
   const data = result.data;
+  const hasStarted = appointment.startsAt.getTime() <= Date.now();
 
-  // ---- გაუქმება ----
+  // ---- გაუქმება: პაციენტი, კლინიკა ან ადმინი. ექიმი ვიზიტს ვერ აუქმებს ----
   if (data.action === "cancel") {
-    if (!isPatient && !isClinic && !isDoctor && !isAdmin) {
-      return jsonError("ამ ვიზიტის გაუქმება არ შეგიძლია", 403);
+    if (!isPatient && !isClinic && !isAdmin) {
+      return jsonError(
+        isDoctor ? "ექიმს ვიზიტის გაუქმება არ შეუძლია — მიმართე კლინიკას" : "ამ ვიზიტის გაუქმება არ შეგიძლია",
+        403,
+      );
     }
 
     if (appointment.status !== "BOOKED") {
       return jsonError("გაუქმება მხოლოდ აქტიურ ვიზიტს შეიძლება", 400);
     }
 
+    // პაციენტი გასულ ვიზიტს ვეღარ აუქმებს. კლინიკას შეუძლია — მაგ: პაციენტი არ გამოცხადდა
+    if (hasStarted && !isClinic && !isAdmin) {
+      return jsonError("გასული ვიზიტის გაუქმება შეუძლებელია", 400);
+    }
+
+    const cancelledBy = isClinic ? "CLINIC" : isPatient ? "PATIENT" : "ADMIN";
+
     await prisma.appointment.update({
       where: { id: appointmentId },
-      data: { status: "CANCELLED" },
+      data: { status: "CANCELLED", cancelledBy, cancelReason: data.reason || null },
     });
 
     return Response.json({ message: "ვიზიტი გაუქმდა" });
@@ -78,7 +95,7 @@ export async function PATCH(
     return jsonError("გაუქმებულ ვიზიტს დიაგნოზი არ ეწერება", 400);
   }
 
-  if (appointment.startsAt.getTime() > Date.now()) {
+  if (!hasStarted) {
     return jsonError("ვიზიტის დრო ჯერ არ დამდგარა", 400);
   }
 

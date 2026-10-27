@@ -11,7 +11,7 @@ export default function DoctorAvatar({ name, avatarUrl, className, alt = "" }: D
   if (avatarUrl) {
     // ჩვეულებრივი <img>: ფოტო data URL-ია ან ნებისმიერი საიტის ბმული
     // eslint-disable-next-line @next/next/no-img-element
-    return <img className={className} src={avatarUrl} alt={alt} />;
+    return <img className={className} src={avatarUrl} alt={alt} loading="lazy" decoding="async" />;
   }
 
   return (

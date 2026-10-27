@@ -71,8 +71,13 @@ export default function EditClinicForm({ clinic }: { clinic: ClinicData }) {
     setIsEditing(false);
   }
 
+  // შენახვამდე ჩანს, რომელი ექიმი მოიხსნება კლინიკიდან
+  const removedDoctors = clinic.doctors.filter(
+    (doctor) => !draft.doctors.some((item) => item.id === doctor.id),
+  );
+
   // შენახვა: მთელ კლინიკას ექიმებიანად ვაგზავნით. ექიმი id-ით განახლდება,
-  // სიიდან ამოღებული კი წაიშლება
+  // სიიდან ამოღებული კი კლინიკიდან მოიხსნება (მომავალი ვიზიტები უქმდება, ისტორია რჩება)
   async function saveClinic(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSaving(true);
@@ -135,7 +140,7 @@ export default function EditClinicForm({ clinic }: { clinic: ClinicData }) {
             disabled={isSaving}
             onClick={() => removeDoctor(doctor.id)}
           >
-            ექიმის წაშლა
+            კლინიკიდან მოხსნა
           </button>
           <label className={styles.field}>
             სახელი და გვარი
@@ -166,6 +171,21 @@ export default function EditClinicForm({ clinic }: { clinic: ClinicData }) {
           </label>
         </fieldset>
       ))}
+
+      {removedDoctors.length > 0 && (
+        <p className={styles.removalNote} role="status">
+          შენახვისას კლინიკიდან მოიხსნება: {removedDoctors.map((doctor) => doctor.name).join(", ")}.
+          მათი მომავალი ვიზიტები გაუქმდება, წარსული ვიზიტები და დიაგნოზები დარჩება.{" "}
+          {/* მოხსნილ ექიმებს სიაში ვაბრუნებთ საწყისი მონაცემებით */}
+          <button
+            type="button"
+            className={styles.cancelButton}
+            onClick={() => setDraft((current) => ({ ...current, doctors: [...current.doctors, ...removedDoctors] }))}
+          >
+            დაბრუნება
+          </button>
+        </p>
+      )}
 
       {error && <p className={styles.error} role="alert">{error}</p>}
       <div className={styles.formActions}>

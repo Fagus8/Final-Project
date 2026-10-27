@@ -101,7 +101,9 @@ export default function DoctorProfileForm({ doctor, isClinic = false }: DoctorPr
   // სერვისები ფორმაში ერთ ტექსტად, თითო ხაზზე თითო სერვისი
   const [services, setServices] = useState(doctor.services.join("\n"));
   const [isSaving, setIsSaving] = useState(false);
+  // შეტყობინება და მისი ტიპი: მწვანე — შენახულია, წითელი — შეცდომა
   const [message, setMessage] = useState("");
+  const [isError, setIsError] = useState(false);
 
   // უნიკალური id ველებისთვის: კლინიკის გვერდზე ეს ფორმა რამდენჯერმე ჩანს
   const id = (field: string) => `doctor-${doctor.id}-${field}`;
@@ -118,6 +120,7 @@ export default function DoctorProfileForm({ doctor, isClinic = false }: DoctorPr
 
     if (!file.type.startsWith("image/")) {
       setMessage("აირჩიე სურათის ფაილი");
+      setIsError(true);
       return;
     }
 
@@ -126,6 +129,7 @@ export default function DoctorProfileForm({ doctor, isClinic = false }: DoctorPr
       setMessage("");
     } catch {
       setMessage("სურათის წაკითხვა ვერ მოხერხდა");
+      setIsError(true);
     }
   }
 
@@ -157,6 +161,7 @@ export default function DoctorProfileForm({ doctor, isClinic = false }: DoctorPr
 
     setIsSaving(false);
     setMessage(result.message);
+    setIsError(!result.ok);
     if (result.ok) {
       router.refresh();
     }
@@ -276,7 +281,11 @@ export default function DoctorProfileForm({ doctor, isClinic = false }: DoctorPr
         <button type="submit" disabled={isSaving}>
           {isSaving ? "ინახება..." : "პროფილის შენახვა"}
         </button>
-        {message && <p className={styles.message}>{message}</p>}
+        {message && (
+          <p className={isError ? styles.error : styles.success} role={isError ? "alert" : "status"}>
+            {message}
+          </p>
+        )}
       </div>
     </form>
   );

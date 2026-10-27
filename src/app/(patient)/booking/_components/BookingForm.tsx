@@ -1,8 +1,7 @@
 "use client";
 
-import dayjs from "dayjs";
-import "dayjs/locale/ka";
 import Calendar from "@/components/ui/Calendar";
+import { formatWorkDays, isWorkingDay } from "@/lib/time";
 import styles from "./BookingForm.module.scss";
 import type { DoctorOption } from "./types";
 
@@ -33,12 +32,6 @@ export default function BookingForm({
   onTimeSelect,
   onConfirm,
 }: BookingFormProps) {
-  // არჩეული თარიღი ქართულად, მაგ: „15 ოქტომბერი 2026“
-  const parsedDate = dayjs(selectedDate);
-  const formattedDate = parsedDate.isValid()
-    ? parsedDate.locale("ka").format("D MMMM YYYY")
-    : "თარიღი არჩეული არ არის";
-
   return (
     <form
       className={styles.form}
@@ -52,15 +45,23 @@ export default function BookingForm({
         ექიმი: <strong>{doctor.name}</strong> · {doctor.specialty}
         {doctor.room && <> · კაბინეტი {doctor.room}</>}
       </p>
+      <p className={styles.datePreview}>იღებს: {formatWorkDays(doctor.workDays)}</p>
 
       <span className={styles.label}>თარიღი</span>
-      <Calendar selectedDate={selectedDate} onSelect={onDateChange} disablePast />
-      <p className={styles.datePreview}>{formattedDate}</p>
+      {/* არასამუშაო და დასვენების დღეები გამორთულია */}
+      <Calendar
+        selectedDate={selectedDate}
+        onSelect={onDateChange}
+        disablePast
+        isDayDisabled={(date) => !isWorkingDay(doctor, date)}
+      />
 
       <fieldset className={styles.times}>
         <legend className={styles.label}>თავისუფალი დრო (თბილისის დროით)</legend>
-        {/* სამი მდგომარეობა: იტვირთება / დროების ღილაკები / თავისუფალი დრო არ არის */}
-        {isLoadingTimes ? (
+        {/* ოთხი მდგომარეობა: დღე არ არის არჩეული / იტვირთება / დროების ღილაკები / თავისუფალი დრო არ არის */}
+        {!selectedDate ? (
+          <p className={styles.emptyTimes}>ჯერ აირჩიე დღე კალენდარში.</p>
+        ) : isLoadingTimes ? (
           <p className={styles.emptyTimes}>იტვირთება...</p>
         ) : availableTimes.length > 0 ? (
           <div className={styles.timeOptions}>
