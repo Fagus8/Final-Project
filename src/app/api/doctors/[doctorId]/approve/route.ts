@@ -1,13 +1,14 @@
 import { isUuid, jsonError } from "@/lib/api";
-import { activeDoctorWhere } from "@/lib/doctors";
+import { activeClinicWhere } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 
 // კლინიკა ადასტურებს (POST) ან უარყოფს (DELETE) ექიმის მოთხოვნას.
-// მოთხოვნა = დაუდასტურებელი ექიმი ამ კლინიკაში.
+// მოთხოვნა = ექიმის დაუდასტურებელი კავშირი ამ კლინიკასთან.
+// სხვა კლინიკებთან ექიმის კავშირებს ეს არ ეხება
 
-// ეძებს ამ კლინიკის მოლოდინში მყოფ ექიმს. თუ ვერ იპოვა, აბრუნებს შეცდომის პასუხს
-async function findPendingDoctor(doctorId: string) {
+// ეძებს ამ კლინიკაში ექიმის მოლოდინში მყოფ მოთხოვნას. თუ ვერ იპოვა, აბრუნებს შეცდომის პასუხს
+async function findPendingRequest(doctorId: string) {
   const session = await getSession();
 
   if (!session) {
@@ -18,16 +19,16 @@ async function findPendingDoctor(doctorId: string) {
     return { error: jsonError("ექიმი ვერ მოიძებნა", 404) };
   }
 
-  const doctor = await prisma.doctor.findFirst({
-    where: { id: doctorId, clinicId: session.user.id, isApproved: false, ...activeDoctorWhere },
+  const membership = await prisma.doctorClinic.findFirst({
+    where: { doctorId, clinicId: session.user.id, isApproved: false, ...activeClinicWhere },
     select: { id: true },
   });
 
-  if (!doctor) {
+  if (!membership) {
     return { error: jsonError("ექიმის მოთხოვნა ვერ მოიძებნა", 404) };
   }
 
-  return { doctor };
+  return { membership };
 }
 
 // დადასტურება
@@ -36,25 +37,25 @@ export async function POST(
   { params }: { params: Promise<{ doctorId: string }> },
 ) {
   const { doctorId } = await params;
-  const { doctor, error } = await findPendingDoctor(doctorId);
+  const { membership, error } = await findPendingRequest(doctorId);
   if (error) return error;
 
-  await prisma.doctor.update({ where: { id: doctor.id }, data: { isApproved: true } });
+  await prisma.doctorClinic.update({ where: { id: membership.id }, data: { isApproved: true } });
 
   return Response.json({ message: "ექიმი დადასტურდა" });
 }
 
 // უარყოფა: ჩანაწერი რჩება უარყოფის თარიღით — ექიმი „ჩემ განრიგში“ ნახავს,
-// რომ მოთხოვნა უარყვეს, და სხვა კლინიკას აირჩევს
+// რომ ამ კლინიკამ მოთხოვნა უარყო
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ doctorId: string }> },
 ) {
   const { doctorId } = await params;
-  const { doctor, error } = await findPendingDoctor(doctorId);
+  const { membership, error } = await findPendingRequest(doctorId);
   if (error) return error;
 
-  await prisma.doctor.update({ where: { id: doctor.id }, data: { rejectedAt: new Date() } });
+  await prisma.doctorClinic.update({ where: { id: membership.id }, data: { rejectedAt: new Date() } });
 
   return Response.json({ message: "მოთხოვნა უარყოფილია" });
 }

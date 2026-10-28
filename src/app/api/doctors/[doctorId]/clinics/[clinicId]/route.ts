@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { isUuid, jsonError, readJson } from "@/lib/api";
-import { activeDoctorWhere, removeDoctors } from "@/lib/doctors";
+import { activeClinicWhere, removeDoctorsFromClinic } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { formatDay, formatTime, generateTimes, isValidDay, isValidTime, isWorkingDay } from "@/lib/time";
@@ -22,43 +22,46 @@ const doctorSchema = z.object({
   room: z.string().trim().optional(),
 });
 
-// ეძებს ექიმს და ამოწმებს, ვინ არის მომხმარებელი მის მიმართ
-async function findDoctor(doctorId: string) {
+// ეძებს ექიმის კავშირს კლინიკასთან და ამოწმებს, ვინ არის მომხმარებელი მის მიმართ
+async function findMembership(doctorId: string, clinicId: string) {
   const session = await getSession();
 
   if (!session) {
     return { error: jsonError("შესვლა საჭიროა", 401) };
   }
 
-  if (!isUuid(doctorId)) {
+  if (!isUuid(doctorId) || !isUuid(clinicId)) {
     return { error: jsonError("ექიმი ვერ მოიძებნა", 404) };
   }
 
-  // უარყოფილი და მოხსნილი ექიმი აღარ რედაქტირდება
-  const doctor = await prisma.doctor.findFirst({ where: { id: doctorId, ...activeDoctorWhere } });
-  if (!doctor) {
+  // უარყოფილი და მოხსნილი კავშირი აღარ რედაქტირდება
+  const membership = await prisma.doctorClinic.findFirst({
+    where: { doctorId, clinicId, ...activeClinicWhere },
+    include: { doctor: { select: { userId: true } } },
+  });
+  if (!membership) {
     return { error: jsonError("ექიმი ვერ მოიძებნა", 404) };
   }
 
   return {
-    doctor,
-    isClinic: doctor.clinicId === session.user.id,
-    // ექიმი თავის გრაფიკს კლინიკის დადასტურების შემდეგ ცვლის
-    isDoctor: doctor.userId === session.user.id && doctor.isApproved,
+    membership,
+    isClinic: clinicId === session.user.id,
+    // ექიმი ამ კლინიკის გრაფიკს მისი დადასტურების შემდეგ ცვლის
+    isDoctor: membership.doctor.userId === session.user.id && membership.isApproved,
     isAdmin: session.user.role === "admin",
   };
 }
 
-// ექიმის გრაფიკის (საათები, დღეები, დასვენება) და კაბინეტის შეცვლა
+// ექიმის ამ კლინიკის გრაფიკის (საათები, დღეები, დასვენება) და კაბინეტის შეცვლა
 export async function PATCH(
   request: Request,
-  { params }: { params: Promise<{ doctorId: string }> },
+  { params }: { params: Promise<{ doctorId: string; clinicId: string }> },
 ) {
-  const { doctorId } = await params;
-  const found = await findDoctor(doctorId);
+  const { doctorId, clinicId } = await params;
+  const found = await findMembership(doctorId, clinicId);
   if (found.error) return found.error;
 
-  const { doctor, isClinic, isDoctor } = found;
+  const { membership, isClinic, isDoctor } = found;
   if (!isClinic && !isDoctor) {
     return jsonError("ამ ექიმის რედაქტირება არ შეგიძლია", 403);
   }
@@ -76,8 +79,8 @@ export async function PATCH(
   }
 
   // საათებს და დღეებს ორივე ცვლის, კაბინეტს — მხოლოდ კლინიკა
-  await prisma.doctor.update({
-    where: { id: doctorId },
+  await prisma.doctorClinic.update({
+    where: { id: membership.id },
     data: {
       workStart,
       workEnd,
@@ -87,10 +90,10 @@ export async function PATCH(
     },
   });
 
-  // უკვე დაჯავშნილი ვიზიტები ავტომატურად არ უქმდება — ვაფრთხილებთ,
+  // ამ კლინიკაში უკვე დაჯავშნილი ვიზიტები ავტომატურად არ უქმდება — ვაფრთხილებთ,
   // თუ რომელიმე ახალი გრაფიკის გარეთ დარჩა
   const booked = await prisma.appointment.findMany({
-    where: { doctorId: doctor.id, status: "BOOKED", startsAt: { gt: new Date() } },
+    where: { doctorId, clinicId, status: "BOOKED", startsAt: { gt: new Date() } },
     select: { startsAt: true },
   });
   const times = generateTimes(workStart, workEnd);
@@ -107,27 +110,33 @@ export async function PATCH(
   });
 }
 
-// ექიმის კლინიკიდან მოხსნა — კლინიკა ან ადმინი. მომავალი ვიზიტები უქმდება,
-// ისტორია რჩება, ექიმი კი სხვა კლინიკას აირჩევს
+// ექიმის ამ კლინიკიდან მოხსნა — კლინიკა ან ადმინი. აქ მომავალი ვიზიტები უქმდება,
+// ისტორია რჩება, სხვა კლინიკებში კი ექიმი ისევ მუშაობს
 export async function DELETE(
   _request: Request,
-  { params }: { params: Promise<{ doctorId: string }> },
+  { params }: { params: Promise<{ doctorId: string; clinicId: string }> },
 ) {
-  const { doctorId } = await params;
-  const found = await findDoctor(doctorId);
+  const { doctorId, clinicId } = await params;
+  const found = await findMembership(doctorId, clinicId);
   if (found.error) return found.error;
 
-  const { doctor, isClinic, isAdmin } = found;
+  const { membership, isClinic, isAdmin } = found;
   if (!isClinic && !isAdmin) {
     return jsonError("ექიმის მოხსნა მხოლოდ კლინიკას შეუძლია", 403);
   }
 
-  if (!doctor.isApproved) {
+  if (!membership.isApproved) {
     return jsonError("ჯერ დაუდასტურებელ მოთხოვნას „უარყოფა“ სჭირდება", 400);
   }
 
   await prisma.$transaction((transaction) =>
-    removeDoctors(transaction, [doctor.id], isClinic ? "CLINIC" : "ADMIN", "ექიმი კლინიკაში აღარ მუშაობს"),
+    removeDoctorsFromClinic(
+      transaction,
+      clinicId,
+      [doctorId],
+      isClinic ? "CLINIC" : "ADMIN",
+      "ექიმი კლინიკაში აღარ მუშაობს",
+    ),
   );
 
   return Response.json({ message: "ექიმი კლინიკიდან მოიხსნა" });

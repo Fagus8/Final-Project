@@ -1,4 +1,4 @@
-import { activeDoctorWhere } from "@/lib/doctors";
+import { activeClinicWhere } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { todayRange } from "@/lib/time";
 import styles from "../../Account.module.scss";
@@ -18,18 +18,18 @@ export default async function ClinicOverview({ clinicId }: { clinicId: string })
   const { todayStart, tomorrowStart } = todayRange();
 
   const [doctorCount, pendingDoctorCount, todayCount, upcomingCount] = await Promise.all([
-    prisma.doctor.count({ where: { clinicId, isApproved: true } }),
+    prisma.doctorClinic.count({ where: { clinicId, isApproved: true } }),
     // ექიმები, რომლებიც დადასტურებას ელოდებიან
-    prisma.doctor.count({ where: { clinicId, isApproved: false, ...activeDoctorWhere } }),
+    prisma.doctorClinic.count({ where: { clinicId, isApproved: false, ...activeClinicWhere } }),
     prisma.appointment.count({
       where: {
-        doctor: { clinicId },
+        clinicId,
         status: "BOOKED",
         startsAt: { gte: todayStart, lt: tomorrowStart },
       },
     }),
     prisma.appointment.count({
-      where: { doctor: { clinicId }, status: "BOOKED", startsAt: { gte: now } },
+      where: { clinicId, status: "BOOKED", startsAt: { gte: now } },
     }),
   ]);
 

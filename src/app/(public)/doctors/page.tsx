@@ -4,7 +4,7 @@ import Card from "@/components/ui/Card";
 import DoctorAvatar from "@/components/ui/DoctorAvatar";
 import filters from "@/components/ui/Filters.module.scss";
 import type { Prisma } from "@/generated/prisma/client";
-import { visibleDoctorWhere } from "@/lib/doctors";
+import { clinicNames, visibleClinicsInclude, visibleDoctorWhere } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import styles from "./Doctors.module.scss";
@@ -31,7 +31,7 @@ export default async function DoctorsPage({ searchParams }: PageProps<"/doctors"
   const [doctors, allSpecialties] = await Promise.all([
     prisma.doctor.findMany({
       where,
-      include: { clinic: true },
+      include: { clinics: visibleClinicsInclude },
       orderBy: { name: "asc" },
     }),
     // ფილტრის სია: არსებული სპეციალობები, გამეორების გარეშე
@@ -82,7 +82,7 @@ export default async function DoctorsPage({ searchParams }: PageProps<"/doctors"
                 </h2>
                 <p>{doctor.specialty}</p>
                 <p>გამოცდილება: {doctor.experienceYears} წელი</p>
-                <p>{doctor.clinic.name}</p>
+                <p>{clinicNames(doctor)}</p>
                 {doctor.languages.length > 0 && <p>ენები: {doctor.languages.join(", ")}</p>}
                 {doctor.consultationFee !== null && (
                   <p className={styles.fee}>კონსულტაცია: {doctor.consultationFee} ₾</p>

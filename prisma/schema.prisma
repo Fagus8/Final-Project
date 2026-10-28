@@ -98,27 +98,11 @@ model Doctor {
   specialty       String
   experienceYears Int     @default(0)
   avatarUrl       String?
-  isApproved      Boolean @default(false)
 
-  // ექიმის ანგარიში. ექიმი თვითონ რეგისტრირდება და კლინიკას ირჩევს,
+  // ექიმის ანგარიში. ექიმი თვითონ რეგისტრირდება და კლინიკებს ირჩევს,
   // ამიტომ ყველა ექიმს ანგარიში აქვს (ელფოსტაც User-შია)
   userId String @unique @db.Uuid
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // კაბინეტის ნომერი
-  room      String?
-  // სამუშაო საათები, მაგ: "10:00" - "18:00"
-  workStart String  @default("10:00")
-  workEnd   String  @default("18:00")
-  // სამუშაო დღეები: 0 — კვირა, 1 — ორშაბათი ... 6 — შაბათი
-  workDays  Int[]    @default([1, 2, 3, 4, 5, 6])
-  // დასვენების / შვებულების დღეები, მაგ: ["2026-11-02"]
-  daysOff   String[] @default([])
-
-  // კლინიკამ მოთხოვნა უარყო ან ექიმი კლინიკიდან მოხსნა. ჩანაწერი რჩება,
-  // რომ ექიმმა ნახოს, რა მოხდა, და სხვა კლინიკა აირჩიოს
-  rejectedAt DateTime?
-  removedAt  DateTime?
 
   // პროფილის ინფორმაცია
   bio             String?
@@ -130,10 +114,43 @@ model Doctor {
   // კონსულტაციის ფასი ლარში
   consultationFee Int?
 
+  // ექიმი რამდენიმე კლინიკაში შეიძლება მუშაობდეს — თითოში თავისი გრაფიკით
+  clinics DoctorClinic[]
+
+  appointments Appointment[]
+}
+
+// ექიმის კავშირი კლინიკასთან: მოთხოვნა, დადასტურება და ამ კლინიკაში სამუშაო გრაფიკი.
+// ექიმი საჯაროდ ჩანს, თუ ერთმა დამტკიცებულმა კლინიკამ მაინც დაადასტურა
+model DoctorClinic {
+  id         String  @id @default(dbgenerated("pg_catalog.gen_random_uuid()")) @db.Uuid
+  isApproved Boolean @default(false)
+
+  // კლინიკამ მოთხოვნა უარყო ან ექიმი კლინიკიდან მოხსნა. ჩანაწერი რჩება,
+  // რომ ექიმმა ნახოს, რა მოხდა (და შეუძლია მოთხოვნა ხელახლა გაგზავნოს)
+  rejectedAt DateTime?
+  removedAt  DateTime?
+
+  // კაბინეტის ნომერი ამ კლინიკაში
+  room      String?
+  // სამუშაო საათები ამ კლინიკაში, მაგ: "10:00" - "18:00"
+  workStart String   @default("10:00")
+  workEnd   String   @default("18:00")
+  // სამუშაო დღეები: 0 — კვირა, 1 — ორშაბათი ... 6 — შაბათი
+  workDays  Int[]    @default([1, 2, 3, 4, 5, 6])
+  // დასვენების / შვებულების დღეები ამ კლინიკაში, მაგ: ["2026-11-02"]
+  daysOff   String[] @default([])
+
+  createdAt DateTime @default(now())
+
+  doctorId String @db.Uuid
+  doctor   Doctor @relation(fields: [doctorId], references: [id], onDelete: Cascade)
   clinicId String @db.Uuid
   clinic   Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
 
-  appointments Appointment[]
+  // ერთ კლინიკაში ექიმს ერთი ჩანაწერი აქვს
+  @@unique([doctorId, clinicId])
+  @@index([clinicId])
 }
 
 model Appointment {
@@ -159,9 +176,14 @@ model Appointment {
   doctor    Doctor? @relation(fields: [doctorId], references: [id], onDelete: SetNull)
   patientId String @db.Uuid
   patient   User   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  // რომელ კლინიკაშია ვიზიტი (ექიმი რამდენიმე კლინიკაში შეიძლება მუშაობდეს).
+  // კლინიკის წაშლისას ვიზიტი რჩება — სახელი clinicName-შია
+  clinicId  String? @db.Uuid
+  clinic    Clinic? @relation(fields: [clinicId], references: [id], onDelete: SetNull)
 
   @@index([doctorId, startsAt])
   @@index([patientId])
+  @@index([clinicId, startsAt])
 }
 
 model Clinic {
@@ -173,7 +195,9 @@ model Clinic {
   specialty  String
   imageUrl   String?
   isApproved Boolean  @default(false)
-  doctors    Doctor[]
+  doctors    DoctorClinic[]
+
+  appointments Appointment[]
 
   user User @relation(fields: [id], references: [id], onDelete: Cascade)
 }

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import DeleteClinicButton from "@/components/clinics/DeleteClinicButton";
 import Sidebar from "@/components/navigation/Sidebar";
-import { activeDoctorWhere } from "@/lib/doctors";
+import { activeClinicWhere } from "@/lib/doctors";
 import { loginUrl } from "@/lib/next-url";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
@@ -22,11 +22,18 @@ export default async function AdminClinicsPage() {
     redirect("/");
   }
 
-  // ყველა კლინიკა (დაუმტკიცებელიც) თავისი აქტიური ექიმებით
-  const clinics = await prisma.clinic.findMany({
-    include: { doctors: { where: activeDoctorWhere, orderBy: { name: "asc" } } },
+  // ყველა კლინიკა (დაუმტკიცებელიც) თავისი აქტიური ექიმებით. ექიმს ამ კლინიკაში
+  // დადასტურების სტატუსი კავშირიდან ემატება
+  const rows = await prisma.clinic.findMany({
+    include: {
+      doctors: { where: activeClinicWhere, include: { doctor: true }, orderBy: { doctor: { name: "asc" } } },
+    },
     orderBy: { name: "asc" },
   });
+  const clinics = rows.map((clinic) => ({
+    ...clinic,
+    doctors: clinic.doctors.map(({ doctor, isApproved }) => ({ ...doctor, isApproved })),
+  }));
 
   return (
     <div className={styles.page}>

@@ -1,23 +1,17 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
-import DoctorSettingsForm from "@/components/doctors/DoctorSettingsForm";
-import DoctorStatusNotice from "@/components/doctors/DoctorStatusNotice";
 import Sidebar from "@/components/navigation/Sidebar";
 import { cancellationText } from "@/lib/appointment-status";
 import { loginUrl } from "@/lib/next-url";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { formatDateTime, formatDay, formatTime } from "@/lib/time";
-import JoinClinicForm from "./_components/JoinClinicForm";
 import DoctorAppointments from "./_components/DoctorAppointments";
 import styles from "../Staff.module.scss";
 
-// ექიმის გვერდი „ჩემი განრიგი“. ოთხი მდგომარეობა აქვს:
-// 1) ექიმი ჯერ არცერთ კლინიკას არ უკავშირდება — კლინიკის არჩევის ფორმა
-// 2) კლინიკამ მოთხოვნა უარყო ან ექიმი მოხსნა — შეტყობინება და კლინიკის არჩევის ფორმა
-// 3) მოთხოვნა გაგზავნილია, კლინიკას ჯერ არ დაუდასტურებია — ლოდინის შეტყობინება
-// 4) დადასტურებულია — სამუშაო გრაფიკი და ვიზიტების კალენდარი
-// (პროფილის ინფორმაცია ცალკე გვერდზეა — „ჩემი პროფილი“, /doctor-profile)
-export default async function DoctorSchedulePage({ searchParams }: PageProps<"/doctor-schedule">) {
+// ექიმის გვერდი „ჩემი განრიგი“ — ვიზიტების კალენდარი ყველა კლინიკიდან.
+// სამუშაო გრაფიკი, კლინიკების არჩევა და პროფილი „ჩემ პროფილშია“ (/doctor-profile)
+export default async function DoctorSchedulePage() {
   const session = await getSession();
 
   if (!session) {
@@ -32,7 +26,7 @@ export default async function DoctorSchedulePage({ searchParams }: PageProps<"/d
   const doctor = await prisma.doctor.findUnique({
     where: { userId: session.user.id },
     include: {
-      clinic: true,
+      clinics: { where: { isApproved: true }, select: { clinicId: true, isApproved: true } },
       appointments: {
         include: { patient: { include: { patient: { select: { phone: true } } } } },
         orderBy: { startsAt: "asc" },
@@ -40,56 +34,14 @@ export default async function DoctorSchedulePage({ searchParams }: PageProps<"/d
     },
   });
 
-  // 1-2) კლინიკა ჯერ არ აურჩევია, ან კლინიკამ უარყო / მოხსნა
-  if (!doctor || doctor.rejectedAt || doctor.removedAt) {
-    // რეგისტრაციისას შეყვანილი სპეციალობა და გამოცდილება URL-ით მოდის,
-    // ან წინა მოთხოვნიდან აიღება
-    const { specialty, experience } = await searchParams;
-    const defaults = {
-      specialty: typeof specialty === "string" ? specialty : (doctor?.specialty ?? ""),
-      experienceYears: Math.max(0, Math.trunc(Number(experience ?? doctor?.experienceYears)) || 0),
-    };
-    const clinics = await prisma.clinic.findMany({
-      where: { isApproved: true },
-      select: { id: true, name: true, city: true },
-      orderBy: { name: "asc" },
-    });
+  const approved = doctor?.clinics.filter((item) => item.isApproved) ?? [];
 
-    return (
-      <div className={styles.page}>
-        <Sidebar />
-        <main className={styles.main}>
-          <h1 className={styles.title}>ჩემი განრიგი</h1>
-          <section className={styles.card}>
-            <h2>აირჩიე კლინიკა</h2>
-            <p>
-              <DoctorStatusNotice doctor={doctor} showLink={false} /> შეავსე ფორმა და კლინიკა
-              დაადასტურებს მოთხოვნას.
-            </p>
-            <h3>ექიმის მონაცემები</h3>
-            <JoinClinicForm clinics={clinics} defaults={defaults} />
-          </section>
-        </main>
-      </div>
-    );
+  // არცერთ კლინიკას ჯერ არ დაუდასტურებია — მდგომარეობა და კლინიკის არჩევა „ჩემ პროფილშია“
+  if (!doctor || approved.length === 0) {
+    redirect("/doctor-profile");
   }
 
-  // 3) კლინიკის დადასტურებას ელოდება
-  if (!doctor.isApproved) {
-    return (
-      <div className={styles.page}>
-        <Sidebar />
-        <main className={styles.main}>
-          <h1 className={styles.title}>ჩემი განრიგი</h1>
-          <p className={styles.card}>
-            <DoctorStatusNotice doctor={doctor} />
-          </p>
-        </main>
-      </div>
-    );
-  }
-
-  // 4) კალენდრისთვის ვიზიტებს მარტივ ობიექტებად ვამზადებთ (კლიენტის
+  // კალენდრისთვის ვიზიტებს მარტივ ობიექტებად ვამზადებთ (კლიენტის
   // კომპონენტს Date ობიექტი კი არა, მზა ტექსტი გადაეცემა)
   const now = new Date();
   const items = doctor.appointments.map((appointment) => {
@@ -111,6 +63,8 @@ export default async function DoctorSchedulePage({ searchParams }: PageProps<"/d
       patientName: appointment.patient.name,
       patientEmail: appointment.patient.email,
       patientPhone: appointment.patient.patient?.phone ?? null,
+      // ერთ კლინიკაში მომუშავე ექიმს კლინიკის სახელი ყველა ვიზიტზე არ სჭირდება
+      clinicName: approved.length > 1 ? appointment.clinicName : null,
       diagnosis: appointment.diagnosis,
       prescription: appointment.prescription,
       cancelText:
@@ -133,24 +87,10 @@ export default async function DoctorSchedulePage({ searchParams }: PageProps<"/d
       <main className={styles.main}>
         <h1 className={styles.title}>ჩემი განრიგი</h1>
 
-        <section className={styles.card}>
-          <h2>{doctor.name}</h2>
-          <p>
-            {doctor.specialty} · {doctor.clinic.name}
-            {doctor.room && <> · კაბინეტი {doctor.room}</>}
-          </p>
-          <h3>სამუშაო გრაფიკი</h3>
-          <DoctorSettingsForm
-            doctor={{
-              id: doctor.id,
-              workStart: doctor.workStart,
-              workEnd: doctor.workEnd,
-              workDays: doctor.workDays,
-              daysOff: doctor.daysOff,
-              room: doctor.room,
-            }}
-          />
-        </section>
+        <p className={styles.card}>
+          სამუშაო გრაფიკის შეცვლა და სხვა კლინიკასთან მოთხოვნა —{" "}
+          <Link href="/doctor-profile">ჩემ პროფილში →</Link>
+        </p>
 
         <DoctorAppointments items={items} today={formatDay(new Date())} />
       </main>

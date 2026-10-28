@@ -9,7 +9,8 @@ type DoctorHours = {
   daysOff: string[];
 };
 
-// აბრუნებს ექიმის თავისუფალ დროებს კონკრეტულ დღეს.
+// აბრუნებს ექიმის თავისუფალ დროებს კონკრეტულ დღეს (ერთი კლინიკის გრაფიკით).
+// id — ექიმის id: ექიმი ერთ დროს ორ კლინიკაში ვერ იქნება, ამიტომ ყველა მისი ვიზიტი ითვლება.
 // patientId — თუ პაციენტი შესულია, მისი სხვა ვიზიტების დროებიც ითიშება
 export async function getAvailableTimes(doctor: DoctorHours, date: string, patientId?: string) {
   if (!isWorkingDay(doctor, date)) {

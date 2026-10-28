@@ -1,19 +1,21 @@
 import { isUuid, jsonError } from "@/lib/api";
 import { getAvailableTimes } from "@/lib/availability";
-import { visibleDoctorWhere } from "@/lib/doctors";
+import { visibleClinicWhere } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { isValidDay } from "@/lib/time";
 
-// ექიმის თავისუფალი დროები: /api/doctors/{id}/slots?date=2026-10-15
+// ექიმის თავისუფალი დროები კლინიკაში: /api/doctors/{id}/slots?date=2026-10-15&clinicId={id}
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ doctorId: string }> },
 ) {
   const { doctorId } = await params;
-  const date = new URL(request.url).searchParams.get("date") ?? "";
+  const searchParams = new URL(request.url).searchParams;
+  const date = searchParams.get("date") ?? "";
+  const clinicId = searchParams.get("clinicId") ?? "";
 
-  if (!isUuid(doctorId)) {
+  if (!isUuid(doctorId) || !isUuid(clinicId)) {
     return jsonError("ექიმი ვერ მოიძებნა", 404);
   }
 
@@ -22,12 +24,13 @@ export async function GET(
   }
 
   // დაუდასტურებელ ან დაურეგისტრირებელ ექიმთან ჩაწერა არ შეიძლება, ამიტომ მის დროებსაც არ ვაჩვენებთ
-  const doctor = await prisma.doctor.findFirst({
-    where: { id: doctorId, ...visibleDoctorWhere },
-    select: { id: true, workStart: true, workEnd: true, workDays: true, daysOff: true },
+  // გრაფიკი თითო კლინიკას თავისი აქვს
+  const membership = await prisma.doctorClinic.findFirst({
+    where: { doctorId, clinicId, ...visibleClinicWhere },
+    select: { workStart: true, workEnd: true, workDays: true, daysOff: true },
   });
 
-  if (!doctor) {
+  if (!membership) {
     return jsonError("ექიმი ვერ მოიძებნა", 404);
   }
 
@@ -36,7 +39,7 @@ export async function GET(
   const patientId = session?.user.accountType === "PATIENT" ? session.user.id : undefined;
 
   // დაკავებული, გასული და არასამუშაო დღის დროები უკვე გაფილტრულია
-  const times = await getAvailableTimes(doctor, date, patientId);
+  const times = await getAvailableTimes({ id: doctorId, ...membership }, date, patientId);
 
   return Response.json({ times });
 }

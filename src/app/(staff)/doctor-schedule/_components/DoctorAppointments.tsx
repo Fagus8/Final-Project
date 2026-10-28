@@ -16,6 +16,8 @@ export type ScheduleItem = {
   patientName: string;
   patientEmail: string;
   patientPhone: string | null;
+  // რომელ კლინიკაშია ვიზიტი (ექიმი რამდენიმე კლინიკაში შეიძლება მუშაობდეს)
+  clinicName: string | null;
   diagnosis: string | null;
   prescription: string | null;
   // „გააუქმა პაციენტმა: ...“ — მხოლოდ გაუქმებულ ვიზიტს აქვს
@@ -63,6 +65,7 @@ export default function DoctorAppointments({ items, today }: { items: ScheduleIt
                         </>
                       )}
                     </p>
+                    {item.clinicName && <p>კლინიკა: {item.clinicName}</p>}
                     <p>წინა ვიზიტები: {item.previousVisits}</p>
                     {item.cancelText && <p className={list.cancelInfo}>{item.cancelText}</p>}
                     {item.previousDiagnoses.length > 0 && (

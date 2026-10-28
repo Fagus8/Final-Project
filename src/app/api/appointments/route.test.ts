@@ -7,7 +7,7 @@ import { POST } from "./route";
 // ავტორიზაცია და ბაზა ჩანაცვლებულია, რომ ტესტი ბაზის გარეშე გაეშვას
 const mocks = vi.hoisted(() => ({
   getSession: vi.fn(),
-  findDoctor: vi.fn(),
+  findMembership: vi.fn(),
   findAppointment: vi.fn(),
   createAppointment: vi.fn(),
   transaction: vi.fn(),
@@ -17,23 +17,23 @@ vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
 vi.mock("@/lib/auth", () => ({ auth: { api: { getSession: mocks.getSession } } }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    doctor: { findFirst: mocks.findDoctor },
+    doctorClinic: { findFirst: mocks.findMembership },
     $transaction: mocks.transaction,
   },
 }));
 
 const DOCTOR_ID = "6f1c2c8e-8a4b-4c55-9a3e-2b1d7c9e0f11";
+const CLINIC_ID = "0b6d3f9a-1c2e-4d5f-8a7b-9c0d1e2f3a4b";
 const patientSession = { user: { id: "patient-1", name: "ანა", accountType: "PATIENT" } };
-const doctor = {
-  id: DOCTOR_ID,
-  name: "ნინო ბერიძე",
+// ექიმის კავშირი კლინიკასთან — ამ კლინიკის გრაფიკით
+const membership = {
+  doctorId: DOCTOR_ID,
+  clinicId: CLINIC_ID,
   workStart: "10:00",
   workEnd: "18:00",
   workDays: [1, 2, 3, 4, 5, 6],
   daysOff: ["2026-10-16"],
-  clinicId: "clinic-1",
-  userId: "doctor-user-1",
-  specialty: "კარდიოლოგი",
+  doctor: { id: DOCTOR_ID, name: "ნინო ბერიძე", userId: "doctor-user-1", specialty: "კარდიოლოგი" },
   clinic: { name: "კლინიკა" },
 };
 
@@ -55,7 +55,7 @@ describe("POST /api/appointments", () => {
     Object.values(mocks).forEach((mock) => mock.mockReset());
 
     mocks.getSession.mockResolvedValue(patientSession);
-    mocks.findDoctor.mockResolvedValue(doctor);
+    mocks.findMembership.mockResolvedValue(membership);
     mocks.findAppointment.mockResolvedValue(null);
     mocks.createAppointment.mockResolvedValue({ id: "appointment-1" });
     // ტრანზაქცია callback-ს იმავე „ბაზით“ უშვებს
@@ -71,12 +71,13 @@ describe("POST /api/appointments", () => {
   });
 
   it("თავისუფალ დროს ჯავშნის", async () => {
-    const response = await book({ doctorId: DOCTOR_ID, date: "2026-10-15", time: "10:30" });
+    const response = await book({ doctorId: DOCTOR_ID, clinicId: CLINIC_ID, date: "2026-10-15", time: "10:30" });
 
     expect(response.status).toBe(200);
     expect(mocks.createAppointment).toHaveBeenCalledWith({
       data: {
         doctorId: DOCTOR_ID,
+        clinicId: CLINIC_ID,
         patientId: "patient-1",
         startsAt: toDate("2026-10-15", "10:30"),
         // ექიმის და კლინიკის სახელი ისტორიისთვის ინახება
@@ -90,7 +91,7 @@ describe("POST /api/appointments", () => {
   it("ორმაგი ჯავშანი: ექიმი ამ დროს უკვე დაკავებულია → 409", async () => {
     mocks.findAppointment.mockResolvedValueOnce({ id: "existing" });
 
-    const response = await book({ doctorId: DOCTOR_ID, date: "2026-10-15", time: "10:30" });
+    const response = await book({ doctorId: DOCTOR_ID, clinicId: CLINIC_ID, date: "2026-10-15", time: "10:30" });
 
     expect(response.status).toBe(409);
     expect(mocks.createAppointment).not.toHaveBeenCalled();
@@ -99,7 +100,7 @@ describe("POST /api/appointments", () => {
   it("ორმაგი ჯავშანი: პაციენტს ამ დროს სხვა ვიზიტი აქვს → 409", async () => {
     mocks.findAppointment.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: "other-doctor" });
 
-    const response = await book({ doctorId: DOCTOR_ID, date: "2026-10-15", time: "10:30" });
+    const response = await book({ doctorId: DOCTOR_ID, clinicId: CLINIC_ID, date: "2026-10-15", time: "10:30" });
 
     expect(response.status).toBe(409);
     // პაციენტს ეუბნება, რომ თვითონ აქვს სხვა ვიზიტი (და არა რომ ექიმია დაკავებული)
@@ -110,7 +111,7 @@ describe("POST /api/appointments", () => {
   it("ერთდროული ჯავშნისას ჩავარდნილი ტრანზაქცია → 409", async () => {
     mocks.transaction.mockRejectedValueOnce(new Error("could not serialize access"));
 
-    const response = await book({ doctorId: DOCTOR_ID, date: "2026-10-15", time: "10:30" });
+    const response = await book({ doctorId: DOCTOR_ID, clinicId: CLINIC_ID, date: "2026-10-15", time: "10:30" });
 
     expect(response.status).toBe(409);
   });
@@ -122,21 +123,29 @@ describe("POST /api/appointments", () => {
     ["სლოტის ბადის გარეთ", "2026-10-15", "10:15"],
     ["წარსული დრო", "2026-10-14", "11:00"],
   ])("%s → 400", async (_label, date, time) => {
-    const response = await book({ doctorId: DOCTOR_ID, date, time });
+    const response = await book({ doctorId: DOCTOR_ID, clinicId: CLINIC_ID, date, time });
 
     expect(response.status).toBe(400);
     expect(mocks.transaction).not.toHaveBeenCalled();
   });
 
+  it("ექიმი ამ კლინიკაში არ იღებს → 404", async () => {
+    mocks.findMembership.mockResolvedValue(null);
+
+    const response = await book({ doctorId: DOCTOR_ID, clinicId: CLINIC_ID, date: "2026-10-15", time: "10:30" });
+
+    expect(response.status).toBe(404);
+  });
+
   it("შესვლის გარეშე → 401", async () => {
     mocks.getSession.mockResolvedValue(null);
 
-    expect((await book({ doctorId: DOCTOR_ID, date: "2026-10-15", time: "10:30" })).status).toBe(401);
+    expect((await book({ doctorId: DOCTOR_ID, clinicId: CLINIC_ID, date: "2026-10-15", time: "10:30" })).status).toBe(401);
   });
 
   it("ექიმი ან კლინიკა ვერ ჯავშნის → 403", async () => {
     mocks.getSession.mockResolvedValue({ user: { id: "x", name: "x", accountType: "DOCTOR" } });
 
-    expect((await book({ doctorId: DOCTOR_ID, date: "2026-10-15", time: "10:30" })).status).toBe(403);
+    expect((await book({ doctorId: DOCTOR_ID, clinicId: CLINIC_ID, date: "2026-10-15", time: "10:30" })).status).toBe(403);
   });
 });

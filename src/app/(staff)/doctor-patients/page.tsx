@@ -25,6 +25,7 @@ export default async function DoctorPatientsPage() {
   const doctor = await prisma.doctor.findUnique({
     where: { userId: session.user.id },
     include: {
+      clinics: { where: { isApproved: true }, select: { id: true } },
       appointments: {
         include: { patient: { include: { patient: { select: { phone: true, bloodType: true } } } } },
         orderBy: { startsAt: "desc" },
@@ -32,9 +33,9 @@ export default async function DoctorPatientsPage() {
     },
   });
 
-  // კლინიკის დადასტურებამდე პაციენტები არ ეყოლება — სტატუსს „ჩემი განრიგი“ აჩვენებს
-  if (!doctor || !doctor.isApproved || doctor.rejectedAt || doctor.removedAt) {
-    redirect("/doctor-schedule");
+  // ერთი კლინიკის დადასტურებამდე მაინც პაციენტები არ ეყოლება — სტატუსს „ჩემი პროფილი“ აჩვენებს
+  if (!doctor || doctor.clinics.length === 0) {
+    redirect("/doctor-profile");
   }
 
   // ვიზიტებს პაციენტების მიხედვით ვაჯგუფებთ. ვიზიტები ახლიდან ძველისკენაა

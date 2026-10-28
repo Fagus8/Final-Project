@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { isUuid, jsonError, readJson } from "@/lib/api";
-import { activeDoctorWhere, removeDoctors } from "@/lib/doctors";
+import { activeClinicWhere, removeDoctorsFromClinic } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 
@@ -56,7 +56,7 @@ export async function PATCH(
   const outcome = await prisma.$transaction(async (transaction) => {
     const clinic = await transaction.clinic.findUnique({
       where: { id: clinicId },
-      select: { doctors: { where: activeDoctorWhere, select: { id: true } } },
+      select: { doctors: { where: activeClinicWhere, select: { doctorId: true } } },
     });
 
     if (!clinic) {
@@ -66,7 +66,7 @@ export async function PATCH(
     // გაგზავნილი id-ები ამ კლინიკის ექიმებს უნდა ეკუთვნოდეს და არ უნდა მეორდებოდეს.
     // თუ არა, ფორმა მოძველებულია (სხვამ უკვე შეცვალა)
     const submittedIds = doctors.map((doctor) => doctor.id);
-    const currentIds = clinic.doctors.map((doctor) => doctor.id);
+    const currentIds = clinic.doctors.map((item) => item.doctorId);
     const hasDuplicates = new Set(submittedIds).size !== submittedIds.length;
     const hasForeignId = submittedIds.some((id) => !currentIds.includes(id));
 
@@ -79,10 +79,11 @@ export async function PATCH(
       data: { ...clinicData, imageUrl: imageUrl || null },
     });
 
-    // სიიდან ამოღებულ ექიმებს კლინიკიდან ვხსნით: მომავალი ვიზიტები უქმდება,
+    // სიიდან ამოღებულ ექიმებს ამ კლინიკიდან ვხსნით: აქ მომავალი ვიზიტები უქმდება,
     // წარსული ვიზიტები და დიაგნოზები რჩება
-    await removeDoctors(
+    await removeDoctorsFromClinic(
       transaction,
+      clinicId,
       currentIds.filter((id) => !submittedIds.includes(id)),
       "ADMIN",
       "ექიმი კლინიკაში აღარ მუშაობს",

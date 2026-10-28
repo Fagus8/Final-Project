@@ -8,7 +8,7 @@ import type { DoctorOption } from "./types";
 type DoctorCardProps = {
   doctor: DoctorOption;
   selected: boolean;
-  onSelect: (doctorId: string) => void;
+  onSelect: (optionId: string) => void;
 };
 
 // ექიმის ბარათი ჯავშნის სიაში. „არჩევა“ ექიმს ირჩევს და ჯავშნის ფორმას ხსნის

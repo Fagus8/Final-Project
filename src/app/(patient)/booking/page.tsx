@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import Sidebar from "@/components/navigation/Sidebar";
 import type { Prisma } from "@/generated/prisma/client";
-import { visibleDoctorWhere } from "@/lib/doctors";
+import { visibleClinicWhere, visibleDoctorWhere } from "@/lib/doctors";
 import { loginUrl } from "@/lib/next-url";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
@@ -56,20 +56,22 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
     orderBy: { name: "asc" },
   });
 
-  // ძებნის პირობას ნაბიჯ-ნაბიჯ ვაწყობთ: ცარიელი ფილტრი პირობას არ ამატებს
-  const where: Prisma.DoctorWhereInput = { ...visibleDoctorWhere };
+  // ძებნის პირობას ნაბიჯ-ნაბიჯ ვაწყობთ: ცარიელი ფილტრი პირობას არ ამატებს.
+  // სიის ელემენტი = ექიმის ხილული კავშირი კლინიკასთან (ექიმი + კლინიკა + ამ კლინიკის გრაფიკი)
+  const doctorWhere: Prisma.DoctorWhereInput = {};
+  const where: Prisma.DoctorClinicWhereInput = { ...visibleClinicWhere, doctor: doctorWhere };
 
   if (specialty) {
-    where.specialty = specialty;
+    doctorWhere.specialty = specialty;
   }
 
   // ექიმის სახელით ძებნა (დიდი/პატარა ასოს მიუხედავად)
   if (q.trim()) {
-    where.name = { contains: q.trim(), mode: "insensitive" };
+    doctorWhere.name = { contains: q.trim(), mode: "insensitive" };
   }
 
   if (language) {
-    where.languages = { has: language };
+    doctorWhere.languages = { has: language };
   }
 
   // clinicId-ს მხოლოდ მაშინ ვიყენებთ, თუ ასეთი დამტკიცებული კლინიკა არსებობს
@@ -77,11 +79,17 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
     where.clinicId = clinicId;
   }
 
-  const doctors = await prisma.doctor.findMany({
+  const memberships = await prisma.doctorClinic.findMany({
     where,
-    include: { clinic: true },
-    orderBy: { name: "asc" },
+    include: { doctor: true, clinic: { select: { name: true } } },
+    orderBy: [{ doctor: { name: "asc" } }, { clinic: { name: "asc" } }],
   });
+
+  // ?doctorId=... (ექიმის პროფილიდან მოსვლისას) ექიმს წინასწარ ირჩევს —
+  // ?clinicId-ით მითითებულ კლინიკაში, თორემ პირველში
+  const initialOption =
+    memberships.find((item) => item.doctorId === doctorId && item.clinicId === clinicId) ??
+    memberships.find((item) => item.doctorId === doctorId);
 
   return (
     <div className={styles.page}>
@@ -127,21 +135,22 @@ export default async function BookingPage({ searchParams }: BookingPageProps) {
         </form>
 
         <BookingSection
-          doctors={doctors.map((doctor) => ({
-            id: doctor.id,
+          doctors={memberships.map(({ doctor, clinic, ...membership }) => ({
+            id: membership.id,
+            doctorId: doctor.id,
+            clinicId: membership.clinicId,
             name: doctor.name,
             specialty: doctor.specialty,
             experienceYears: doctor.experienceYears,
-            room: doctor.room,
-            clinicName: doctor.clinic.name,
+            room: membership.room,
+            clinicName: clinic.name,
             avatarUrl: doctor.avatarUrl,
             consultationFee: doctor.consultationFee,
             languages: doctor.languages,
-            workDays: doctor.workDays,
-            daysOff: doctor.daysOff,
+            workDays: membership.workDays,
+            daysOff: membership.daysOff,
           }))}
-          // ?doctorId=... (ექიმის პროფილიდან მოსვლისას) ექიმს წინასწარ ირჩევს
-          initialDoctorId={doctors.some((doctor) => doctor.id === doctorId) ? doctorId : undefined}
+          initialOptionId={initialOption?.id}
         />
       </main>
     </div>

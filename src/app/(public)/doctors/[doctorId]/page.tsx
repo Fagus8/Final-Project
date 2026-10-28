@@ -4,14 +4,14 @@ import Sidebar from "@/components/navigation/Sidebar";
 import DoctorAvatar from "@/components/ui/DoctorAvatar";
 import Icon from "@/components/ui/Icon";
 import { isUuid } from "@/lib/api";
-import { visibleDoctorWhere } from "@/lib/doctors";
+import { visibleClinicWhere, visibleDoctorWhere } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { formatLongDay, formatDay, formatWorkDays } from "@/lib/time";
 import { getSession } from "@/lib/session";
 import styles from "./DoctorProfile.module.scss";
 
 // ექიმის საჯარო პროფილი: ფოტო, სპეციალობა, ბიოგრაფია, განათლება, ენები,
-// სერვისები, ფასი, კლინიკა და იმავე კლინიკის სხვა ექიმები
+// სერვისები, ფასი, კლინიკები (თითოში თავისი გრაფიკით) და იმავე კლინიკების სხვა ექიმები
 export default async function DoctorProfilePage(props: PageProps<"/doctors/[doctorId]">) {
   const { doctorId } = await props.params;
 
@@ -24,7 +24,8 @@ export default async function DoctorProfilePage(props: PageProps<"/doctors/[doct
   const doctor = await prisma.doctor.findFirst({
     where: { id: doctorId, ...visibleDoctorWhere },
     include: {
-      clinic: true,
+      // მხოლოდ ხილული კლინიკები — თითოეულს თავისი გრაფიკი და კაბინეტი აქვს
+      clinics: { where: visibleClinicWhere, include: { clinic: true }, orderBy: { clinic: { name: "asc" } } },
       _count: { select: { appointments: { where: { status: "COMPLETED" } } } },
     },
   });
@@ -33,9 +34,13 @@ export default async function DoctorProfilePage(props: PageProps<"/doctors/[doct
     notFound();
   }
 
-  // იმავე კლინიკის სხვა ექიმები
+  // იმავე კლინიკების სხვა ექიმები
+  const clinicIds = doctor.clinics.map((item) => item.clinicId);
   const colleagues = await prisma.doctor.findMany({
-    where: { ...visibleDoctorWhere, clinicId: doctor.clinicId, id: { not: doctor.id } },
+    where: {
+      clinics: { some: { ...visibleClinicWhere, clinicId: { in: clinicIds } } },
+      id: { not: doctor.id },
+    },
     orderBy: { name: "asc" },
     take: 6,
   });
@@ -44,9 +49,9 @@ export default async function DoctorProfilePage(props: PageProps<"/doctors/[doct
   // „დაჯავშნა“ ღილაკი ჩანს სტუმრისთვის და პაციენტისთვის
   const canBook = !session || session.user.accountType === "PATIENT";
 
-  // უახლოესი (არაუმეტეს ხუთი) დასვენების დღე
+  // უახლოესი (არაუმეტეს ხუთი) დასვენების დღე კლინიკაში
   const today = formatDay(new Date());
-  const upcomingDaysOff = doctor.daysOff.filter((day) => day >= today).slice(0, 5);
+  const upcomingDaysOff = (daysOff: string[]) => daysOff.filter((day) => day >= today).slice(0, 5);
 
   return (
     <div className={styles.page}>
@@ -67,10 +72,12 @@ export default async function DoctorProfilePage(props: PageProps<"/doctors/[doct
           <div className={styles.headerBody}>
             <h1>{doctor.name}</h1>
             <span className={styles.specialty}>{doctor.specialty}</span>
-            <Link href={`/clinics/${doctor.clinic.id}`} className={styles.clinicLink}>
-              <Icon name="clinic" size={16} />
-              {doctor.clinic.name}
-            </Link>
+            {doctor.clinics.map(({ clinic }) => (
+              <Link key={clinic.id} href={`/clinics/${clinic.id}`} className={styles.clinicLink}>
+                <Icon name="clinic" size={16} />
+                {clinic.name}
+              </Link>
+            ))}
           </div>
 
           {canBook && (
@@ -91,10 +98,8 @@ export default async function DoctorProfilePage(props: PageProps<"/doctors/[doct
             <span>ჩატარებული ვიზიტი</span>
           </li>
           <li>
-            <strong>
-              {doctor.workStart} – {doctor.workEnd}
-            </strong>
-            <span>მიღების საათები</span>
+            <strong>{doctor.clinics.length}</strong>
+            <span>კლინიკა</span>
           </li>
           {doctor.consultationFee !== null && (
             <li>
@@ -140,78 +145,80 @@ export default async function DoctorProfilePage(props: PageProps<"/doctors/[doct
                   <dd>{doctor.languages.join(", ")}</dd>
                 </div>
               )}
-              <div>
-                <dt>
-                  <Icon name="appointments" size={18} />
-                  სამუშაო დღეები
-                </dt>
-                <dd>{formatWorkDays(doctor.workDays)}</dd>
-              </div>
-              {/* უახლოესი დასვენების დღეები, რომ პაციენტმა წინასწარ იცოდეს */}
-              {upcomingDaysOff.length > 0 && (
-                <div>
-                  <dt>
-                    <Icon name="appointments" size={18} />
-                    არ იღებს
-                  </dt>
-                  <dd>
-                    {upcomingDaysOff.map((day) => formatLongDay(day)).join("; ")}
-                  </dd>
-                </div>
-              )}
-              <div>
-                <dt>
-                  <Icon name="clock" size={18} />
-                  მიღების საათები
-                </dt>
-                <dd>
-                  {doctor.workStart} – {doctor.workEnd}
-                </dd>
-              </div>
-              {doctor.room && (
-                <div>
-                  <dt>
-                    <Icon name="door" size={18} />
-                    კაბინეტი
-                  </dt>
-                  <dd>{doctor.room}</dd>
-                </div>
-              )}
             </dl>
           </section>
 
-          <section className={styles.panel}>
-            <h2>კლინიკა</h2>
-            <dl className={styles.info}>
-              <div>
-                <dt>
-                  <Icon name="clinic" size={18} />
-                  დასახელება
-                </dt>
-                <dd>
-                  <Link href={`/clinics/${doctor.clinic.id}`}>{doctor.clinic.name}</Link>
-                </dd>
-              </div>
-              <div>
-                <dt>
-                  <Icon name="pin" size={18} />
-                  მისამართი
-                </dt>
-                <dd>
-                  {doctor.clinic.city}, {doctor.clinic.address}
-                </dd>
-              </div>
-              <div>
-                <dt>
-                  <Icon name="phone" size={18} />
-                  ტელეფონი
-                </dt>
-                <dd>
-                  <a href={`tel:${doctor.clinic.phone.replace(/\s/g, "")}`}>{doctor.clinic.phone}</a>
-                </dd>
-              </div>
-            </dl>
-          </section>
+          {/* თითო კლინიკა — მისამართი და ამ კლინიკაში მიღების გრაფიკი */}
+          {doctor.clinics.map(({ clinic, ...schedule }) => {
+            const daysOff = upcomingDaysOff(schedule.daysOff);
+            return (
+              <section key={clinic.id} className={styles.panel}>
+                <h2>
+                  <Link href={`/clinics/${clinic.id}`}>{clinic.name}</Link>
+                </h2>
+                <dl className={styles.info}>
+                  <div>
+                    <dt>
+                      <Icon name="pin" size={18} />
+                      მისამართი
+                    </dt>
+                    <dd>
+                      {clinic.city}, {clinic.address}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>
+                      <Icon name="phone" size={18} />
+                      ტელეფონი
+                    </dt>
+                    <dd>
+                      <a href={`tel:${clinic.phone.replace(/\s/g, "")}`}>{clinic.phone}</a>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>
+                      <Icon name="appointments" size={18} />
+                      სამუშაო დღეები
+                    </dt>
+                    <dd>{formatWorkDays(schedule.workDays)}</dd>
+                  </div>
+                  {/* უახლოესი დასვენების დღეები, რომ პაციენტმა წინასწარ იცოდეს */}
+                  {daysOff.length > 0 && (
+                    <div>
+                      <dt>
+                        <Icon name="appointments" size={18} />
+                        არ იღებს
+                      </dt>
+                      <dd>{daysOff.map((day) => formatLongDay(day)).join("; ")}</dd>
+                    </div>
+                  )}
+                  <div>
+                    <dt>
+                      <Icon name="clock" size={18} />
+                      მიღების საათები
+                    </dt>
+                    <dd>
+                      {schedule.workStart} – {schedule.workEnd}
+                    </dd>
+                  </div>
+                  {schedule.room && (
+                    <div>
+                      <dt>
+                        <Icon name="door" size={18} />
+                        კაბინეტი
+                      </dt>
+                      <dd>{schedule.room}</dd>
+                    </div>
+                  )}
+                </dl>
+                {canBook && doctor.clinics.length > 1 && (
+                  <Link href={`/booking?doctorId=${doctor.id}&clinicId=${clinic.id}`}>
+                    დაჯავშნა ამ კლინიკაში →
+                  </Link>
+                )}
+              </section>
+            );
+          })}
         </div>
 
         {doctor.services.length > 0 && (
@@ -230,7 +237,7 @@ export default async function DoctorProfilePage(props: PageProps<"/doctors/[doct
 
         {colleagues.length > 0 && (
           <section className={styles.section}>
-            <h2>სხვა ექიმები ამ კლინიკაში</h2>
+            <h2>{doctor.clinics.length > 1 ? "სხვა ექიმები ამ კლინიკებში" : "სხვა ექიმები ამ კლინიკაში"}</h2>
             <ul className={styles.colleagues}>
               {colleagues.map((colleague) => (
                 <li key={colleague.id}>

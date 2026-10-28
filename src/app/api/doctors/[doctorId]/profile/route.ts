@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { isUuid, jsonError, readJson } from "@/lib/api";
-import { activeDoctorWhere } from "@/lib/doctors";
+import { activeClinicWhere } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 
@@ -36,7 +36,7 @@ const profileSchema = z.object({
   specialty: z.string().trim().min(1, "სპეციალობა სავალდებულოა").max(80).optional(),
 });
 
-// ექიმის პროფილის რედაქტირება — თავად ექიმი ან მისი კლინიკა.
+// ექიმის პროფილის რედაქტირება — თავად ექიმი ან მისი რომელიმე კლინიკა.
 // სპეციალობა და გამოცდილება საჯაროდ ჩანს და კლინიკა აგებს პასუხს, ამიტომ მათ მხოლოდ კლინიკა ცვლის
 export async function PATCH(
   request: Request,
@@ -59,15 +59,18 @@ export async function PATCH(
     return jsonError(result.error.issues[0]?.message ?? "შეამოწმე შევსებული ველები", 400);
   }
 
-  // უარყოფილი და მოხსნილი ექიმი აღარ რედაქტირდება
-  const doctor = await prisma.doctor.findFirst({ where: { id: doctorId, ...activeDoctorWhere } });
+  // მხოლოდ აქტიური კავშირები: უარყოფილ და მოხსნილ კლინიკას ექიმის რედაქტირება აღარ შეუძლია
+  const doctor = await prisma.doctor.findUnique({
+    where: { id: doctorId },
+    include: { clinics: { where: activeClinicWhere, select: { clinicId: true, isApproved: true } } },
+  });
   if (!doctor) {
     return jsonError("ექიმი ვერ მოიძებნა", 404);
   }
 
-  const isClinic = doctor.clinicId === session.user.id;
-  // ექიმი პროფილს კლინიკის დადასტურების შემდეგ ავსებს
-  const isDoctor = doctor.userId === session.user.id && doctor.isApproved;
+  const isClinic = doctor.clinics.some((item) => item.clinicId === session.user.id);
+  // ექიმი პროფილს ერთი კლინიკის დადასტურების შემდეგ მაინც ავსებს
+  const isDoctor = doctor.userId === session.user.id && doctor.clinics.some((item) => item.isApproved);
 
   if (!isClinic && !isDoctor) {
     return jsonError("ამ ექიმის რედაქტირება არ შეგიძლია", 403);

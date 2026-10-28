@@ -72,7 +72,10 @@ async function main() {
   // კლინიკები და ექიმები. ყველა ექიმს საკუთარი ანგარიში აქვს (Doctor.userId სავალდებულოა)
   const doctorIds: string[] = [];
   // ვიზიტში ექიმის და კლინიკის სახელიც ინახება
-  const visitNames = new Map<string, { doctorName: string; doctorSpecialty: string; clinicName: string }>();
+  const visitNames = new Map<
+    string,
+    { doctorName: string; doctorSpecialty: string; clinicName: string; clinicId: string }
+  >();
   for (const clinic of clinics) {
     const clinicUser = await createUser(clinic.name, clinic.email, "CLINIC");
     await prisma.clinic.create({
@@ -94,10 +97,9 @@ async function main() {
           name: doctor.name,
           specialty: doctor.specialty,
           experienceYears: doctor.experienceYears,
-          room: doctor.room,
           userId: doctorUser.id,
-          isApproved: true,
-          clinicId: clinicUser.id,
+          // დადასტურებული კავშირი კლინიკასთან, კაბინეტით
+          clinics: { create: { clinicId: clinicUser.id, isApproved: true, room: doctor.room } },
           languages: ["ქართული", "ინგლისური"],
           consultationFee: 50,
         },
@@ -107,6 +109,7 @@ async function main() {
         doctorName: doctor.name,
         doctorSpecialty: doctor.specialty,
         clinicName: clinic.name,
+        clinicId: clinicUser.id,
       });
     }
   }

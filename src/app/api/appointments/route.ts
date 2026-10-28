@@ -1,12 +1,14 @@
 import { z } from "zod";
 import { jsonError, readJson } from "@/lib/api";
-import { visibleDoctorWhere } from "@/lib/doctors";
+import { visibleClinicWhere } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { generateTimes, isValidDay, isValidTime, isWorkingDay, toDate } from "@/lib/time";
 
 const bookingSchema = z.object({
   doctorId: z.string().uuid(),
+  // ექიმი რამდენიმე კლინიკაში შეიძლება მუშაობდეს — პაციენტი ირჩევს, რომელში
+  clinicId: z.string().uuid(),
   date: z.string(),
   time: z.string(),
 });
@@ -28,22 +30,25 @@ export async function POST(request: Request) {
     return jsonError("შეამოწმე თარიღი და დრო", 400);
   }
 
-  const { doctorId, date, time } = result.data;
+  const { doctorId, clinicId, date, time } = result.data;
 
-  const doctor = await prisma.doctor.findFirst({
-    where: { id: doctorId, ...visibleDoctorWhere },
-    include: { clinic: { select: { name: true } } },
+  // ექიმის ხილული კავშირი ამ კლინიკასთან — აქ არის ამ კლინიკის გრაფიკიც
+  const membership = await prisma.doctorClinic.findFirst({
+    where: { doctorId, clinicId, ...visibleClinicWhere },
+    include: { doctor: true, clinic: { select: { name: true } } },
   });
 
-  if (!doctor) {
+  if (!membership) {
     return jsonError("ექიმი ვერ მოიძებნა", 404);
   }
 
+  const { doctor } = membership;
+
   const startsAt = toDate(date, time);
 
-  // დრო უნდა იყოს ექიმის სამუშაო დღესა და საათებში და მომავალში
+  // დრო უნდა იყოს ექიმის ამ კლინიკის სამუშაო დღესა და საათებში და მომავალში
   const isWorkingTime =
-    isWorkingDay(doctor, date) && generateTimes(doctor.workStart, doctor.workEnd).includes(time);
+    isWorkingDay(membership, date) && generateTimes(membership.workStart, membership.workEnd).includes(time);
   if (!isWorkingTime || startsAt.getTime() <= Date.now()) {
     return jsonError("ეს დრო ხელმისაწვდომი არ არის", 400);
   }
@@ -56,7 +61,7 @@ export async function POST(request: Request) {
   try {
     outcome = await prisma.$transaction(
       async (transaction) => {
-        // ექიმს ამ დროს სხვა პაციენტი ხომ არ ჰყავს?
+        // ექიმს ამ დროს სხვა პაციენტი ხომ არ ჰყავს (ნებისმიერ კლინიკაში)?
         const doctorBusy = await transaction.appointment.findFirst({
           where: { doctorId, startsAt, status: { not: "CANCELLED" } },
         });
@@ -78,11 +83,12 @@ export async function POST(request: Request) {
         const appointment = await transaction.appointment.create({
           data: {
             doctorId,
+            clinicId,
             patientId: session.user.id,
             startsAt,
             doctorName: doctor.name,
             doctorSpecialty: doctor.specialty,
-            clinicName: doctor.clinic.name,
+            clinicName: membership.clinic.name,
           },
         });
 

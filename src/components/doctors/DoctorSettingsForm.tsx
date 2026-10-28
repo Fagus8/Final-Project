@@ -7,8 +7,10 @@ import { formatLongDay, WEEK_ORDER, WEEKDAY_NAMES } from "@/lib/time";
 import styles from "@/components/ui/InlineForm.module.scss";
 
 type DoctorSettingsFormProps = {
+  // ექიმის გრაფიკი ერთ კლინიკაში
   doctor: {
     id: string;
+    clinicId: string;
     workStart: string;
     workEnd: string;
     workDays: number[];
@@ -19,7 +21,7 @@ type DoctorSettingsFormProps = {
   isClinic?: boolean;
 };
 
-// ექიმის გრაფიკის ფორმა („ჩემი განრიგი“ და „კლინიკის მართვა“): საათები,
+// ექიმის ერთი კლინიკის გრაფიკის ფორმა („ჩემი განრიგი“ და „კლინიკის მართვა“): საათები,
 // სამუშაო დღეები და დასვენების დღეები. აქედან იქმნება 30-წუთიანი სლოტები ჯავშნისთვის
 export default function DoctorSettingsForm({ doctor, isClinic = false }: DoctorSettingsFormProps) {
   const router = useRouter();
@@ -53,7 +55,7 @@ export default function DoctorSettingsForm({ doctor, isClinic = false }: DoctorS
 
     // კაბინეტს სერვერი მხოლოდ კლინიკისგან იღებს
     const body = { workStart, workEnd, workDays, daysOff, ...(isClinic && { room }) };
-    const saved = await sendRequest(`/api/doctors/${doctor.id}`, "PATCH", body);
+    const saved = await sendRequest(`/api/doctors/${doctor.id}/clinics/${doctor.clinicId}`, "PATCH", body);
 
     setIsSaving(false);
     setResult(saved);

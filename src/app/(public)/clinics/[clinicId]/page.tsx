@@ -4,7 +4,6 @@ import Sidebar from "@/components/navigation/Sidebar";
 import DoctorAvatar from "@/components/ui/DoctorAvatar";
 import Icon from "@/components/ui/Icon";
 import { isUuid } from "@/lib/api";
-import { visibleDoctorWhere } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { formatWorkDays } from "@/lib/time";
 import { getSession } from "@/lib/session";
@@ -24,9 +23,11 @@ export default async function ClinicDetailsPage(props: PageProps<"/clinics/[clin
   const clinic = await prisma.clinic.findFirst({
     where: { id: clinicId, isApproved: true },
     include: {
+      // დადასტურებული ექიმები, თავიანთი ამ კლინიკის გრაფიკით
       doctors: {
-        where: visibleDoctorWhere,
-        orderBy: { name: "asc" },
+        where: { isApproved: true },
+        include: { doctor: true },
+        orderBy: { doctor: { name: "asc" } },
       },
     },
   });
@@ -35,15 +36,17 @@ export default async function ClinicDetailsPage(props: PageProps<"/clinics/[clin
     notFound();
   }
 
+  const doctors = clinic.doctors.map(({ doctor, workDays }) => ({ ...doctor, workDays }));
+
   const session = await getSession();
   // „დაჯავშნა“ ღილაკი ჩანს სტუმრისთვის და პაციენტისთვის
   const canBook = !session || session.user.accountType === "PATIENT";
 
   // სტატისტიკა: განსხვავებული სპეციალობები და ექიმების საშუალო გამოცდილება
-  const specialties = [...new Set(clinic.doctors.map((doctor) => doctor.specialty))].sort();
-  const totalExperience = clinic.doctors.reduce((sum, doctor) => sum + doctor.experienceYears, 0);
-  const averageExperience = clinic.doctors.length
-    ? Math.round(totalExperience / clinic.doctors.length)
+  const specialties = [...new Set(doctors.map((doctor) => doctor.specialty))].sort();
+  const totalExperience = doctors.reduce((sum, doctor) => sum + doctor.experienceYears, 0);
+  const averageExperience = doctors.length
+    ? Math.round(totalExperience / doctors.length)
     : 0;
 
   return (
@@ -80,14 +83,14 @@ export default async function ClinicDetailsPage(props: PageProps<"/clinics/[clin
               <li>
                 <Icon name="clock" size={18} />
                 {/* კლინიკა იმ დღეებში იღებს, როცა ერთი ექიმი მაინც მუშაობს */}
-                {clinic.doctors.length > 0
-                  ? formatWorkDays([...new Set(clinic.doctors.flatMap((doctor) => doctor.workDays))])
+                {doctors.length > 0
+                  ? formatWorkDays([...new Set(doctors.flatMap((doctor) => doctor.workDays))])
                   : "სამუშაო დღეები ექიმების მიხედვით"}
               </li>
             </ul>
 
             <div className={styles.actions}>
-              {canBook && clinic.doctors.length > 0 && (
+              {canBook && doctors.length > 0 && (
                 <Link className={styles.primaryLink} href={`/booking?clinicId=${clinic.id}`}>
                   <Icon name="calendarPlus" size={18} />
                   ვიზიტის დაჯავშნა
@@ -110,7 +113,7 @@ export default async function ClinicDetailsPage(props: PageProps<"/clinics/[clin
 
         <ul className={styles.stats}>
           <li>
-            <strong>{clinic.doctors.length}</strong>
+            <strong>{doctors.length}</strong>
             <span>ექიმი</span>
           </li>
           <li>
@@ -136,11 +139,11 @@ export default async function ClinicDetailsPage(props: PageProps<"/clinics/[clin
 
         <section className={styles.section}>
           <h2>კლინიკის ექიმები</h2>
-          {clinic.doctors.length === 0 ? (
+          {doctors.length === 0 ? (
             <p className={styles.empty}>ამ კლინიკაში ჯერ ექიმები არ არიან დამატებული.</p>
           ) : (
             <ul className={styles.doctors}>
-              {clinic.doctors.map((doctor) => (
+              {doctors.map((doctor) => (
                 <li key={doctor.id}>
                   <Link href={`/doctors/${doctor.id}`} className={styles.doctor}>
                     <DoctorAvatar name={doctor.name} avatarUrl={doctor.avatarUrl} className={styles.avatar} />

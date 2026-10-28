@@ -5,7 +5,6 @@ import { loginUrl } from "@/lib/next-url";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import ClinicOverview from "./_components/ClinicOverview";
-import DoctorOverview from "./_components/DoctorOverview";
 import PatientOverview from "./_components/PatientOverview";
 import StatCard from "./_components/StatCard";
 import styles from "../Account.module.scss";
@@ -13,10 +12,6 @@ import styles from "../Account.module.scss";
 // თითოეული როლისთვის მისალმების ტექსტი და მთავარი გვერდი
 const roleIntro: Record<string, { text: string; link?: { href: string; label: string } }> = {
   PATIENT: { text: "აქ ნახავ შენს ვიზიტებს, დიაგნოზებს და დანიშნულებებს." },
-  DOCTOR: {
-    text: "აქ ნახავ შენს დღევანდელ და მომავალ პაციენტებს.",
-    link: { href: "/doctor-schedule", label: "ჩემი განრიგი" },
-  },
   CLINIC: {
     text: "აქ ნახავ კლინიკის ექიმებსა და ვიზიტებს.",
     link: { href: "/manage-clinic", label: "კლინიკის მართვა" },
@@ -24,9 +19,9 @@ const roleIntro: Record<string, { text: string; link?: { href: string; label: st
 };
 
 // პირადი კაბინეტი. ყველა როლს თავისი შიგთავსი აქვს:
-// პაციენტს — ჯანმრთელობა, ექიმს — პაციენტები, კლინიკას — ექიმები და ვიზიტები,
-// ადმინს — საიტის სტატისტიკა
-export default async function DashboardPage() {
+// პაციენტს — ჯანმრთელობა, კლინიკას — ექიმები და ვიზიტები, ადმინს — საიტის სტატისტიკა.
+// ექიმის კაბინეტი „ჩემ პროფილშია“ (/doctor-profile)
+export default async function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
   const session = await getSession();
 
   if (!session) {
@@ -35,6 +30,14 @@ export default async function DashboardPage() {
 
   const isAdmin = session.user.role === "admin";
   const accountType = session.user.accountType;
+
+  // ექიმი პირდაპირ „ჩემ პროფილზე“ გადადის; რეგისტრაციის მონაცემები (?specialty=...) თან მიაქვს
+  if (accountType === "DOCTOR" && !isAdmin) {
+    const query = new URLSearchParams(
+      Object.entries(await searchParams).filter((entry): entry is [string, string] => typeof entry[1] === "string"),
+    ).toString();
+    redirect(query ? `/doctor-profile?${query}` : "/doctor-profile");
+  }
   const intro = isAdmin ? null : roleIntro[accountType];
 
   return (
@@ -63,7 +66,6 @@ export default async function DashboardPage() {
         ) : (
           <>
             {accountType === "PATIENT" && <PatientOverview patientId={session.user.id} />}
-            {accountType === "DOCTOR" && <DoctorOverview userId={session.user.id} />}
             {accountType === "CLINIC" && <ClinicOverview clinicId={session.user.id} />}
           </>
         )}

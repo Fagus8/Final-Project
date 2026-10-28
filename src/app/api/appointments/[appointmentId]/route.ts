@@ -38,7 +38,7 @@ export async function PATCH(
 
   const appointment = await prisma.appointment.findUnique({
     where: { id: appointmentId },
-    include: { doctor: true },
+    include: { doctor: { include: { clinics: { select: { clinicId: true, isApproved: true } } } } },
   });
 
   if (!appointment) {
@@ -49,10 +49,12 @@ export async function PATCH(
   // ექიმის ჩანაწერი შეიძლება აღარ არსებობდეს (კლინიკა წაიშალა) — მაშინ doctor null-ია
   const user = session.user;
   const isPatient = appointment.patientId === user.id;
-  const isClinic = appointment.doctor !== null && appointment.doctor.clinicId === user.id;
-  // კლინიკიდან მოხსნილი ექიმი ძველ ვიზიტებს ვეღარ ცვლის
+  const isClinic = appointment.clinicId !== null && appointment.clinicId === user.id;
+  // კლინიკიდან მოხსნილი ექიმი ამ კლინიკის ძველ ვიზიტებს ვეღარ ცვლის
   const isDoctor =
-    appointment.doctor !== null && appointment.doctor.userId === user.id && appointment.doctor.isApproved;
+    appointment.doctor !== null &&
+    appointment.doctor.userId === user.id &&
+    appointment.doctor.clinics.some((item) => item.clinicId === appointment.clinicId && item.isApproved);
   const isAdmin = user.role === "admin";
 
   const data = result.data;

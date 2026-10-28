@@ -6,13 +6,15 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import list from "@/components/ui/List.module.scss";
 import { sendRequest } from "@/lib/api-client";
 
-// კლინიკა ხსნის ექიმს: მომავალი ვიზიტები უქმდება, ისტორია რჩება
+// კლინიკა ხსნის ექიმს: ამ კლინიკაში მომავალი ვიზიტები უქმდება, ისტორია რჩება
 export default function RemoveDoctorButton({
   doctorId,
+  clinicId,
   doctorName,
   upcomingCount,
 }: {
   doctorId: string;
+  clinicId: string;
   doctorName: string;
   // რამდენი მომავალი ვიზიტი გაუქმდება — დადასტურების ტექსტისთვის
   upcomingCount: number;
@@ -26,7 +28,7 @@ export default function RemoveDoctorButton({
     setIsSaving(true);
     setError("");
 
-    const { ok, message } = await sendRequest(`/api/doctors/${doctorId}`, "DELETE");
+    const { ok, message } = await sendRequest(`/api/doctors/${doctorId}/clinics/${clinicId}`, "DELETE");
 
     setIsSaving(false);
     if (!ok) {

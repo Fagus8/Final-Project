@@ -23,13 +23,20 @@ export default async function PatientVisitsPage() {
     redirect("/dashboard");
   }
 
-  // ექიმის ჩანაწერი შეიძლება აღარ არსებობდეს (კლინიკა წაიშალა) —
-  // მაშინ ვიზიტში შენახულ სახელებს ვაჩვენებთ
+  // ექიმის ან კლინიკის ჩანაწერი შეიძლება აღარ არსებობდეს (წაიშალა) —
+  // მაშინ ვიზიტში შენახულ სახელებს ვაჩვენებთ. კაბინეტი ექიმის ამ კლინიკასთან კავშირშია
   const appointments = await prisma.appointment.findMany({
     where: { patientId: session.user.id },
-    include: { doctor: { include: { clinic: true } } },
+    include: {
+      clinic: { select: { address: true } },
+      doctor: { include: { clinics: { select: { clinicId: true, room: true } } } },
+    },
     orderBy: { startsAt: "desc" },
   });
+
+  function roomOf(appointment: (typeof appointments)[number]) {
+    return appointment.doctor?.clinics.find((item) => item.clinicId === appointment.clinicId)?.room ?? null;
+  }
 
   // მომავალი = აქტიური და ჯერ არ დამდგარი; უახლოესი პირველია (ამიტომ reverse).
   // დანარჩენი (დასრულებული, გაუქმებული, გასული) ისტორიაში მიდის
@@ -68,8 +75,8 @@ export default async function PatientVisitsPage() {
                     <p>{appointment.doctorName} · {appointment.doctorSpecialty}</p>
                     <p>
                       {appointment.clinicName}
-                      {appointment.doctor && <>, {appointment.doctor.clinic.address}</>}
-                      {appointment.doctor?.room && <> · კაბინეტი {appointment.doctor.room}</>}
+                      {appointment.clinic && <>, {appointment.clinic.address}</>}
+                      {roomOf(appointment) && <> · კაბინეტი {roomOf(appointment)}</>}
                     </p>
                   </div>
                 </div>

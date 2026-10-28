@@ -1,5 +1,5 @@
 import Sidebar from "@/components/navigation/Sidebar";
-import { visibleDoctorWhere } from "@/lib/doctors";
+import { clinicNames, visibleClinicsInclude, visibleDoctorWhere } from "@/lib/doctors";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import BookingSteps from "./BookingSteps";
@@ -19,7 +19,7 @@ export default async function HomePage() {
     prisma.doctor.count({ where: visibleDoctorWhere }),
     prisma.doctor.findMany({
       where: visibleDoctorWhere,
-      include: { clinic: true },
+      include: { clinics: visibleClinicsInclude },
       orderBy: { experienceYears: "desc" },
       take: 3,
     }),
@@ -42,7 +42,7 @@ export default async function HomePage() {
             name: doctor.name,
             specialty: doctor.specialty,
             experienceYears: doctor.experienceYears,
-            clinicName: doctor.clinic.name,
+            clinicName: clinicNames(doctor),
             avatarUrl: doctor.avatarUrl,
           }))}
         />

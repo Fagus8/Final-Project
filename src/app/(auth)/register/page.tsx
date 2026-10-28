@@ -85,15 +85,15 @@ async function saveRoleDetails(values: RegistrationValues) {
 // სად გადავიდეს მომხმარებელი რეგისტრაციის შემდეგ
 function destination(values: RegistrationValues) {
   if (values.accountType === "DOCTOR") {
-    // კლინიკა თუ ჯერ არ აურჩევია, „ჩემ განრიგში“ ფორმა შეყვანილი მონაცემებით ივსება
+    // კლინიკა თუ ჯერ არ აურჩევია, „ჩემ პროფილში“ ფორმა შეყვანილი მონაცემებით ივსება
     if (values.doctorClinicId) {
-      return "/doctor-schedule";
+      return "/doctor-profile";
     }
     const params = new URLSearchParams({
       specialty: values.doctorSpecialty.trim(),
       experience: String(values.doctorExperience),
     });
-    return `/doctor-schedule?${params}`;
+    return `/doctor-profile?${params}`;
   }
 
   // პაციენტი ბრუნდება იქ, საიდანაც რეგისტრაციაზე მოვიდა (მაგ: ჯავშანი).

@@ -32,9 +32,9 @@ export default async function Sidebar() {
   }
 
   // როლის მიხედვით ბმულები, პირველი — პირადი კაბინეტი
-  const personal: MenuItem[] = session
-    ? [{ href: "/dashboard", label: "პირადი კაბინეტი", icon: "dashboard" }]
-    : [];
+  // (ექიმს ცალკე კაბინეტი არ აქვს — ის „ჩემ პროფილშია“)
+  const personal: MenuItem[] =
+    session && !isDoctor ? [{ href: "/dashboard", label: "პირადი კაბინეტი", icon: "dashboard" }] : [];
 
   if (isPatient && !isAdmin) {
     personal.push(
@@ -45,9 +45,9 @@ export default async function Sidebar() {
 
   if (isDoctor) {
     personal.push(
+      { href: "/doctor-profile", label: "ჩემი პროფილი", icon: "profile" },
       { href: "/doctor-schedule", label: "ჩემი განრიგი", icon: "appointments" },
       { href: "/doctor-patients", label: "ჩემი პაციენტები", icon: "patients" },
-      { href: "/doctor-profile", label: "ჩემი პროფილი", icon: "profile" },
     );
   }
 

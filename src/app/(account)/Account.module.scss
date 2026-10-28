@@ -147,6 +147,12 @@
     font-size: 1.0625rem;
     font-weight: 650;
   }
+
+  > p {
+    margin: 0 0 12px;
+    color: $color-text;
+    line-height: 1.6;
+  }
 }
 
 @include common.contentAbove(441px) {

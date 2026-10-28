@@ -8,7 +8,7 @@ import DoctorSettingsForm from "@/components/doctors/DoctorSettingsForm";
 import Sidebar from "@/components/navigation/Sidebar";
 import type { Prisma } from "@/generated/prisma/client";
 import { cancellationText, displayStatus, statusLabels } from "@/lib/appointment-status";
-import { activeDoctorWhere } from "@/lib/doctors";
+import { activeClinicWhere } from "@/lib/doctors";
 import { loginUrl } from "@/lib/next-url";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
@@ -60,17 +60,22 @@ export default async function ManageClinicPage({ searchParams }: PageProps<"/man
     redirect("/dashboard");
   }
 
-  // კლინიკის id = ანგარიშის id; აქტიური ექიმები, მათი ვიზიტები და ანგარიშის ელფოსტა
+  // კლინიკის id = ანგარიშის id; აქტიური ექიმები (კავშირები), მათი ამ კლინიკის ვიზიტები
+  // და ანგარიშის ელფოსტა
   const clinic = await prisma.clinic.findUnique({
     where: { id: session.user.id },
     include: {
       doctors: {
-        where: activeDoctorWhere,
+        where: activeClinicWhere,
         include: {
-          appointments: { include: { patient: true } },
-          user: { select: { email: true } },
+          doctor: {
+            include: {
+              appointments: { where: { clinicId: session.user.id }, include: { patient: true } },
+              user: { select: { email: true } },
+            },
+          },
         },
-        orderBy: { name: "asc" },
+        orderBy: { doctor: { name: "asc" } },
       },
     },
   });
@@ -89,9 +94,15 @@ export default async function ManageClinicPage({ searchParams }: PageProps<"/man
 
   const tab: Tab = tabs.some((item) => item.key === query.tab) ? (query.tab as Tab) : "doctors";
 
+  // ექიმი და მისი კავშირი ამ კლინიკასთან (გრაფიკი, კაბინეტი) ერთ ობიექტად; id — ექიმის id
+  const clinicDoctors: ClinicDoctor[] = clinic.doctors.map(({ doctor, ...membership }) => ({
+    ...membership,
+    ...doctor,
+  }));
+
   // ექიმები, რომლებმაც ეს კლინიკა აირჩიეს და დადასტურებას ელოდებიან
-  const pendingDoctors = clinic.doctors.filter((doctor) => !doctor.isApproved);
-  const doctors = clinic.doctors.filter((doctor) => doctor.isApproved);
+  const pendingDoctors = clinicDoctors.filter((doctor) => !doctor.isApproved);
+  const doctors = clinicDoctors.filter((doctor) => doctor.isApproved);
   const now = new Date();
 
   return (
@@ -140,7 +151,7 @@ export default async function ManageClinicPage({ searchParams }: PageProps<"/man
             <section className={`${styles.card} ${clinicStyles.dangerZone}`}>
               <h2>კლინიკის წაშლა</h2>
               <p>
-                კლინიკის ანგარიში სამუდამოდ წაიშლება. ექიმები კლინიკას მოშორდებიან, მომავალი
+                კლინიკის ანგარიში სამუდამოდ წაიშლება. ექიმები კლინიკას მოშორდებიან, აქ მომავალი
                 ვიზიტები გაუქმდება, პაციენტების ისტორია (დიაგნოზები) კი შენარჩუნდება.
               </p>
               <DeleteClinicButton clinicId={clinic.id} clinicName={clinic.name} isOwnClinic />
@@ -152,10 +163,11 @@ export default async function ManageClinicPage({ searchParams }: PageProps<"/man
   );
 }
 
-// კლინიკის ექიმი ვიზიტებით და ელფოსტით (როგორც ზემოთ ვტვირთავთ)
-type ClinicDoctor = Prisma.DoctorGetPayload<{
-  include: { appointments: { include: { patient: true } }; user: { select: { email: true } } };
-}>;
+// კლინიკის ექიმი ამ კლინიკის გრაფიკით, ვიზიტებით და ელფოსტით (როგორც ზემოთ ვაწყობთ)
+type ClinicDoctor = Omit<Prisma.DoctorClinicGetPayload<object>, "id"> &
+  Prisma.DoctorGetPayload<{
+    include: { appointments: { include: { patient: true } }; user: { select: { email: true } } };
+  }>;
 
 // ტაბი „ექიმები“
 function DoctorsTab({
@@ -223,6 +235,7 @@ function DoctorsTab({
               isClinic
               doctor={{
                 id: doctor.id,
+                clinicId: doctor.clinicId,
                 workStart: doctor.workStart,
                 workEnd: doctor.workEnd,
                 workDays: doctor.workDays,
@@ -251,6 +264,7 @@ function DoctorsTab({
               </details>
               <RemoveDoctorButton
                 doctorId={doctor.id}
+                clinicId={doctor.clinicId}
                 doctorName={doctor.name}
                 upcomingCount={
                   doctor.appointments.filter((a) => a.status === "BOOKED" && a.startsAt > now).length

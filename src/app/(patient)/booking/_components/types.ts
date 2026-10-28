@@ -1,6 +1,10 @@
-// ექიმი, როგორც ჯავშნის სიაში ჩანს (გვერდი ბაზიდან ამ ფორმით გადასცემს)
+// ექიმი კონკრეტულ კლინიკაში, როგორც ჯავშნის სიაში ჩანს (გვერდი ბაზიდან ამ ფორმით გადასცემს).
+// რამდენიმე კლინიკაში მომუშავე ექიმი სიაში თითო კლინიკისთვის ცალკე ჩანს
 export type DoctorOption = {
+  // ექიმის კავშირის (DoctorClinic) id — სიაში უნიკალურია
   id: string;
+  doctorId: string;
+  clinicId: string;
   name: string;
   specialty: string;
   experienceYears: number;
@@ -9,7 +13,7 @@ export type DoctorOption = {
   avatarUrl: string | null;
   consultationFee: number | null;
   languages: string[];
-  // სამუშაო დღეები (0 — კვირა) და დასვენების დღეები — კალენდარში ითიშება
+  // ამ კლინიკის სამუშაო დღეები (0 — კვირა) და დასვენების დღეები — კალენდარში ითიშება
   workDays: number[];
   daysOff: string[];
 };

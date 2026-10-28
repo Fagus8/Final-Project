@@ -4,13 +4,16 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 
 const doctorSchema = z.object({
-  specialty: z.string().trim().min(1),
-  experienceYears: z.number().int().min(0),
-  clinicId: z.string().uuid(),
+  // სპეციალობა და გამოცდილება მხოლოდ პირველ მოთხოვნაზეა საჭირო —
+  // შემდეგ მათ მხოლოდ კლინიკა ცვლის
+  specialty: z.string().trim().min(1).optional(),
+  experienceYears: z.number().int().min(0).optional(),
+  // ერთი ან რამდენიმე კლინიკა
+  clinicIds: z.array(z.string().uuid()).min(1).max(20),
 });
 
-// ექიმი თვითონ რეგისტრირდება და ირჩევს კლინიკას.
-// კლინიკა მას „ახალი ექიმების“ სიაში ნახავს და დაადასტურებს.
+// ექიმი თვითონ რეგისტრირდება და ირჩევს ერთ ან რამდენიმე კლინიკას.
+// თითოეული კლინიკა მას „ახალი ექიმების“ სიაში ნახავს და დაადასტურებს
 export async function POST(request: Request) {
   const session = await getSession();
 
@@ -27,48 +30,86 @@ export async function POST(request: Request) {
     return jsonError("შეამოწმე შევსებული ველები", 400);
   }
 
-  const clinic = await prisma.clinic.findFirst({
-    where: { id: result.data.clinicId, isApproved: true },
+  const clinicIds = [...new Set(result.data.clinicIds)];
+  const clinics = await prisma.clinic.findMany({
+    where: { id: { in: clinicIds }, isApproved: true },
+    select: { id: true },
   });
 
-  if (!clinic) {
+  if (clinics.length !== clinicIds.length) {
     return jsonError("კლინიკა ვერ მოიძებნა", 404);
   }
-
-  // მოთხოვნა = დაუდასტურებელი ექიმი; კლინიკა მას „კლინიკის მართვაში“ დაადასტურებს
-  const doctorData = {
-    name: session.user.name,
-    specialty: result.data.specialty,
-    experienceYears: result.data.experienceYears,
-    clinicId: clinic.id,
-    isApproved: false,
-  };
 
   // ერთ ანგარიშს მხოლოდ ერთი ექიმის ჩანაწერი აქვს
   const existing = await prisma.doctor.findUnique({
     where: { userId: session.user.id },
+    include: { clinics: true },
   });
 
   if (!existing) {
-    await prisma.doctor.create({ data: { ...doctorData, userId: session.user.id } });
-    return Response.json({ message: "მოთხოვნა გაიგზავნა კლინიკასთან" });
+    const { specialty, experienceYears } = result.data;
+    if (!specialty || experienceYears === undefined) {
+      return jsonError("შეავსე სპეციალობა და გამოცდილება", 400);
+    }
+
+    // მოთხოვნა = დაუდასტურებელი კავშირი კლინიკასთან
+    await prisma.doctor.create({
+      data: {
+        name: session.user.name,
+        specialty,
+        experienceYears,
+        userId: session.user.id,
+        clinics: { create: clinicIds.map((clinicId) => ({ clinicId })) },
+      },
+    });
+    return Response.json({ message: "მოთხოვნა გაიგზავნა კლინიკებთან" });
   }
 
-  // აქტიური მოთხოვნა ან კლინიკა უკვე აქვს
-  if (!existing.rejectedAt && !existing.removedAt) {
-    return jsonError("მოთხოვნა უკვე გაგზავნილია. ჯერ დაელოდე კლინიკის პასუხს.", 409);
+  // აქტიური მოთხოვნა ან კავშირი უკვე აქვს — ხელახლა არ ვაგზავნით
+  const active = existing.clinics.filter((item) => !item.rejectedAt && !item.removedAt);
+  const newIds = clinicIds.filter((id) => !active.some((item) => item.clinicId === id));
+
+  if (newIds.length === 0) {
+    return jsonError("ამ კლინიკებთან მოთხოვნა უკვე გაგზავნილია.", 409);
   }
 
-  // უარყოფილი ან მოხსნილი ექიმი ახალ კლინიკას ირჩევს. ძველ ვიზიტებს ამ
-  // ჩანაწერს ვწყვეტთ, რომ ახალ კლინიკაში არ გადაყვეს — პაციენტების ისტორიაში
-  // ისინი რჩება (ექიმის და კლინიკის სახელი ვიზიტშივე ინახება)
+  // სანამ არცერთ კლინიკას არ დაუდასტურებია, ექიმს სპეციალობის შესწორება შეუძლია
+  const canEditProfile = !existing.clinics.some((item) => item.isApproved);
+
   await prisma.$transaction([
-    prisma.appointment.updateMany({ where: { doctorId: existing.id }, data: { doctorId: null } }),
-    prisma.doctor.update({
-      where: { id: existing.id },
-      data: { ...doctorData, rejectedAt: null, removedAt: null, room: null, daysOff: [] },
-    }),
+    ...newIds.map((clinicId) =>
+      // უარყოფილი ან მოხსნილი ექიმი იმავე კლინიკას ხელახლა სთხოვს — ძველი ჩანაწერი
+      // თავიდან მოლოდინში გადადის, გრაფიკი და კაბინეტი ნაგულისხმევზე ბრუნდება
+      prisma.doctorClinic.upsert({
+        where: { doctorId_clinicId: { doctorId: existing.id, clinicId } },
+        create: { doctorId: existing.id, clinicId },
+        update: {
+          isApproved: false,
+          rejectedAt: null,
+          removedAt: null,
+          room: null,
+          workStart: "10:00",
+          workEnd: "18:00",
+          workDays: [1, 2, 3, 4, 5, 6],
+          daysOff: [],
+          createdAt: new Date(),
+        },
+      }),
+    ),
+    ...(canEditProfile
+      ? [
+          prisma.doctor.update({
+            where: { id: existing.id },
+            data: {
+              specialty: result.data.specialty,
+              experienceYears: result.data.experienceYears,
+            },
+          }),
+        ]
+      : []),
   ]);
 
-  return Response.json({ message: "მოთხოვნა გაიგზავნა კლინიკასთან" });
+  return Response.json({
+    message: newIds.length > 1 ? "მოთხოვნა გაიგზავნა კლინიკებთან" : "მოთხოვნა გაიგზავნა კლინიკასთან",
+  });
 }

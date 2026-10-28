@@ -1,49 +1,53 @@
 import Link from "next/link";
 
 type DoctorStatusNoticeProps = {
-  // ექიმის ჩანაწერი კლინიკის სახელით; null — ანგარიში ჯერ არცერთ კლინიკას არ უკავშირდება
-  doctor: {
+  // ექიმის კავშირები კლინიკებთან; ცარიელი — ანგარიში ჯერ არცერთ კლინიკას არ უკავშირდება
+  clinics: {
     isApproved: boolean;
     rejectedAt: Date | null;
     removedAt: Date | null;
     clinic: { name: string };
-  } | null;
-  // „ჩემ განრიგზე“ კლინიკის არჩევის ფორმა თვითონ ჩანს, ბმული არ სჭირდება
+  }[];
+  // „ჩემ პროფილში“ კლინიკის არჩევის ფორმა თვითონ ჩანს, ბმული არ სჭირდება
   showLink?: boolean;
 };
 
-// ექიმის მდგომარეობა, სანამ კლინიკა არ დაადასტურებს: არ არის დაკავშირებული,
-// მოთხოვნა უარყვეს, კლინიკიდან მოხსნეს ან დადასტურებას ელოდება.
-// გამოიყენება კაბინეტში, „ჩემ განრიგსა“ და „ჩემ პროფილზე“
-export default function DoctorStatusNotice({ doctor, showLink = true }: DoctorStatusNoticeProps) {
-  const chooseLink = showLink && <> <Link href="/doctor-schedule">აირჩიე კლინიკა →</Link></>;
+// კლინიკების სახელები ერთ სტრიქონად: „ა“, „ბ“ და „გ“
+function names(clinics: DoctorStatusNoticeProps["clinics"]) {
+  return clinics.map((item, index) => (
+    <span key={item.clinic.name}>
+      {index > 0 && (index === clinics.length - 1 ? " და " : ", ")}
+      <strong>{item.clinic.name}</strong>
+    </span>
+  ));
+}
 
-  if (!doctor) {
+// ექიმის მდგომარეობა, სანამ ერთი კლინიკა მაინც არ დაადასტურებს: არ არის დაკავშირებული,
+// მოთხოვნები ელოდება, უარყვეს ან კლინიკიდან მოხსნეს.
+// გამოიყენება კაბინეტში და „ჩემ პროფილში“
+export default function DoctorStatusNotice({ clinics, showLink = true }: DoctorStatusNoticeProps) {
+  const chooseLink = showLink && <> <Link href="/doctor-profile">აირჩიე კლინიკა →</Link></>;
+
+  if (clinics.length === 0) {
     return <>შენი ანგარიში ჯერ არცერთ კლინიკას არ უკავშირდება.{chooseLink}</>;
   }
 
-  if (doctor.removedAt) {
-    return (
-      <>
-        კლინიკამ <strong>{doctor.clinic.name}</strong> შეწყვიტა თანამშრომლობა — შენი მომავალი
-        ვიზიტები გაუქმდა. შეგიძლია სხვა კლინიკა აირჩიო.{chooseLink}
-      </>
-    );
-  }
-
-  if (doctor.rejectedAt) {
-    return (
-      <>
-        კლინიკამ <strong>{doctor.clinic.name}</strong> უარყო შენი მოთხოვნა. შეგიძლია სხვა კლინიკა
-        აირჩიო.{chooseLink}
-      </>
-    );
-  }
+  const pending = clinics.filter((item) => !item.isApproved && !item.rejectedAt && !item.removedAt);
+  const rejected = clinics.filter((item) => item.rejectedAt);
+  const removed = clinics.filter((item) => item.removedAt);
 
   return (
     <>
-      შენი მოთხოვნა გაგზავნილია კლინიკაში <strong>{doctor.clinic.name}</strong> და დადასტურებას
-      ელოდება. დადასტურების შემდეგ გამოჩნდება შენი განრიგი, პაციენტები და პროფილის რედაქტირება.
+      {pending.length > 0 && (
+        <>
+          შენი მოთხოვნა გაგზავნილია {pending.length > 1 ? "კლინიკებში" : "კლინიკაში"} {names(pending)} და
+          დადასტურებას ელოდება. ერთი კლინიკის დადასტურების შემდეგ გამოჩნდება შენი განრიგი,
+          პაციენტები და პროფილის რედაქტირება.{" "}
+        </>
+      )}
+      {rejected.length > 0 && <>{names(rejected)} — მოთხოვნა უარყოფილია. </>}
+      {removed.length > 0 && <>{names(removed)} — თანამშრომლობა შეწყდა, მომავალი ვიზიტები გაუქმდა. </>}
+      {pending.length === 0 && <>შეგიძლია სხვა კლინიკა აირჩიო.{chooseLink}</>}
     </>
   );
 }
