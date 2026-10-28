@@ -1,0 +1,138 @@
+@use '../../../styles/colors' as *;
+@use '../../../styles/shared' as common;
+
+.page {
+  @include common.pageShell;
+}
+
+.main {
+  @include common.pageContent;
+
+  h1 {
+    @include common.pageTitle;
+  }
+}
+
+.empty {
+  @include common.card;
+  max-width: 760px;
+  margin: 0;
+  padding: 24px;
+  color: $color-text-muted;
+}
+
+// ბარათების ბადე: ვიწროზე ერთი სვეტი, ფართოზე რამდენიც ჩაეტევა
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 16px;
+}
+
+// ერთი პაციენტის ბარათი
+.patient {
+  @include common.card;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 20px;
+  color: $color-text;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+
+  > div {
+    min-width: 0;
+  }
+
+  h2 {
+    margin: 0;
+    color: $color-heading;
+    font-size: 1rem;
+    font-weight: 650;
+  }
+
+  p {
+    margin: 2px 0 0;
+    overflow-wrap: anywhere;
+    color: $color-text-muted;
+    font-size: 0.8125rem;
+  }
+}
+
+// სახელის პირველი ასო წრეში
+.initial {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: $color-accent-light;
+  color: $color-primary-dark;
+  font-weight: 700;
+}
+
+// ტელეფონი, სისხლის ჯგუფი, ვიზიტების რაოდენობა — პატარა „ჩიპებად“
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: $color-background;
+    color: $color-text;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+}
+
+.details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+
+  dt {
+    color: $color-text-muted;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  dd {
+    margin: 2px 0 0;
+    color: $color-heading;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+}
+
+// ბოლო დიაგნოზი ბარათის ბოლოში, გამოყოფილ ბლოკში
+.diagnosis {
+  margin-top: auto;
+  padding: 10px 12px;
+  border-radius: $radius-sm;
+  background: $color-background;
+
+  span {
+    color: $color-text-muted;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 2px 0 0;
+    overflow-wrap: anywhere;
+    color: $color-heading;
+    font-size: 0.875rem;
+  }
+}
+

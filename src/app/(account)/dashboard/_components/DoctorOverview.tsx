@@ -79,7 +79,7 @@ export default async function DoctorOverview({ userId }: { userId: string }) {
       <section className={styles.details} aria-label="ვიზიტების სტატისტიკა">
         <StatCard href="/doctor-schedule" label="დღევანდელი ვიზიტები" value={todayCount} />
         <StatCard href="/doctor-schedule" label="მომავალი ვიზიტები" value={upcomingCount} />
-        <StatCard href="/doctor-schedule" label="ნამკურნალები პაციენტები" value={patientGroups.length} />
+        <StatCard href="/doctor-patients" label="ნამკურნალები პაციენტები" value={patientGroups.length} />
       </section>
     </>
   );

@@ -20,9 +20,10 @@ export default async function Sidebar() {
   const canBook = !session || (isPatient && !isAdmin);
 
   // საერთო ბმულები — ყველასთვის
+  // ექიმს ექიმების სია არ სჭირდება — მის მაგივრად „ჩემი პაციენტები“ აქვს
   const general: MenuItem[] = [
     { href: "/", label: "მთავარი", icon: "home" },
-    { href: "/doctors", label: "ექიმები", icon: "doctors" },
+    ...(isDoctor ? [] : [{ href: "/doctors", label: "ექიმები", icon: "doctors" } as const]),
     { href: "/clinics", label: "კლინიკები", icon: "clinic" },
   ];
 
@@ -45,6 +46,7 @@ export default async function Sidebar() {
   if (isDoctor) {
     personal.push(
       { href: "/doctor-schedule", label: "ჩემი განრიგი", icon: "appointments" },
+      { href: "/doctor-patients", label: "ჩემი პაციენტები", icon: "patients" },
       { href: "/doctor-profile", label: "ჩემი პროფილი", icon: "profile" },
     );
   }
