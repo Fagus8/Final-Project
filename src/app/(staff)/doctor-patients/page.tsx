@@ -1,12 +1,15 @@
 import { redirect } from "next/navigation";
 import Sidebar from "@/components/navigation/Sidebar";
+import { cancellationText, displayStatus } from "@/lib/appointment-status";
 import { loginUrl } from "@/lib/next-url";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { formatDateTime } from "@/lib/time";
+import PatientCard, { type PatientCardData } from "./_components/PatientCard";
 import styles from "./DoctorPatients.module.scss";
 
 // ექიმის გვერდი „ჩემი პაციენტები“: ყველა პაციენტი, ვისაც ამ ექიმმა უმკურნალა.
+// ბარათზე დაჭერით იხსნება ამ პაციენტის ყველა ვიზიტი ამ ექიმთან.
 // ექიმი ხედავს მხოლოდ საკუთარ ვიზიტებს — სხვა ექიმების დიაგნოზებს არა
 export default async function DoctorPatientsPage() {
   const session = await getSession();
@@ -19,12 +22,10 @@ export default async function DoctorPatientsPage() {
     redirect("/dashboard");
   }
 
-  // გაუქმებული ვიზიტები არ ითვლება — ასეთი პაციენტი ექიმთან არ ყოფილა
   const doctor = await prisma.doctor.findUnique({
     where: { userId: session.user.id },
     include: {
       appointments: {
-        where: { status: { not: "CANCELLED" } },
         include: { patient: { include: { patient: { select: { phone: true, bloodType: true } } } } },
         orderBy: { startsAt: "desc" },
       },
@@ -37,22 +38,10 @@ export default async function DoctorPatientsPage() {
   }
 
   // ვიზიტებს პაციენტების მიხედვით ვაჯგუფებთ. ვიზიტები ახლიდან ძველისკენაა
-  // დალაგებული, ამიტომ პირველი ნაპოვნი დასრულებული ვიზიტი ბოლოა
+  // დალაგებული, ამიტომ პირველი ნაპოვნი დასრულებული ვიზიტი ბოლოა.
+  // კლიენტის კომპონენტს Date კი არა, მზა ტექსტი გადაეცემა
   const now = new Date();
-  const byPatient = new Map<
-    string,
-    {
-      id: string;
-      name: string;
-      email: string;
-      phone: string | null;
-      bloodType: string | null;
-      completedVisits: number;
-      lastVisit: Date | null;
-      lastDiagnosis: string | null;
-      nextVisit: Date | null;
-    }
-  >();
+  const byPatient = new Map<string, PatientCardData>();
 
   for (const appointment of doctor.appointments) {
     let item = byPatient.get(appointment.patientId);
@@ -67,19 +56,33 @@ export default async function DoctorPatientsPage() {
         lastVisit: null,
         lastDiagnosis: null,
         nextVisit: null,
+        visits: [],
       };
       byPatient.set(appointment.patientId, item);
     }
 
+    // მოდალში ყველა ვიზიტი ჩანს, გაუქმებულიც
+    item.visits.push({
+      id: appointment.id,
+      dateTime: formatDateTime(appointment.startsAt),
+      status: displayStatus(appointment.status, appointment.startsAt, now),
+      diagnosis: appointment.diagnosis,
+      prescription: appointment.prescription,
+      cancelText:
+        appointment.status === "CANCELLED"
+          ? cancellationText(appointment.cancelledBy, appointment.cancelReason)
+          : null,
+    });
+
     if (appointment.status === "COMPLETED") {
       item.completedVisits += 1;
       if (!item.lastVisit) {
-        item.lastVisit = appointment.startsAt;
+        item.lastVisit = formatDateTime(appointment.startsAt);
         item.lastDiagnosis = appointment.diagnosis;
       }
-    } else if (appointment.startsAt > now) {
+    } else if (appointment.status === "BOOKED" && appointment.startsAt > now) {
       // სიაში ბოლოს ნაპოვნი მომავალი ვიზიტი ყველაზე ახლოა
-      item.nextVisit = appointment.startsAt;
+      item.nextVisit = formatDateTime(appointment.startsAt);
     }
   }
 
@@ -99,39 +102,7 @@ export default async function DoctorPatientsPage() {
         ) : (
           <section className={styles.grid}>
             {patients.map((patient) => (
-              <article key={patient.id} className={styles.patient}>
-                <header className={styles.header}>
-                  <span className={styles.initial} aria-hidden="true">
-                    {patient.name.charAt(0)}
-                  </span>
-                  <div>
-                    <h2>{patient.name}</h2>
-                    <p>{patient.email}</p>
-                  </div>
-                </header>
-
-                <ul className={styles.tags}>
-                  {patient.phone && <li>{patient.phone}</li>}
-                  {patient.bloodType && <li>სისხლის ჯგუფი {patient.bloodType}</li>}
-                  <li>ვიზიტები: {patient.completedVisits}</li>
-                </ul>
-
-                <dl className={styles.details}>
-                  <div>
-                    <dt>ბოლო ვიზიტი</dt>
-                    <dd>{patient.lastVisit ? formatDateTime(patient.lastVisit) : "—"}</dd>
-                  </div>
-                  <div>
-                    <dt>შემდეგი ვიზიტი</dt>
-                    <dd>{patient.nextVisit ? formatDateTime(patient.nextVisit) : "—"}</dd>
-                  </div>
-                </dl>
-
-                <div className={styles.diagnosis}>
-                  <span>ბოლო დიაგნოზი</span>
-                  <p>{patient.lastDiagnosis ?? "—"}</p>
-                </div>
-              </article>
+              <PatientCard key={patient.id} patient={patient} />
             ))}
           </section>
         )}

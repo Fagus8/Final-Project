@@ -28,7 +28,7 @@
   gap: 16px;
 }
 
-// ერთი პაციენტის ბარათი
+// ერთი პაციენტის ბარათი — დაჭერით ვიზიტების ფანჯარა იხსნება
 .patient {
   @include common.card;
   display: flex;
@@ -36,6 +36,25 @@
   gap: 14px;
   padding: 18px 20px;
   color: $color-text;
+  cursor: pointer;
+  transition: border-color $transition, box-shadow $transition, transform $transition;
+
+  @include common.hover {
+    border-color: $color-primary;
+    box-shadow: $shadow-md;
+    transform: translateY(-2px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+  }
+}
+
+.more {
+  color: $color-primary-dark;
+  font-size: 0.8125rem;
+  font-weight: 600;
 }
 
 .header {
@@ -136,3 +155,61 @@
   }
 }
 
+// ვიზიტების მოდალური ფანჯარა (ჩარჩო — AppointmentActions-ის .dialog)
+.visitsDialog {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  // 18px მობილურზე → 24px 561px-დან
+  padding: 18px;
+
+  @media (min-width: 561px) {
+    padding: 24px;
+  }
+}
+
+.dialogSubtitle {
+  margin: 2px 0 0;
+  color: $color-text-muted;
+  font-size: 0.8125rem;
+}
+
+// ვიზიტების სია: ახლიდან ძველისკენ
+.visits {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    padding: 12px 14px;
+    border: 1px solid $color-border;
+    border-radius: $radius-sm;
+  }
+
+  h3 {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 4px;
+    color: $color-heading;
+    font-size: 0.9375rem;
+    font-weight: 650;
+  }
+
+  p {
+    margin: 4px 0 0;
+    overflow-wrap: anywhere;
+    color: $color-text;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+}
+
+// დანიშნულება ხშირად რამდენიმე ხაზია — ხაზების გადატანა ნარჩუნდება
+.prescription {
+  white-space: pre-line;
+}
