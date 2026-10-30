@@ -75,7 +75,7 @@ async function saveRoleDetails(values: RegistrationValues) {
     return sendRequest("/api/doctor-registration", "POST", {
       specialty: values.doctorSpecialty,
       experienceYears: values.doctorExperience,
-      clinicId: values.doctorClinicId,
+      clinicIds: [values.doctorClinicId],
     });
   }
 
